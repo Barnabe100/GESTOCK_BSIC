@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+            $table->foreignId('agence_id')->nullable()->constrained('agences');
+            $table->foreignId('departement_id')->nullable()->constrained('departements');
+            $table->foreignId('service_id')->nullable()->constrained('services');
         });
     }
 
