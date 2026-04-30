@@ -2,63 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Article;
 use App\Models\Categorie;
 use Illuminate\Http\Request;
 
-class ArticleController extends Controller
+class CategorieController extends Controller
 {
     public function index()
     {
-        $articles = Article::with('categorie')
-            ->where('archiver', 0)
-            ->get();
-
-        return view('articles.index', compact('articles'));
+        $categories = Categorie::where('archiver', 0)->get();
+        return view('categories.index', compact('categories'))
+        ->with('success', 'Catégorie créée avec succès 👍');
     }
 
     public function create()
     {
-        $categories = Categorie::where('archiver', 0)->get();
-        return view('articles.create', compact('categories'));
+        return view('categories.create');
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'code' => 'required|unique:articles',
+            'code' => 'required|unique:categories',
             'libelle' => 'required',
-            'prix_unitaire' => 'required|numeric',
-            'stock_disponible' => 'required|integer',
-            'stock_securite' => 'required|integer',
-            'categorie_id' => 'required|exists:categories,id',
+            'description' => 'nullable',
         ]);
 
-        Article::create([
+        Categorie::create([
             'code' => $request->code,
             'libelle' => $request->libelle,
-            'prix_unitaire' => $request->prix_unitaire,
-            'stock_disponible' => $request->stock_disponible,
-            'stock_securite' => $request->stock_securite,
-            'categorie_id' => $request->categorie_id,
+            'description' => $request->description,
         ]);
 
-        return redirect()->route('articles.index')
-            ->with('success', 'Article créé avec succès');
+        return redirect()->route('categories.index')
+            ->with('success', 'Catégorie créée avec succès');
     }
 
     public function show($id)
     {
-        $article = Article::with('categorie')->findOrFail($id);
-        return view('articles.show', compact('article'));
+        $categorie = Categorie::findOrFail($id);
+        return view('categories.show', compact('categorie'));
     }
 
     public function edit($id)
     {
-        $article = Article::findOrFail($id);
-        $categories = Categorie::where('archiver', 0)->get();
-
-        return view('articles.edit', compact('article', 'categories'));
+        $categorie = Categorie::findOrFail($id);
+        return view('categories.edit', compact('categorie'));
     }
 
     public function update(Request $request, $id)
@@ -66,36 +54,30 @@ class ArticleController extends Controller
         $request->validate([
             'code' => 'required',
             'libelle' => 'required',
-            'prix_unitaire' => 'required|numeric',
-            'stock_disponible' => 'required|integer',
-            'stock_securite' => 'required|integer',
-            'categorie_id' => 'required|exists:categories,id',
+            'description' => 'nullable',
         ]);
 
-        $article = Article::findOrFail($id);
+        $categorie = Categorie::findOrFail($id);
 
-        $article->update([
+        $categorie->update([
             'code' => $request->code,
             'libelle' => $request->libelle,
-            'prix_unitaire' => $request->prix_unitaire,
-            'stock_disponible' => $request->stock_disponible,
-            'stock_securite' => $request->stock_securite,
-            'categorie_id' => $request->categorie_id,
+            'description' => $request->description,
         ]);
 
-        return redirect()->route('articles.index')
-            ->with('success', 'Article modifié avec succès');
+        return redirect()->route('categories.index')
+            ->with('success', 'Catégorie modifiée avec succès');
     }
 
     public function destroy($id)
     {
-        $article = Article::findOrFail($id);
+        $categorie = Categorie::findOrFail($id);
 
-        $article->update([
+        $categorie->update([
             'archiver' => 1
         ]);
 
-        return redirect()->route('articles.index')
-            ->with('success', 'Article archivé avec succès');
+        return redirect()->route('categories.index')
+            ->with('success', 'Catégorie archivée avec succès');
     }
 }

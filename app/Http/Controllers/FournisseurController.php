@@ -53,6 +53,12 @@ class FournisseurController extends Controller
             ->with('success', 'Fournisseur modifié');
     }
 
+    public function show($id)
+    {
+        $fournisseur = Fournisseur::findOrFail($id);
+        return view('fournisseurs.show', compact('fournisseur'));
+    }
+
     public function destroy($id)
     {
         Fournisseur::findOrFail($id)->update([

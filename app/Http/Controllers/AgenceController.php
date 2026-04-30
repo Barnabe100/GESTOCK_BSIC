@@ -9,7 +9,8 @@ class AgenceController extends Controller
 {
     public function index()
     {
-        $agences = Agence::where('archiver', 0)->get();
+        //$agences = Agence::where('archiver', 0)->get();
+        $agences = Agence::all();
         return view('agences.index', compact('agences'));
     }
 
@@ -21,17 +22,15 @@ class AgenceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'code' => 'required',
             'nom' => 'required',
-            'ville' => 'nullable',
-            'adresse' => 'nullable',
-            'telephone' => 'nullable',
+            'lieu' => 'nullable',
         ]);
 
         Agence::create([
+            'code' => $request->code,
             'nom' => $request->nom,
-            'ville' => $request->ville,
-            'adresse' => $request->adresse,
-            'telephone' => $request->telephone,
+            'lieu' => $request->lieu,
         ]);
 
         return redirect()->route('agences.index')
@@ -53,19 +52,19 @@ class AgenceController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'nom' => 'required',
-            'ville' => 'nullable',
-            'adresse' => 'nullable',
-            'telephone' => 'nullable',
+            'code' => 'required',
+            'nom' => 'nullable',
+            'lieu' => 'nullable',
+            
         ]);
 
         $agence = Agence::findOrFail($id);
 
         $agence->update([
+            'code' => $request->code,
             'nom' => $request->nom,
-            'ville' => $request->ville,
-            'adresse' => $request->adresse,
-            'telephone' => $request->telephone,
+            'lieu' => $request->lieu,
+           
         ]);
 
         return redirect()->route('agences.index')

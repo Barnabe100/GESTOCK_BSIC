@@ -23,6 +23,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'departement_id',
+        'agence_id',
+        'service_id',
+
     ];
 
     /**
@@ -44,4 +48,24 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function agence()
+    {
+        return $this->belongsTo(Agence::class);
+    }
+
+    public function departement()
+    {
+        return $this->belongsTo(Departement::class);
+    }
+
+    public function service()
+    {
+        return $this->belongsTo(Service::class);
+    }
+
+    public function demandes()
+    {
+        return $this->hasMany(Demande::class);
+    }
 }

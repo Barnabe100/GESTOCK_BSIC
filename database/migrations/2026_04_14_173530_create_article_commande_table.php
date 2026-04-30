@@ -22,6 +22,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->integer('quantite');
+            $table->decimal('prix', 10, 2);
             $table->boolean('archiver')->default(0);
             $table->timestamps();
         });

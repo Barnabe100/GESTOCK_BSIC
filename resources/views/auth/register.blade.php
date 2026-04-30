@@ -39,6 +39,39 @@
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
+        <!-- Agence -->
+        <div class="mt-4">
+            <x-input-label value="Agence" />
+
+            <select name="agence_id" class="block mt-1 w-full">
+                @foreach($agences as $agence)
+                    <option value="{{ $agence->id }}">{{ $agence->nom }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- Département -->
+        <div class="mt-4">
+            <x-input-label value="Département" />
+
+            <select name="departement_id" class="block mt-1 w-full">
+                @foreach($departements as $dep)
+                    <option value="{{ $dep->id }}">{{ $dep->nom }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <!-- Service -->
+        <div class="mt-4">
+            <x-input-label value="Service" />
+
+            <select name="service_id" class="block mt-1 w-full">
+                @foreach($services as $service)
+                    <option value="{{ $service->id }}">{{ $service->nom }}</option>
+                @endforeach
+            </select>
+        </div>
+
         <div class="flex items-center justify-end mt-4">
             <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
                 {{ __('Already registered?') }}

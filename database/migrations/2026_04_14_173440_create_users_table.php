@@ -17,11 +17,11 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->rememberToken();
-            $table->timestamps();
+            $table->rememberToken();            
             $table->foreignId('agence_id')->nullable()->constrained('agences');
             $table->foreignId('departement_id')->nullable()->constrained('departements');
             $table->foreignId('service_id')->nullable()->constrained('services');
+            $table->timestamps();
         });
     }
 
