@@ -12,7 +12,7 @@
             <div class="card-header bg-primary text-white d-flex justify-content-between">
                 <h5>Détail utilisateur</h5>
 
-                <a href="{{ route('users.index') }}" class="btn btn-light btn-sm">
+                <a href="{{ url()->previous() }}" class="btn btn-light btn-sm">
                     ← Retour
                 </a>
             </div>
@@ -26,6 +26,13 @@
                         <label>Nom</label>
                         <div class="form-control bg-light">
                             {{ $user->name }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Prénom</label>
+                        <div class="form-control bg-light">
+                            {{ $user->prenom }}
                         </div>
                     </div>
 

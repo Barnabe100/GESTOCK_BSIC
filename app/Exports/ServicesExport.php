@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Service;
+use App\Models\Departement;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
@@ -12,13 +13,24 @@ class ServicesExport implements FromCollection, WithHeadings, WithStyles
 {
     public function collection()
     {
-        return Service::where('archiver', 0)
-            ->select(
-                'code',
-                'nom',
-                'localisation'
-            )
-            ->get();
+
+
+        return Service::with(['departement'])
+            ->where('archiver', 0)
+            ->get()
+            ->map(function ($service) {
+
+                return [
+
+                    'code' => $service->code,
+
+                    'nom' => $service->nom,
+                    'localisation' => $service->localisation,
+
+                    'departement' => $service->departement->nom ?? '',
+
+                ];
+            });
     }
 
     public function headings(): array
@@ -26,7 +38,8 @@ class ServicesExport implements FromCollection, WithHeadings, WithStyles
         return [
             'Code',
             'Nom',
-            'Localisation'
+            'Localisation',
+            'Departement'
         ];
     }
 

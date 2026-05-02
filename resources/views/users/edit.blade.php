@@ -26,6 +26,11 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
+                            <label>Prénom</label>
+                            <input type="text" name="prenom" class="form-control" value="{{ $user->prenom }}">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
                             <label>Email</label>
                             <input type="email" name="email" class="form-control" value="{{ $user->email }}">
                         </div>

@@ -43,12 +43,13 @@
                             <tr>
                                 <th>#</th>
                                 <th>Nom</th>
-                                <th>Email</th>
+                                <th>Prenom</th>
+                                <th width="50px">Email</th>
                                 <th>Agence</th>
-                                <th>Département</th>
+                                <th width="50px">Département</th>
                                 <th>Service</th>
                                 <th>Rôles</th>
-                                <th width="180px">Actions</th>
+                                <th width="280px">Actions</th>
                             </tr>
                         </thead>
 
@@ -59,6 +60,7 @@
                                     <td>{{ $key + 1 }}</td>
 
                                     <td>{{ $user->name }}</td>
+                                    <td>{{ $user->prenom }}</td>
 
                                     <td>{{ $user->email }}</td>
 

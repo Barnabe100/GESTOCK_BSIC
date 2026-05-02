@@ -11,7 +11,8 @@ class Departement extends Model
 
     protected $fillable = [
         'code',
-        'nom'
+        'nom',
+        'agence_id'
     ];
 
     public function services()
@@ -22,5 +23,10 @@ class Departement extends Model
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+    public function agence()
+    {
+        return $this->belongsTo(Agence::class);
     }
 }

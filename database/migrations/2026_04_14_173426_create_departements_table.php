@@ -16,6 +16,11 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->string('nom');
             $table->boolean('archiver')->default(0);
+
+            $table->foreignId('agence_id')
+                ->constrained('agences')
+                ->cascadeOnDelete();
+
             $table->timestamps();
         });
     }

@@ -8,7 +8,7 @@
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
 
         $('.datatable').DataTable({
             responsive: true,
@@ -22,6 +22,10 @@
 <!-- Validation demande-->
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- COnfirmation-->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- selection sur un champs-->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
     function confirmDelete(form) {
@@ -56,4 +60,3 @@
         });
     }
 </script>
-

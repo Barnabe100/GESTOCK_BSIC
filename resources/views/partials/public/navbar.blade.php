@@ -2,11 +2,10 @@
     <div class="container-fluid">
 
         <button class="btn btn-primary" id="sidebarToggle">
-            <i class="fas fa-align-justify"></i>  
+            <i class="fas fa-align-justify"></i>
         </button>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
             <span class="navbar-toggler-icon"></span>
         </button>
 
@@ -14,19 +13,85 @@
             <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
                 <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
                 @guest
-                <li class="nav-item"><a class="nav-link" href="{{route('login')}}">Se connecter</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">Se connecter</a></li>
                 @endguest
                 @auth
-                <li class="nav-item">
-                    <a id="color-nav" class="nav-link" href="{{ route('logout') }}"
-                        onclick="event.preventDefault();
+
+
+                    <li class="nav-item dropdown">
+
+                        <!-- TOGGLE -->
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+
+                            {{ Auth::user()->prenom }}
+                            {{ Auth::user()->name }}
+
+                        </a>
+
+                        <!-- MENU -->
+                        <ul class="dropdown-menu dropdown-menu-end">
+
+                            <!-- VOIR PROFIL -->
+                            <li>
+
+                                <a class="dropdown-item" href="{{ route('users.show', Auth::user()->id) }}">
+
+                                    <i class="fas fa-user me-2"></i>
+
+                                    Voir profil
+
+                                </a>
+
+                            </li>
+
+                            <!-- MODIFIER PROFIL -->
+                            <li>
+
+                                <a class="dropdown-item" href="{{ route('users.edit', Auth::user()->id) }}">
+
+                                    <i class="fas fa-user-edit me-2"></i>
+
+                                    Modifier profil
+
+                                </a>
+
+                            </li>
+
+                            <!-- SEPARATEUR -->
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <!-- LOGOUT -->
+                            <li>
+
+                                <a class="dropdown-item text-danger" href="{{ route('logout') }}"
+                                    onclick="event.preventDefault();
                                         document.getElementById('logout-form').submit();">
-                        {{ __('Se deconnecter') }}
-                    </a>
-                    <form id="logout-form" action="{{ route('logout') }}" method="POST">
-                        @csrf
-                    </form>
-                </li>
+
+                                    <i class="fas fa-sign-out-alt me-2"></i>
+
+                                    Se déconnecter
+
+                                </a>
+
+                            </li>
+
+                        </ul>
+
+                        <!-- FORM LOGOUT -->
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST">
+
+                            @csrf
+
+                        </form>
+
+                    </li>
+
+                    <li class="nav-item">
+
+                    </li>
                 @endauth
             </ul>
         </div>

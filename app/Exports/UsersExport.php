@@ -13,17 +13,19 @@ class UsersExport implements FromCollection, WithHeadings, WithStyles
     public function collection()
     {
         return User::with([
-                'agence',
-                'departement',
-                'service',
-                'roles'
-            ])
+            'agence',
+            'departement',
+            'service',
+            'roles'
+        ])
             ->get()
             ->map(function ($user) {
 
                 return [
 
                     'nom' => $user->name,
+
+                    'prenom' => $user->prenom,
 
                     'email' => $user->email,
 
@@ -44,6 +46,7 @@ class UsersExport implements FromCollection, WithHeadings, WithStyles
     {
         return [
             'Nom',
+            'Prenom',
             'Email',
             'Agence',
             'Département',

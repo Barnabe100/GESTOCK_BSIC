@@ -47,6 +47,18 @@
                             @enderror
                         </div>
 
+                        <div class="col-md-6 mb-3">
+                            <label>Agence</label>
+                            <select name="agence_id" class="form-control">
+                                @foreach ($agences as $ag)
+                                    <option value="{{ $ag->id }}"
+                                        {{ $ag->id == $departement->agence_id ? 'selected' : '' }}>
+                                        {{ $ag->nom }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                     </div>
 
                     <div class="d-flex justify-content-between">

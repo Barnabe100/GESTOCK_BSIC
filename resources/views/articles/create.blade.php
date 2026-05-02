@@ -39,7 +39,8 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Catégorie</label>
-                            <select name="categorie_id" class="form-control">
+                            <select name="categorie_id" class="form-control select2">
+                                <option value=""></option>
                                 @foreach ($categories as $cat)
                                     <option value="{{ $cat->id }}">{{ $cat->libelle }}</option>
                                 @endforeach
@@ -71,3 +72,17 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+
+            $('.select2').select2({
+                placeholder: 'Sélectionner ...',
+                allowClear: true,
+                width: '100%'
+            });
+
+        });
+    </script>
+@endpush

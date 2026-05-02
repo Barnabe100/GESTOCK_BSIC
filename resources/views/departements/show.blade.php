@@ -33,6 +33,13 @@
                         </div>
                     </div>
 
+                    <div class="col-md-12 mb-3">
+                        <label>Agence</label>
+                        <div class="form-control bg-light">
+                            {{ $departement->agence->nom ?? '' }}
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="d-flex justify-content-between">

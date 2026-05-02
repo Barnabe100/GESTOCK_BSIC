@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Departement;
+use App\Models\Agence;
 use Illuminate\Http\Request;
 use App\Exports\DepartementsExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -17,7 +18,8 @@ class DepartementController extends Controller
 
     public function create()
     {
-        return view('departements.create');
+        $agences = Agence::all();
+        return view('departements.create', compact('agences'));
     }
 
     public function store(Request $request)
@@ -25,11 +27,13 @@ class DepartementController extends Controller
         $request->validate([
             'code' => 'required|unique:departements',
             'nom' => 'required',
+            'agence_id' => 'required|exists:agences,id',
         ]);
 
         Departement::create([
             'code' => $request->code,
             'nom' => $request->nom,
+            'agence_id' => $request->agence_id,
         ]);
 
         return redirect()->route('departements.index')
@@ -45,7 +49,8 @@ class DepartementController extends Controller
     public function edit($id)
     {
         $departement = Departement::findOrFail($id);
-        return view('departements.edit', compact('departement'));
+        $agences = Agence::all();
+        return view('departements.edit', compact('departement', 'agences'));
     }
 
     public function update(Request $request, $id)
@@ -53,6 +58,7 @@ class DepartementController extends Controller
         $request->validate([
             'code' => 'required',
             'nom' => 'required',
+            'agence_id' => 'required|exists:agences,id',
         ]);
 
         $departement = Departement::findOrFail($id);
@@ -60,6 +66,7 @@ class DepartementController extends Controller
         $departement->update([
             'code' => $request->code,
             'nom' => $request->nom,
+            'agence_id' => $request->agence_id,
         ]);
 
         return redirect()->route('departements.index')

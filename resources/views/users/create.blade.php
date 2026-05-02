@@ -25,6 +25,11 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
+                            <label>Prénom</label>
+                            <input type="text" name="prenom" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
                             <label>Email</label>
                             <input type="email" name="email" class="form-control" required>
                         </div>
@@ -44,7 +49,8 @@
 
                         <div class="col-md-4 mb-3">
                             <label>Agence</label>
-                            <select name="agence_id" class="form-control">
+                            <select name="agence_id" class="form-control select2">
+                                <option value=""></option>
                                 @foreach ($agences as $agence)
                                     <option value="{{ $agence->id }}">{{ $agence->nom }}</option>
                                 @endforeach
@@ -53,7 +59,8 @@
 
                         <div class="col-md-4 mb-3">
                             <label>Département</label>
-                            <select name="departement_id" class="form-control">
+                            <select name="departement_id" class="form-control select2">
+                                <option value=""></option>
                                 @foreach ($departements as $dep)
                                     <option value="{{ $dep->id }}">{{ $dep->nom }}</option>
                                 @endforeach
@@ -62,7 +69,8 @@
 
                         <div class="col-md-4 mb-3">
                             <label>Service</label>
-                            <select name="service_id" class="form-control">
+                            <select name="service_id" class="form-control select2">
+                                <option value=""></option>
                                 @foreach ($services as $service)
                                     <option value="{{ $service->id }}">{{ $service->nom }}</option>
                                 @endforeach
@@ -82,3 +90,17 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+
+            $('.select2').select2({
+                placeholder: 'Sélectionner ...',
+                allowClear: true,
+                width: '100%'
+            });
+
+        });
+    </script>
+@endpush

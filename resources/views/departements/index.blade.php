@@ -44,6 +44,7 @@
                                 <th>#</th>
                                 <th>Code</th>
                                 <th>Nom</th>
+                                <th>Agence</th>
                                 <th width="180px">Actions</th>
                             </tr>
                         </thead>
@@ -54,6 +55,7 @@
                                     <td>{{ $key + 1 }}</td>
                                     <td>{{ $dep->code }}</td>
                                     <td>{{ $dep->nom }}</td>
+                                    <td>{{ $dep->agence->nom ?? '' }}</td>
 
                                     <td>
                                         <a href="{{ route('departements.show', $dep->id) }}" class="btn btn-info btn-sm"

@@ -36,6 +36,16 @@
                             @enderror
                         </div>
 
+                        <div class="col-md-12 mb-3">
+                            <label>Agence</label>
+                            <select name="agence_id" class="form-control select2">
+                                <option value=""></option>
+                                @foreach ($agences as $ag)
+                                    <option value="{{ $ag->id }}">{{ $ag->nom }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
                     </div>
 
                     <button class="btn btn-success">Enregistrer</button>
@@ -46,3 +56,17 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+
+            $('.select2').select2({
+                placeholder: 'Sélectionner ...',
+                allowClear: true,
+                width: '100%'
+            });
+
+        });
+    </script>
+@endpush

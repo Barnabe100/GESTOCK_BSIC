@@ -9,10 +9,15 @@ class Agence extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['code','nom','lieu'];
+    protected $fillable = ['code', 'nom', 'lieu'];
 
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+    public function departements()
+    {
+        return $this->hasMany(Departement::class);
     }
 }
