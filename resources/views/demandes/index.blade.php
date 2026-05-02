@@ -12,9 +12,27 @@
         <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
             <h5 class="mb-0">Liste des demandes</h5>
 
-            <a href="{{ route('demandes.create') }}" class="btn btn-light btn-sm">
-                + Ajouter
-            </a>
+            <div class="d-flex gap-2">
+                <!-- EXCEL -->
+                <a href="{{ route('demandes.export.excel') }}"
+                class="btn btn-success btn-sm">
+        
+                <i class="fas fa-file-excel"></i>
+                Excel
+                </a>
+        
+                <!-- CSV -->
+                    <a href="{{ route('demandes.export.csv') }}"
+                    class="btn btn-info btn-sm">
+            
+                    <i class="fas fa-file-csv"></i>
+                    CSV
+                </a>
+
+                <a href="{{ route('demandes.create') }}" class="btn btn-light btn-sm">
+                    + Ajouter
+                </a>
+            </div>
         </div>
 
         <!-- BODY -->

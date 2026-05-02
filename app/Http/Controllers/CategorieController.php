@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Categorie;
 use Illuminate\Http\Request;
+use App\Exports\CategoriesExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CategorieController extends Controller
 {
@@ -79,5 +81,23 @@ class CategorieController extends Controller
 
         return redirect()->route('categories.index')
             ->with('success', 'Catégorie archivée avec succès');
+    }
+
+    //Export Excel
+    public function exportExcel()
+    {
+        return Excel::download(
+            new CategoriesExport,
+            'categories.xlsx'
+        );
+    }
+
+    //Export CSV
+    public function exportCsv()
+    {
+        return Excel::download(
+            new CategoriesExport,
+            'categories.csv'
+        );
     }
 }

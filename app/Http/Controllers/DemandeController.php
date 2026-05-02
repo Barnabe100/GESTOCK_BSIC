@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Demande;
 use App\Models\Article;
 use Illuminate\Http\Request;
+use App\Exports\DemandesExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Models\ArticleDemande;
 
 class DemandeController extends Controller
 {
@@ -64,13 +67,11 @@ class DemandeController extends Controller
 
     public function show($id)
     {
-        
+
         $demande = Demande::with('articles.article')->findOrFail($id);
         $articles = Article::all();
 
         return view('demandes.show', compact('demande', 'articles'));
-
-        
     }
 
     public function destroy($id)
@@ -126,5 +127,23 @@ class DemandeController extends Controller
         ]);
 
         return back()->with('success', 'Demande livrée');
+    }
+
+    //Export Excel
+    public function exportExcel()
+    {
+        return Excel::download(
+            new DemandesExport,
+            'demandes.xlsx'
+        );
+    }
+
+    //Export CSV
+    public function exportCsv()
+    {
+        return Excel::download(
+            new DemandesExport,
+            'demandes.csv'
+        );
     }
 }

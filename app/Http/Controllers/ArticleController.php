@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\Categorie;
 use Illuminate\Http\Request;
+use App\Exports\ArticlesExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ArticleController extends Controller
 {
@@ -97,5 +99,23 @@ class ArticleController extends Controller
 
         return redirect()->route('articles.index')
             ->with('success', 'Article archivé avec succès');
+    }
+
+    //Export Excel
+    public function exportExcel()
+    {
+        return Excel::download(
+            new ArticlesExport,
+            'articles.xlsx'
+        );
+    }
+
+    //Export CSV
+    public function exportCsv()
+    {
+        return Excel::download(
+            new ArticlesExport,
+            'articles.csv'
+        );
     }
 }

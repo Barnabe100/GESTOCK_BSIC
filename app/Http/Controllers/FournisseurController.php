@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Fournisseur;
 use Illuminate\Http\Request;
+use App\Exports\FournisseursExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class FournisseurController extends Controller
 {
@@ -67,5 +69,23 @@ class FournisseurController extends Controller
 
         return redirect()->route('fournisseurs.index')
             ->with('success', 'Fournisseur archivé');
+    }
+
+    //Export Excel
+    public function exportExcel()
+    {
+        return Excel::download(
+            new FournisseursExport,
+            'fournisseurs.xlsx'
+        );
+    }
+
+    //Export CSV
+    public function exportCsv()
+    {
+        return Excel::download(
+            new FournisseursExport,
+            'fournisseurs.csv'
+        );
     }
 }

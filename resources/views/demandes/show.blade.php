@@ -142,9 +142,29 @@
     <!-- 🔥 LISTE DES ARTICLES -->
     <div class="card mt-4 shadow-sm">
 
-        <div class="card-header bg-primary text-white">
+        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
             Articles demandés
+
+            <div class="d-flex gap-2">
+                <!-- EXCEL -->
+                    <a href="{{ route('articles-demandes.export.excel') }}"
+                    class="btn btn-success btn-sm">
+    
+                    <i class="fas fa-file-excel"></i>
+                    Excel
+                </a>
+    
+                <!-- CSV -->
+                    <a href="{{ route('articles-demandes.export.csv') }}"
+                    class="btn btn-info btn-sm">
+    
+                    <i class="fas fa-file-csv"></i>
+                    CSV
+                </a>                 
+            </div>
         </div>
+
+       
 
         <div class="card-body">
 

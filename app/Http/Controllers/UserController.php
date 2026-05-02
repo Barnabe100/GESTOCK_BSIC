@@ -9,6 +9,8 @@ use App\Models\Departement;
 use App\Models\Service;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use App\Exports\UsersExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
@@ -95,5 +97,23 @@ class UserController extends Controller
         User::findOrFail($id)->delete();
 
         return redirect()->route('users.index');
+    }
+
+    //Export Excel
+    public function exportExcel()
+    {
+        return Excel::download(
+            new UsersExport,
+            'users.xlsx'
+        );
+    }
+
+    //Export CSV
+    public function exportCsv()
+    {
+        return Excel::download(
+            new UsersExport,
+            'users.csv'
+        );
     }
 }

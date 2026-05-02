@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Agence;
 use Illuminate\Http\Request;
+use App\Exports\AgencesExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AgenceController extends Controller
 {
@@ -81,5 +83,23 @@ class AgenceController extends Controller
 
         return redirect()->route('agences.index')
             ->with('success', 'Agence archivée avec succès');
+    }
+
+    //Export Excel
+    public function exportExcel()
+    {
+        return Excel::download(
+            new AgencesExport,
+            'agences.xlsx'
+        );
+    }
+
+    //Export CSV
+    public function exportCsv()
+    {
+        return Excel::download(
+            new AgencesExport,
+            'agences.csv'
+        );
     }
 }

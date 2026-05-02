@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('code')->unique();
             $table->string('nom');
+            $table->boolean('archiver')->default(0);
             $table->timestamps();
         });
     }

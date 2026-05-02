@@ -87,6 +87,65 @@ Route::middleware(['auth'])->group(function () {
 
     Route::delete('article-commande/{id}', [ArticleCommandeController::class, 'destroy'])
         ->name('article_commande.destroy');
+
+
+    //Export Categories
+    Route::get('categories-export-excel',[CategorieController::class, 'exportExcel'])
+    ->name('categories.export.excel');
+    Route::get('categories-export-csv',[CategorieController::class, 'exportCsv'])
+        ->name('categories.export.csv');
+    //Export Agences
+    Route::get('agences-export-excel',[AgenceController::class, 'exportExcel'])
+        ->name('agences.export.excel');
+    Route::get('agences-export-csv',[AgenceController::class, 'exportCsv'])
+        ->name('agences.export.csv');
+    //Export Articles
+    Route::get('articles-export-excel',[ArticleController::class, 'exportExcel'])
+        ->name('articles.export.excel');
+    Route::get('articles-export-csv',[ArticleController::class, 'exportCsv'])
+        ->name('articles.export.csv');
+    //Export demandes
+    Route::get('demandes-export-excel',[DemandeController::class, 'exportExcel'])
+        ->name('demandes.export.excel');
+    Route::get('demandes-export-csv',[DemandeController::class, 'exportCsv'])
+        ->name('demandes.export.csv');
+    //Export commandes
+    Route::get('commandes-export-excel',[CommandeController::class, 'exportExcel'])
+        ->name('commandes.export.excel');
+    Route::get('commandes-export-csv',[CommandeController::class, 'exportCsv'])
+        ->name('commandes.export.csv');
+    //Export fournisseurs
+    Route::get('fournisseurs-export-excel',[FournisseurController::class, 'exportExcel'])
+        ->name('fournisseurs.export.excel');
+    Route::get('fournisseurs-export-csv',[FournisseurController::class, 'exportCsv'])
+        ->name('fournisseurs.export.csv');
+    //Export departements
+    Route::get('departements-export-excel',[DepartementController::class, 'exportExcel'])
+        ->name('departements.export.excel');
+    Route::get('departements-export-csv',[DepartementController::class, 'exportCsv'])
+        ->name('departements.export.csv');
+    //Export services
+    Route::get('services-export-excel',[ServiceController::class, 'exportExcel'])
+        ->name('services.export.excel');
+    Route::get('services-export-csv',[ServiceController::class, 'exportCsv'])
+        ->name('services.export.csv');
+    //Export users
+    Route::get('users-export-excel',[UserController::class, 'exportExcel'])
+        ->name('users.export.excel');
+    Route::get('users-export-csv',[UserController::class, 'exportCsv'])
+        ->name('users.export.csv');
+
+    //Export Articles demandes
+    Route::get('articles-demandes-export-excel',[ArticleDemandeController::class, 'exportExcel'])
+        ->name('articles-demandes.export.excel');
+    Route::get('articles-demandes-export-csv',[ArticleDemandeController::class, 'exportCsv'])
+        ->name('articles-demandes.export.csv');
+
+    //Export Articles Commandes
+    Route::get('articles-commandes-export-excel',[ArticleCommandeController::class, 'exportExcel'])
+        ->name('articles-commandes.export.excel');
+    Route::get('articles-commandes-export-csv',[ArticleCommandeController::class, 'exportCsv'])
+        ->name('articles-commandes.export.csv');
 });
 
 Route::resource('departements', DepartementController::class);

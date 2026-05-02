@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Service;
 use App\Models\Departement;
 use Illuminate\Http\Request;
+use App\Exports\ServicesExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ServiceController extends Controller
 {
@@ -82,5 +84,23 @@ class ServiceController extends Controller
 
         return redirect()->route('services.index')
             ->with('success', 'Service supprimé avec succès');
+    }
+
+    //Export Excel
+    public function exportExcel()
+    {
+        return Excel::download(
+            new ServicesExport,
+            'services.xlsx'
+        );
+    }
+
+    //Export CSV
+    public function exportCsv()
+    {
+        return Excel::download(
+            new ServicesExport,
+            'services.csv'
+        );
     }
 }

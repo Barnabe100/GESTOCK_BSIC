@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\ArticleCommande;
 use App\Models\Commande;
 use App\Models\Article;
+use App\Exports\ArticleCommandesExport;
+use Maatwebsite\Excel\Facades\Excel;
+
 
 
 class ArticleCommandeController extends Controller
@@ -48,6 +51,25 @@ class ArticleCommandeController extends Controller
         $commande->update(['montant' => $total]);
 
         return back();
+    }
+
+
+    //Export Excel
+    public function exportExcel()
+    {
+        return Excel::download(
+            new ArticleCommandesExport,
+            'articles-commandes.xlsx'
+        );
+    }
+
+    //Export CSV
+    public function exportCsv()
+    {
+        return Excel::download(
+            new ArticleCommandesExport,
+            'articles-commandes.csv'
+        );
     }
 
     

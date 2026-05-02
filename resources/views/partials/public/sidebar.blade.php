@@ -1,4 +1,4 @@
-<div class="border-end bg-white" id="sidebar-wrapper">
+<div class="border-end bg-white table-dark table-skyblue" id="sidebar-wrapper">
     <div class="sidebar-heading border-bottom bg-light">
         Start Bootstrap
     </div>

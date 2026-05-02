@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Departement;
 use Illuminate\Http\Request;
+use App\Exports\DepartementsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DepartementController extends Controller
 {
@@ -72,5 +74,23 @@ class DepartementController extends Controller
 
         return redirect()->route('departements.index')
             ->with('success', 'Département supprimé avec succès');
+    }
+
+    //Export Excel
+    public function exportExcel()
+    {
+        return Excel::download(
+            new DepartementsExport,
+            'departements.xlsx'
+        );
+    }
+
+    //Export CSV
+    public function exportCsv()
+    {
+        return Excel::download(
+            new DepartementsExport,
+            'departements.csv'
+        );
     }
 }

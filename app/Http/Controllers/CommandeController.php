@@ -6,6 +6,8 @@ use App\Models\Commande;
 use App\Models\Fournisseur;
 use Illuminate\Http\Request;
 use App\Models\Article;
+use App\Exports\CommandesExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CommandeController extends Controller
 {
@@ -145,5 +147,24 @@ class CommandeController extends Controller
         ]);
 
         return back()->with('success', 'Commande livrée');
+    }
+
+
+    //Export Excel
+    public function exportExcel()
+    {
+        return Excel::download(
+            new CommandesExport,
+            'commandes.xlsx'
+        );
+    }
+
+    //Export CSV
+    public function exportCsv()
+    {
+        return Excel::download(
+            new CommandesExport,
+            'commandes.csv'
+        );
     }
 }

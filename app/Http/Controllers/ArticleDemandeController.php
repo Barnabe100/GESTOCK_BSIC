@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ArticleDemande;
 use App\Models\Article;
+use App\Exports\ArticleDemandesExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 class ArticleDemandeController extends Controller
@@ -50,5 +52,24 @@ class ArticleDemandeController extends Controller
         $ligne->delete();
 
         return back()->with('success', 'Article supprimé et stock mis à jour');
+    }
+
+
+    //Export Excel
+    public function exportExcel()
+    {
+        return Excel::download(
+            new ArticleDemandesExport,
+            'articles-demandes.xlsx'
+        );
+    }
+
+    //Export CSV
+    public function exportCsv()
+    {
+        return Excel::download(
+            new ArticleDemandesExport,
+            'articles-demandes.csv'
+        );
     }
 }
