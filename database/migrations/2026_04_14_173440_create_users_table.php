@@ -22,6 +22,8 @@ return new class extends Migration
             $table->foreignId('agence_id')->nullable()->constrained('agences');
             $table->foreignId('departement_id')->nullable()->constrained('departements');
             $table->foreignId('service_id')->nullable()->constrained('services');
+            $table->boolean('superieur')->default(false);
+
             $table->timestamps();
         });
     }

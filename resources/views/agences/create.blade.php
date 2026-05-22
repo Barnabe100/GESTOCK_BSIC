@@ -32,7 +32,7 @@
 
                     <div class="row">
 
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label>Lieu</label>
                             <input type="text" name="lieu" class="form-control">
                         </div>
@@ -40,6 +40,7 @@
                     </div>
 
                     <button class="btn btn-success">Enregistrer</button>
+                    <a href="{{ route('agences.index') }}" class="btn btn-secondary">Retour</a>
 
                 </form>
 

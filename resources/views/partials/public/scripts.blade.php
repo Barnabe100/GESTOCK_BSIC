@@ -26,7 +26,8 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- selection sur un champs-->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
+<!-- graphiques-->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     function confirmDelete(form) {
         Swal.fire({
@@ -59,4 +60,20 @@
             }
         });
     }
+</script>
+
+
+
+<script>
+    document.querySelectorAll('.dropdown-submenu .dropdown-toggle')
+        .forEach(function(element) {
+
+            element.addEventListener('click', function(e) {
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                this.nextElementSibling.classList.toggle('show');
+            });
+        });
 </script>

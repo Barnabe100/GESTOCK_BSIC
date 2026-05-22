@@ -13,7 +13,7 @@
                 <h5 class="mb-0">Détail de la catégorie</h5>
 
                 <a href="{{ route('categories.index') }}" class="btn btn-light btn-sm">
-                    ← Retour
+                    Retour
                 </a>
             </div>
 
@@ -56,7 +56,7 @@
                 <div class="d-flex justify-content-between mt-3">
 
                     <a href="{{ route('categories.index') }}" class="btn btn-secondary">
-                        ← Retour
+                        Retour
                     </a>
 
                     @can('categorie-manage')

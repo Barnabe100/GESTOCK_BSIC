@@ -43,6 +43,8 @@ class Demande extends Model
         return $this->hasMany(ArticleDemande::class);
     }
 
+    
+
     public function scopeActif($query)
     {
         return $query->where('archiver', 0);

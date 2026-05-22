@@ -34,16 +34,14 @@
                             <input type="email" name="email" class="form-control" required>
                         </div>
 
-                    </div>
-
-                    <div class="row">
-
                         <div class="col-md-6 mb-3">
                             <label>Mot de passe</label>
                             <input type="password" name="password" class="form-control" required>
                         </div>
 
                     </div>
+
+
 
                     <div class="row">
 
@@ -79,7 +77,21 @@
 
                     </div>
 
+                    <div class="form-check mt-3">
+
+                        <input class="form-check-input" type="checkbox" name="superieur" value="1"
+                            {{ old('superieur', $user->superieur ?? false) ? 'checked' : '' }}>
+
+                        <label class="form-check-label">
+
+                            Directeur / Supérieur hiérarchique
+
+                        </label>
+
+                    </div>
+
                     <button class="btn btn-success">Enregistrer</button>
+                    <a href="{{ route('users.index') }}" class="btn btn-secondary">Retour</a>
 
                 </form>
 

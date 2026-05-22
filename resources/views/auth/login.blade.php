@@ -4,31 +4,60 @@
 
 @section('content')
 
-<h3 class="text-center mb-4">Connexion</h3>
+    <h3 class="text-center mb-4">
 
-<form method="POST" action="{{ route('login') }}">
-    @csrf
+        Connexion
 
-    <!-- Email -->
-    <div class="mb-3">
-        <label>Email</label>
-        <input type="email" name="email" class="form-control" required>
-    </div>
+    </h3>
 
-    <!-- Password -->
-    <div class="mb-3">
-        <label>Mot de passe</label>
-        <input type="password" name="password" class="form-control" required>
-    </div>
+    @if ($errors->any())
+        <div class="alert alert-danger">
 
-    <button class="btn btn-primary w-100">
-        Se connecter
-    </button>
+            {{ $errors->first() }}
 
-    <button href="{{ route('commandes.index') }}" class="btn btn-primary w-100">
-        S'inscrire
-    </button>
+        </div>
+    @endif
 
-</form>
+    <form method="POST" action="{{ route('login') }}">
+
+        @csrf
+
+        <!-- Email -->
+        <div class="mb-3">
+
+            <label>Email</label>
+
+            <input type="email" name="email" class="form-control" required>
+
+        </div>
+
+        <!-- Password -->
+        <div class="mb-3">
+
+            <label>Mot de passe</label>
+
+            <div class="input-group">
+
+                <input type="password" name="password" id="password" class="form-control" required>
+
+                <!-- BOUTON -->
+                <button type="button" class="btn btn-outline-secondary" onclick="togglePassword()">
+
+                    <i class="fas fa-eye" id="eyeIcon"></i>
+
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <button class="btn btn-primary w-100 mt-5">
+
+            Se connecter
+
+        </button>
+
+    </form>
 
 @endsection

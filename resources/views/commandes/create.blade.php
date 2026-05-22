@@ -51,12 +51,12 @@
 
                     <div class="row">
 
-                        <div class="col-md-6 mb-3">
+                        {{-- <div class="col-md-6 mb-3">
                             <label>Montant</label>
                             <input type="number" name="montant" class="form-control">
-                        </div>
+                        </div> --}}
 
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label>Libellé</label>
                             <input type="text" name="libelle" class="form-control">
                         </div>
@@ -64,6 +64,9 @@
                     </div>
 
                     <button class="btn btn-success">Enregistrer</button>
+                    <a href="{{ route('commandes.index') }}" class="btn btn-secondary">
+                        Retour
+                    </a>
 
                 </form>
 

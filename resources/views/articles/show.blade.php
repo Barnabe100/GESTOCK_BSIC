@@ -11,7 +11,7 @@
             <div class="card-header bg-primary text-white d-flex justify-content-between">
                 <h5>Détail article</h5>
 
-                <a href="{{ route('articles.index') }}" class="btn btn-light btn-sm">← Retour</a>
+                <a href="{{ route('articles.index') }}" class="btn btn-light btn-sm"> Retour</a>
             </div>
 
             <div class="card-body">

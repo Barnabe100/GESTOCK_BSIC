@@ -26,10 +26,11 @@
                         <i class="fas fa-file-csv"></i>
                         CSV
                     </a>
-
-                    <a href="{{ route('departements.create') }}" class="btn btn-light btn-sm">
-                        + Ajouter
-                    </a>
+                    @can('gerer-departement')
+                        <a href="{{ route('departements.create') }}" class="btn btn-light btn-sm">
+                            + Ajouter
+                        </a>
+                    @endcan
                 </div>
             </div>
 
@@ -39,7 +40,7 @@
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped datatable">
 
-                        <thead class="table-vert-brillant">
+                        <thead style="background-color: #c3c3ee;">
                             <tr>
                                 <th>#</th>
                                 <th>Code</th>

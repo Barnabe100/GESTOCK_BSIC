@@ -21,12 +21,14 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Code</label>
-                            <input type="text" name="code" class="form-control" value="{{ old('code', $agence->code) }}">
+                            <input type="text" name="code" class="form-control"
+                                value="{{ old('code', $agence->code) }}">
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label>Nom</label>
-                            <input type="text" name="nom" class="form-control" value="{{ old('nom', $agence->nom) }}">
+                            <input type="text" name="nom" class="form-control"
+                                value="{{ old('nom', $agence->nom) }}">
                         </div>
 
                     </div>
@@ -41,9 +43,9 @@
 
                     </div>
 
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ route('agences.index') }}" class="btn btn-secondary">← Retour</a>
+                    <div style="display: flex; gap: 10px;">
                         <button class="btn btn-success">Enregistrer</button>
+                        <a href="{{ route('agences.index') }}" class="btn btn-secondary">Retour</a>
                     </div>
 
                 </form>

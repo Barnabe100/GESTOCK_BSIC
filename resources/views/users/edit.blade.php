@@ -86,6 +86,19 @@
 
                     </div>
 
+                    <div class="form-check mt-3">
+
+                        <input class="form-check-input" type="checkbox" name="superieur" value="1"
+                            {{ old('superieur', $user->superieur ?? false) ? 'checked' : '' }}>
+
+                        <label class="form-check-label">
+
+                            Directeur / Supérieur hiérarchique
+
+                        </label>
+
+                    </div>
+
                     <!-- 🔥 MULTI ROLES -->
                     <div class="mb-3">
                         <label>Rôles</label>
@@ -103,7 +116,11 @@
 
                     </div>
 
+
+
                     <button class="btn btn-success">Enregistrer</button>
+                    <a href="{{ route('users.index') }}" class="btn btn-secondary">Retour</a>
+
 
                 </form>
 

@@ -79,15 +79,13 @@
                     </div>
 
                     <!-- BOUTONS -->
-                    <div class="d-flex justify-content-between">
+                    <div style="display: flex; gap: 10px;">
 
-                        <a href="{{ route('categories.index') }}" class="btn btn-secondary">
-                            ← Retour
-                        </a>
 
                         <button type="submit" class="btn btn-success">
                             Enregistrer
                         </button>
+                        <a href="{{ route('categories.index') }}" class="btn btn-secondary">Retour</a>
 
                     </div>
 

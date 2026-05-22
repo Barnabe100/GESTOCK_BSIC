@@ -11,10 +11,11 @@
 
             <div class="card-header bg-primary text-white d-flex justify-content-between">
                 <h5>Détail commande</h5>
-
-                <a href="{{ route('commandes.index') }}" class="btn btn-light btn-sm">
-                    ← Retour
-                </a>
+                @if ($commande->user_id == auth()->id())
+                    <a href="{{ route('commandes.index') }}" class="btn btn-light btn-sm">
+                        ← Retour
+                    </a>
+                @endif
             </div>
 
             <div class="card-body">
@@ -122,14 +123,19 @@
                             </div>
 
                             <div class="col-md-3 mb-3">
-                                <label>Prix</label>
-                                <input type="number" name="prix" class="form-control" required>
+                                <label>Prix unitaire</label>
+                                <input type="number" name="prix_unitaire" class="form-control" required>
                             </div>
 
                             <div class="col-md-2 mb-3 d-flex align-items-end">
-                                <button class="btn btn-success w-100">
-                                    Ajouter
-                                </button>
+                                @if (
+                                    $commande->user_id == auth()->id() ||
+                                        auth()->user()->hasAnyRole(['SuperAdmin', 'Gestionnaire']))
+                                    <button class="btn btn-success w-100">
+                                        Ajouter
+                                    </button>
+                                @endif
+
                             </div>
 
                         </div>
@@ -152,7 +158,7 @@
             <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
                 Articles de la commande
 
-                <div class="d-flex gap-2">
+                {{-- <div class="d-flex gap-2">
                     <!-- EXCEL -->
                     <a href="{{ route('articles-commandes.export.excel') }}" class="btn btn-success btn-sm">
 
@@ -166,14 +172,14 @@
                         <i class="fas fa-file-csv"></i>
                         CSV
                     </a>
-                </div>
+                </div> --}}
             </div>
 
             <div class="card-body">
 
                 <table class="table table-bordered table-striped">
 
-                    <thead class="table-dark">
+                    <thead style="background-color: #c3c3ee;">
                         <tr>
                             <th>#</th>
                             <th>Article</th>
@@ -195,10 +201,10 @@
 
                                 <td>{{ $ligne->quantite }}</td>
 
-                                <td>{{ $ligne->prix }}</td>
+                                <td>{{ $ligne->prix_unitaire }}</td>
 
                                 <td>
-                                    {{ $ligne->quantite * $ligne->prix }}
+                                    {{ $ligne->quantite * $ligne->prix_unitaire }}
                                 </td>
 
                                 <td>
@@ -210,8 +216,13 @@
                                             @csrf
                                             @method('DELETE')
 
-                                            <button class="btn btn-danger btn-sm"
+                                            {{-- <button class="btn btn-danger btn-sm"
                                                 onclick="return confirm('Supprimer cet article ?')">
+                                                <i class="fas fa-trash"></i>
+                                            </button> --}}
+
+                                            <button type="button" title="Supprimer" class="btn btn-danger btn-sm"
+                                                onclick="confirmDelete(this.form)">
                                                 <i class="fas fa-trash"></i>
                                             </button>
 

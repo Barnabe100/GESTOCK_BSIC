@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+<nav class="navbar navbar-expand-lg navbar-light border-bottom" style="background-color: #6993e0;">
     <div class="container-fluid">
 
         <button class="btn btn-primary" id="sidebarToggle">
@@ -11,7 +11,7 @@
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
-                <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
+                {{-- <li class="nav-item"><a class="nav-link" href="#">Home</a></li> --}}
                 @guest
                     <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">Se connecter</a></li>
                 @endguest
@@ -24,8 +24,8 @@
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                             aria-expanded="false">
 
-                            {{ Auth::user()->prenom }}
-                            {{ Auth::user()->name }}
+                            {{ Auth::user()->prenom }} {{ Auth::user()->name }}
+
 
                         </a>
 

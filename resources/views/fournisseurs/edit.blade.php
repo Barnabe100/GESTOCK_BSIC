@@ -60,15 +60,17 @@
 
                     </div>
 
-                    <div class="d-flex justify-content-between">
+                    <div style="display: flex; gap: 10px;">
 
-                        <a href="{{ route('fournisseurs.index') }}" class="btn btn-secondary">
-                            ← Retour
-                        </a>
+
 
                         <button class="btn btn-success">
                             Enregistrer
                         </button>
+
+                        <a href="{{ route('fournisseurs.index') }}" class="btn btn-secondary">
+                            ← Retour
+                        </a>
 
                     </div>
 

@@ -27,6 +27,4 @@ class ArticleDemande extends Model
     {
         return $this->belongsTo(Article::class);
     }
-
-   
 }

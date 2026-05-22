@@ -32,7 +32,7 @@ class ArticleDemandeController extends Controller
         ]);
 
         // 🔥 DÉCRÉMENTER STOCK
-        $article->decrement('stock_disponible', $request->quantite);
+        // $article->decrement('stock_disponible', $request->quantite);
 
         return back()->with('success', 'Article ajouté et stock mis à jour');
     }

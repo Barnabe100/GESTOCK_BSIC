@@ -32,6 +32,58 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+
+        if ($request->has('superieur')) {
+            // Directeur agence
+            if ($request->agence_id) {
+                $agenceExiste = User::where(
+                    'agence_id',
+                    $request->agence_id
+                )
+                    ->where(
+                        'superieur',
+                        1
+                    )
+                    ->exists();
+
+                if ($agenceExiste) {
+                    return back()
+                        ->withErrors([
+
+                            'superieur' =>
+
+                            'Cette agence possède déjà un directeur.'
+
+                        ])
+                        ->withInput();
+                }
+            }
+
+            // Directeur département
+            if ($request->departement_id) {
+                $departementExiste = User::where(
+                    'departement_id',
+                    $request->departement_id
+                )
+                    ->where(
+                        'superieur',
+                        1
+                    )
+                    ->exists();
+
+                if ($departementExiste) {
+                    return back()
+                        ->withErrors([
+
+                            'superieur' =>
+
+                            'Ce département possède déjà un directeur.'
+
+                        ])
+                        ->withInput();
+                }
+            }
+        }
         $user = User::create([
             'name' => $request->name,
             'prenom' => $request->prenom,
@@ -40,8 +92,16 @@ class UserController extends Controller
             'agence_id' => $request->agence_id,
             'departement_id' => $request->departement_id,
             'service_id' => $request->service_id,
+            'superieur' => $request->has('superieur'),
         ]);
 
+        if (
+            $user->superieur
+        ) {
+            $user->assignRole(
+                'Superieur'
+            );
+        }
         // 🔥 rôle par défaut
         $user->assignRole('Demandeur');
 
@@ -72,6 +132,58 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
+        if ($request->has('superieur')) {
+            $agenceExiste = User::where(
+                'agence_id',
+                $request->agence_id
+            )
+                ->where(
+                    'superieur',
+                    1
+                )
+                ->where(
+                    'id',
+                    '!=',
+                    $user->id
+                )
+                ->exists();
+
+            $departementExiste = User::where(
+                'departement_id',
+                $request->departement_id
+            )
+                ->where(
+                    'superieur',
+                    1
+                )
+                ->where(
+                    'id',
+                    '!=',
+                    $user->id
+                )
+                ->exists();
+
+            if ($agenceExiste) {
+                return back()->withErrors([
+
+                    'superieur' =>
+
+                    'Cette agence possède déjà un directeur.'
+
+                ]);
+            }
+
+            if ($departementExiste) {
+                return back()->withErrors([
+
+                    'superieur' =>
+
+                    'Ce département possède déjà un directeur.'
+
+                ]);
+            }
+        }
+
         $user->update([
             'name' => $request->name,
             'prenom' => $request->prenom,
@@ -79,11 +191,33 @@ class UserController extends Controller
             'agence_id' => $request->agence_id,
             'departement_id' => $request->departement_id,
             'service_id' => $request->service_id,
+            'superieur' => $request->has('superieur')
         ]);
 
-        if ($request->password) {
+        if (
+            $user->superieur
+        ) {
+            if (
+                !$user->hasRole(
+                    'Superieur'
+                )
+            ) {
+                $user->assignRole(
+                    'Superieur'
+                );
+            }
+        } else {
+            $user->removeRole(
+                'Superieur'
+            );
+        }
+
+        // 🔥 PASSWORD
+        if ($request->filled('password')) {
             $user->update([
-                'password' => Hash::make($request->password)
+
+                'password' => $request->password
+
             ]);
         }
 
@@ -116,6 +250,45 @@ class UserController extends Controller
         return Excel::download(
             new UsersExport,
             'users.csv'
+        );
+    }
+
+    //Blocage et deblocage d'un utilisateur
+    public function bloquer($id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->update([
+
+            'bloque' => true
+
+        ]);
+
+        return back()->with(
+
+            'success',
+
+            'Utilisateur bloqué'
+
+        );
+    }
+
+    public function debloquer($id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->update([
+
+            'bloque' => false
+
+        ]);
+
+        return back()->with(
+
+            'success',
+
+            'Utilisateur débloqué'
+
         );
     }
 }

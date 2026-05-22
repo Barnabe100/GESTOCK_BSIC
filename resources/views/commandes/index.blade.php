@@ -40,12 +40,12 @@
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped datatable">
 
-                        <thead class="table-vert-brillant">
+                        <thead style="background-color: #c3c3ee;">
                             <tr>
                                 <th>#</th>
                                 <th>Numéro BC</th>
                                 <th>Fournisseur</th>
-                                <th>Montant</th>
+                                {{-- <th>Montant</th> --}}
                                 <th>Date</th>
                                 <th>Validation</th>
                                 <th>Reception</th>
@@ -63,7 +63,7 @@
 
                                     <td>{{ $commande->fournisseur->nom ?? '' }}</td>
 
-                                    <td>{{ $commande->montant }}</td>
+                                    {{-- <td>{{ $commande->montant }}</td> --}}
 
                                     <td>{{ $commande->date }}</td>
 
@@ -86,65 +86,74 @@
                                     </td>
 
                                     <td>
-
-                                        <!-- VOIR -->
-                                        <a href="{{ route('commandes.show', $commande->id) }}" title="Détail"
-                                            class="btn btn-info btn-sm">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-
-                                        <!-- EDIT -->
-                                        @if (!$commande->validation)
-                                            <a href="{{ route('commandes.edit', $commande->id) }}" title="Editer"
-                                                class="btn btn-warning btn-sm">
-                                                <i class="fas fa-edit"></i>
+                                        @if (
+                                            $commande->user_id == auth()->id() ||
+                                                auth()->user()->hasAnyRole(['SuperAdmin', 'Gestionnaire', 'ValidateurCommande']))
+                                            <!-- VOIR -->
+                                            <a href="{{ route('commandes.show', $commande->id) }}" title="Détail"
+                                                class="btn btn-info btn-sm">
+                                                <i class="fas fa-eye"></i>
                                             </a>
-                                        @else
-                                            <button class="btn btn-secondary btn-sm" disabled>
-                                                <i class="fas fa-lock"></i>
-                                            </button>
                                         @endif
-
-                                        <!-- SUPPRIMER -->
-                                        @if (!$commande->validation)
-                                            <form action="{{ route('commandes.destroy', $commande->id) }}" method="POST"
-                                                style="display:inline-block">
-
-                                                @csrf
-                                                @method('DELETE')
-
-                                                <button type="button" title="Supprimer" class="btn btn-danger btn-sm"
-                                                    onclick="confirmDelete(this.form)">
-                                                    <i class="fas fa-trash"></i>
+                                        @if (
+                                            $commande->user_id == auth()->id() ||
+                                                auth()->user()->hasAnyRole(['SuperAdmin', 'Gestionnaire']))
+                                            <!-- EDIT -->
+                                            @if (!$commande->validation)
+                                                <a href="{{ route('commandes.edit', $commande->id) }}" title="Editer"
+                                                    class="btn btn-warning btn-sm">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            @else
+                                                <button class="btn btn-secondary btn-sm" disabled>
+                                                    <i class="fas fa-lock"></i>
                                                 </button>
-
-                                            </form>
+                                            @endif
                                         @endif
+                                        @role('SuperAdmin')
+                                            <!-- SUPPRIMER -->
+                                            @if (!$commande->validation)
+                                                <form action="{{ route('commandes.destroy', $commande->id) }}" method="POST"
+                                                    style="display:inline-block">
+
+                                                    @csrf
+                                                    @method('DELETE')
+
+                                                    <button type="button" title="Supprimer" class="btn btn-danger btn-sm"
+                                                        onclick="confirmDelete(this.form)">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+
+                                                </form>
+                                            @endif
+                                        @endrole
 
                                         <!-- VALIDER -->
-                                        @if (!$commande->validation)
-                                            <form action="{{ route('commandes.valider', $commande->id) }}" method="POST"
-                                                style="display:inline-block">
-                                                @csrf
-                                                <button type="button" title="Valider" class="btn btn-success btn-sm"
-                                                    onclick="confirmAction(this.form, 'Confirmer la validation de cette commande ?')">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                            </form>
-                                        @endif
+                                        @if (auth()->user()->hasAnyRole(['ValidateurCommande', 'SuperAdmin']))
+                                            @if (!$commande->validation)
+                                                <form action="{{ route('commandes.valider', $commande->id) }}"
+                                                    method="POST" style="display:inline-block">
+                                                    @csrf
+                                                    <button type="button" title="Valider" class="btn btn-success btn-sm"
+                                                        onclick="confirmAction(this.form, 'Confirmer la validation de cette commande ?')">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
 
-                                        <!-- LIVRER -->
-                                        @if ($commande->validation && !$commande->livraison)
-                                            <form action="{{ route('commandes.livrer', $commande->id) }}" method="POST"
-                                                style="display:inline-block">
-                                                @csrf
-                                                <button type="button" title="Recevoir" class="btn btn-success btn-sm"
-                                                    onclick="confirmAction(this.form, 'Confirmer la reception de cette commande ?')">
-                                                    <i class="fas fa-box-open"></i>
-                                                </button>
-                                            </form>
-                                        @endif
 
+                                            <!-- LIVRER -->
+                                            @if ($commande->validation && !$commande->livraison)
+                                                <form action="{{ route('commandes.livrer', $commande->id) }}"
+                                                    method="POST" style="display:inline-block">
+                                                    @csrf
+                                                    <button type="button" title="Recevoir" class="btn btn-success btn-sm"
+                                                        onclick="confirmAction(this.form, 'Confirmer la reception de cette commande ?')">
+                                                        <i class="fas fa-box-open"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        @endif
                                     </td>
 
                                 </tr>

@@ -8,13 +8,38 @@ use Illuminate\Http\Request;
 use App\Exports\DemandesExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\ArticleDemande;
+use Illuminate\Support\Facades\Auth;
+use HasRoles;
 
 class DemandeController extends Controller
 {
+
     public function index()
     {
-        $demandes = Demande::where('archiver', 0)->get();
-        return view('demandes.index', compact('demandes'));
+        $estMesDemandes = false;
+        $user_id = Auth::user()->id;
+        $user = Auth::user();
+        if ($user->hasRole(['Gestionnaire', 'SuperAdmin'])) {
+            $demandes = Demande::where('archiver', 0)->get();
+            return view('demandes.index', compact('demandes'));
+        } else {
+            $demandes = Demande::where('archiver', 0)->where('id', $user_id)->get();
+            return view('demandes.index', compact('demandes', 'estMesDemandes'));
+        }
+    }
+
+    public function mesDemandes()
+    {
+        $estMesDemandes = true;
+        $user_id = auth()->id();
+        $user = Auth::user();
+        if ($user->hasRole(['Demandeur'])) {
+            $demandes = Demande::where('archiver', 0)
+                ->where('user_id', $user_id)
+                ->get();
+
+            return view('demandes.index', compact('demandes', 'estMesDemandes'));
+        }
     }
 
     public function create()
@@ -34,15 +59,30 @@ class DemandeController extends Controller
 
         // pivot article_demande à gérer après
 
-        return redirect()->route('demandes.index')
+        return redirect()->route('mes.demandes')
             ->with('success', 'Demande créée');
     }
 
     public function edit($id)
     {
-        $demande = Demande::findOrFail($id);
+        if (auth()->user()->hasRole('SuperAdmin')) {
+            $demande = Demande::findOrFail($id);
+        } else {
+            $demande = Demande::where(
+                'id',
+                $id
+            )
+                ->where(
+                    'user_id',
+                    auth()->id()
+                )
+                ->firstOrFail();
+        }
 
-        return view('demandes.edit', compact('demande'));
+        return view(
+            'demandes.edit',
+            compact('demande')
+        );
     }
 
     public function update(Request $request, $id)
@@ -55,7 +95,7 @@ class DemandeController extends Controller
             'description' => $request->description,
         ]);
 
-        return redirect()->route('demandes.index')
+        return redirect()->route('mes.demandes')
             ->with('success', 'Demande mise à jour');
     }
 
@@ -65,12 +105,34 @@ class DemandeController extends Controller
     //     return view('demandes.show', compact('demande'));
     // }
 
+    // public function show($id)
+    // {
+
+    //     $demande = Demande::with('articles.article')->findOrFail($id);
+    //     $articles = Article::all();
+
+    //     return view('demandes.show', compact('demande', 'articles'));
+    // }
+
     public function show($id)
     {
+        $articles = Article::where(
+            'archiver',
+            0
+        )->get();
 
-        $demande = Demande::with('articles.article')->findOrFail($id);
-        $articles = Article::all();
-
+        // ADMIN : accès à toutes les demandes
+        if (auth()->user()->hasRole(['SuperAdmin', 'Gestionnaire'])) {
+            $demande = Demande::with([
+                'articles.article'
+            ])->findOrFail($id);
+        } else {
+            $demande = Demande::with([
+                'articles.article'
+            ])
+                ->where('id', $id)
+                ->where('user_id', auth()->id())->firstOrFail();
+        }
         return view('demandes.show', compact('demande', 'articles'));
     }
 
@@ -109,7 +171,10 @@ class DemandeController extends Controller
     //Livraison
     public function livrer($id)
     {
-        $demande = Demande::findOrFail($id);
+        //$demande = Demande::findOrFail($id);
+        $demande = Demande::with(
+            'articles.article'
+        )->findOrFail($id);
 
         // pas encore validée
         if (!$demande->validation) {
@@ -119,6 +184,19 @@ class DemandeController extends Controller
         // déjà livrée
         if ($demande->livraison) {
             return back()->with('error', 'Demande déjà livrée');
+        }
+
+
+
+        //Decrementation
+        foreach ($demande->articles as $ligne) {
+            if (!$ligne->article)
+                continue;
+
+            $ligne->article->decrement(
+                'stock_disponible',
+                $ligne->quantite
+            );
         }
 
         $demande->update([

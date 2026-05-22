@@ -64,6 +64,9 @@
                     </div>
 
                     <button class="btn btn-success">Enregistrer</button>
+                    <a href="{{ route('articles.index') }}" class="btn btn-secondary">
+                        Retour
+                    </a>
 
                 </form>
 

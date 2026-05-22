@@ -56,6 +56,8 @@
 
                     <button class="btn btn-success">Enregistrer</button>
 
+                    <a href="{{ route('fournisseurs.index') }}" class="btn btn-secondary">Retour</a>
+
                 </form>
 
             </div>

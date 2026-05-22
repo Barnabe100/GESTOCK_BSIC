@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use App\Models\Commande;
+use App\Models\Demande;
 use App\Models\Fournisseur;
 use Illuminate\Http\Request;
 use App\Models\Article;
@@ -11,8 +13,11 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class CommandeController extends Controller
 {
+
+
     public function index()
     {
+
         $commandes = Commande::with('fournisseur')
             ->where('archiver', 0)
             ->get();
@@ -40,7 +45,7 @@ class CommandeController extends Controller
             'num_facture_proforma' => $request->num_facture_proforma,
             'date' => $request->date,
             'libelle' => $request->libelle,
-            'montant' => $request->montant ?? 0,
+            //'montant' => $request->montant ?? 0,
             'fournisseur_id' => $request->fournisseur_id,
             'validation' => 0,
             'livraison' => 0,
@@ -54,8 +59,9 @@ class CommandeController extends Controller
     public function show($id)
     {
         $commande = Commande::with('fournisseur')->findOrFail($id);
+
         $articles = Article::where('archiver', 0)->get();
-        return view('commandes.show', compact('commande','articles'));
+        return view('commandes.show', compact('commande', 'articles'));
     }
 
     // 🔥 EDIT
@@ -82,7 +88,7 @@ class CommandeController extends Controller
             'num_facture_proforma' => $request->num_facture_proforma,
             'date' => $request->date,
             'libelle' => $request->libelle,
-            'montant' => $request->montant,
+            //'montant' => $request->montant,
             'fournisseur_id' => $request->fournisseur_id,
         ]);
 
@@ -136,11 +142,10 @@ class CommandeController extends Controller
             return back()->with('error', 'Déjà livrée');
         }
 
-        foreach ($commande->articles as $ligne) 
-        {
+        foreach ($commande->articles as $ligne) {
             if (!$ligne->article) continue;
             $ligne->article->increment('stock_disponible', $ligne->quantite);
-        }  
+        }
         $commande->update([
             'livraison' => 1,
             'date_livraison' => now()

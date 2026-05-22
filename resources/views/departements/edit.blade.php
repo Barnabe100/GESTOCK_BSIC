@@ -61,9 +61,10 @@
 
                     </div>
 
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ route('departements.index') }}" class="btn btn-secondary">← Retour</a>
+                    <div style="display: flex; gap: 10px;">
                         <button class="btn btn-success">Enregistrer</button>
+                        <a href="{{ route('departements.index') }}" class="btn btn-secondary">Retour</a>
+
                     </div>
 
                 </form>

@@ -6,14 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="description" content="" />
     <meta name="author" content="" />
-    <title>Simple Sidebar - Start Bootstrap Template</title>
+    <title>GESTOK-BSIC</title>
     <!-- Favicon-->
     @include('partials.public.styles')
     @stack('styles')
     @stack('scripts')
 </head>
 
-<body>
+<body style="background-color: #edf4f4;">
     <div class="d-flex" id="wrapper">
         <!-- Sidebar-->
         @include('partials.public.sidebar')
@@ -45,6 +45,32 @@
 
     @stack('scripts')
 
+    <footer class="text-white text-center py-3 mt-4" style="background-color: #5060f1;">
+
+        <small>
+
+            © {{ date('Y') }}
+
+            GESTION DE STOCKS - BSIC BURKINA-SA
+
+            | Tous droits réservés
+
+        </small>
+
+    </footer>
+
 </body>
+
+{{-- <footer class="row-footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                <p style="padding:10px;"></p>
+                <p align="center"><b>© Copyright 2026 BSIC BURKINA</b></p>
+            </div>
+        </div>
+    </div>
+</footer> --}}
+
 
 </html>

@@ -13,7 +13,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ArticleCommandeController extends Controller
 {
-    
+
 
     public function store(Request $request)
     {
@@ -21,7 +21,7 @@ class ArticleCommandeController extends Controller
             'commande_id' => $request->commande_id,
             'article_id' => $request->article_id,
             'quantite' => $request->quantite,
-            //'prix' => $request->prix,
+            'prix_unitaire' => $request->prix_unitaire,
         ]);
 
         // 🔥 recalcul montant
@@ -45,7 +45,7 @@ class ArticleCommandeController extends Controller
 
         // 🔥 recalcul montant
         $total = $commande->articles->sum(function ($item) {
-            return $item->quantite * $item->prix;
+            return $item->quantite * $item->prix_unitaire;
         });
 
         $commande->update(['montant' => $total]);
@@ -71,6 +71,4 @@ class ArticleCommandeController extends Controller
             'articles-commandes.csv'
         );
     }
-
-    
 }

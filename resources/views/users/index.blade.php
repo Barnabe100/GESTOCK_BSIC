@@ -12,6 +12,7 @@
             <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
                 <h5 class="mb-0">Liste des utilisateurs</h5>
 
+
                 <div class="d-flex gap-2">
                     <!-- EXCEL -->
                     <a href="{{ route('users.export.excel') }}" class="btn btn-success btn-sm">
@@ -26,11 +27,12 @@
                         <i class="fas fa-file-csv"></i>
                         CSV
                     </a>
-
-                    <a href="{{ route('users.create') }}" class="btn btn-light btn-sm">
-                        + Ajouter
-                    </a>
-                </div>
+                    @can('gerer-utilisateurs')
+                        <a href="{{ route('users.create') }}" class="btn btn-light btn-sm">
+                            + Ajouter
+                        </a>
+                    </div>
+                @endcan
             </div>
 
             <!-- BODY -->
@@ -39,17 +41,17 @@
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped datatable">
 
-                        <thead class="table-vert-brillant">
+                        <thead style="background-color: #c3c3ee;">
                             <tr>
                                 <th>#</th>
                                 <th>Nom</th>
                                 <th>Prenom</th>
-                                <th width="50px">Email</th>
+                                <th>Email</th>
                                 <th>Agence</th>
-                                <th width="50px">Département</th>
+                                <th>Département</th>
                                 <th>Service</th>
                                 <th>Rôles</th>
-                                <th width="280px">Actions</th>
+                                <th width="280px" class="text-nowrap">Actions </th>
                             </tr>
                         </thead>
 
@@ -78,7 +80,7 @@
                                         @endforeach
                                     </td>
 
-                                    <td>
+                                    <td class="text-nowrap">
 
                                         <a href="{{ route('users.show', $user->id) }}" title="Détail"
                                             class="btn btn-info btn-sm">
@@ -102,6 +104,18 @@
                                             </button>
 
                                         </form>
+
+                                        @if (!$user->bloque)
+                                            <a href="{{ route('users.bloquer', $user->id) }}" title="Bloquer"
+                                                class="btn btn-success btn-sm">
+                                                <i class="fas fa-lock-open"></i>
+                                            </a>
+                                        @else
+                                            <a href="{{ route('users.debloquer', $user->id) }}" title="Débloquer"
+                                                class="btn btn-danger btn-sm">
+                                                <i class="fas fa-lock"></i>
+                                            </a>
+                                        @endif
 
                                     </td>
 

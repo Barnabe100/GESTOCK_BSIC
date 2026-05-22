@@ -37,15 +37,53 @@ class LoginRequest extends FormRequest
      *
      * @throws \Illuminate\Validation\ValidationException
      */
+    // public function authenticate(): void
+    // {
+    //     $this->ensureIsNotRateLimited();
+
+    //     if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+    //         RateLimiter::hit($this->throttleKey());
+
+    //         throw ValidationException::withMessages([
+    //             //'email' => trans('auth.failed'),
+    //             'email' => 'Email ou mot de passe incorrect.',
+    //         ]);
+    //     }
+
+    //     RateLimiter::clear($this->throttleKey());
+    // }
+
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $user = \App\Models\User::where(
+            'email',
+            $this->email
+        )->first();
+
+        // 🔥 UTILISATEUR BLOQUÉ
+        //dd($user);
+        if ($user && $user->bloque) {
+            throw ValidationException::withMessages([
+
+                'email' => 'Votre compte est bloqué, veuillez contacter votre administrateur.'
+
+            ]);
+        }
+
+        // 🔥 LOGIN
+        if (! Auth::attempt(
+            $this->only('email', 'password'),
+            $this->boolean('remember')
+        )) {
+
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+
+                'email' => 'Email ou mot de passe incorrect.'
+
             ]);
         }
 
@@ -80,6 +118,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }

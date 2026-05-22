@@ -9,10 +9,17 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
+
+/**
+ * @method bool hasRole(string|array $roles)
+ * @method bool hasAnyRole(...$roles)
+ * @method bool hasPermissionTo(string $permission)
+ */
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
     use HasRoles;
+
 
     /**
      * The attributes that are mass assignable.
@@ -21,11 +28,14 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'prenom',
         'email',
         'password',
         'departement_id',
         'agence_id',
         'service_id',
+        'bloque',
+        'superieur',
 
     ];
 

@@ -1,18 +1,101 @@
-<div class="border-end bg-white table-dark table-skyblue" id="sidebar-wrapper">
-    <div class="sidebar-heading border-bottom bg-light">
-        Start Bootstrap
+<div class="border-end bg-info-subtle" id="sidebar-wrapper" style="background-color: #d1dce6;">
+
+    <div class="sidebar-heading border-bottom bg-info-subtle">
+
+        <img src="{{ asset('assets/BSICBF-1.png') }}" alt="BSIC-BF" width="180" height="80">
+
     </div>
 
-    <div class="list-group list-group-flush">
-        <a class="list-group-item list-group-item-action p-3" href="#">Dashboard</a>
-        <a class="list-group-item list-group-item-action p-3" href="{{ route('categories.index') }}">categories</a>
-        <a class="list-group-item list-group-item-action p-3" href="{{ route('departements.index') }}">Departements</a>
-        <a class="list-group-item list-group-item-action p-3" href="{{ route('services.index') }}">Services</a>
-        <a class="list-group-item list-group-item-action p-3" href="{{ route('agences.index') }}">Agences</a>
-        <a class="list-group-item list-group-item-action p-3" href="{{ route('articles.index') }}">Articles</a>
-        <a class="list-group-item list-group-item-action p-3" href="{{ route('commandes.index') }}">Commandes</a>
-        <a class="list-group-item list-group-item-action p-3" href="{{ route('fournisseurs.index') }}">Fournisseurs</a>
-        <a class="list-group-item list-group-item-action p-3" href="{{ route('demandes.index') }}">Demandes</a>
-        <a class="list-group-item list-group-item-action p-3" href="{{ route('users.index') }}">Users</a>
+    {{-- <div class="list-group list-group-flush"> --}}
+    <div class=" list-group-flush">
+
+        <a class="list-group-item list-group-item-action p-3 bg-info-subtle " href="{{ route('dashboard') }}">
+
+            Dashboard
+
+        </a>
+
+
+        @can('gerer-departement')
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('departements.index') }}">
+
+                Departements
+
+            </a>
+        @endcan
+        @can('gerer-service')
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('services.index') }}">
+
+                Services
+
+            </a>
+        @endcan
+        @can('gerer-agence')
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('agences.index') }}">
+
+                Agences
+
+            </a>
+        @endcan
+        @can('gerer-utilisateurs')
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('users.index') }}">
+
+                Users
+
+            </a>
+        @endcan
+
+
+        <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('mes.demandes') }}">
+
+            Mes demandes
+
+        </a>
+
+        @can('gerer-stock')
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('categories.index') }}">
+
+                Categories
+
+            </a>
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('articles.index') }}">
+
+                Articles
+
+            </a>
+        @endcan
+        @if (auth()->user()->hasAnyRole(['ValidateurCommande', 'Gestionnaire', 'SuperAdmin']))
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('commandes.index') }}">
+
+                Commandes
+
+            </a>
+        @endif
+        @if (auth()->user()->hasAnyRole(['ValidateurDemande', 'Gestionnaire', 'SuperAdmin']))
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle"
+                href="{{ route('fournisseurs.index') }}">
+
+                Fournisseurs
+
+            </a>
+
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('demandes.index') }}">
+
+                Demandes
+
+            </a>
+        @endif
+
+
+
+        @can('gerer-stock')
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('etats.index') }}">
+
+                États
+
+            </a>
+        @endcan
+
     </div>
+
 </div>

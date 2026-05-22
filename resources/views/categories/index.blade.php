@@ -43,7 +43,7 @@
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped datatable">
 
-                        <thead class="table-vert-brillant">
+                        <thead style="background-color: #c3c3ee;">
                             <tr>
                                 <th>#</th>
                                 <th>Code</th>
