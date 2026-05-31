@@ -12,6 +12,7 @@ class Article extends Model
         'code',
         'libelle',
         'prix_unitaire',
+        'stock_initial',
         'stock_disponible',
         'stock_securite',
         'archiver',
@@ -40,5 +41,10 @@ class Article extends Model
     public function commandes()
     {
         return $this->hasMany(ArticleCommande::class);
+    }
+
+    public function mouvements()
+    {
+        return $this->hasMany(MouvementStock::class);
     }
 }

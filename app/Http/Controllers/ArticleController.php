@@ -7,6 +7,7 @@ use App\Models\Categorie;
 use Illuminate\Http\Request;
 use App\Exports\ArticlesExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\MouvementStock;
 
 class ArticleController extends Controller
 {
@@ -40,6 +41,7 @@ class ArticleController extends Controller
             'code' => $request->code,
             'libelle' => $request->libelle,
             'prix_unitaire' => $request->prix_unitaire,
+            'stock_initial' => 0,
             'stock_disponible' => $request->stock_disponible,
             'stock_securite' => $request->stock_securite,
             'categorie_id' => $request->categorie_id,
@@ -99,6 +101,97 @@ class ArticleController extends Controller
 
         return redirect()->route('articles.index')
             ->with('success', 'Article archivé avec succès');
+    }
+
+    public function miseRebut(
+        Request $request,
+        $id
+    ) {
+        $request->validate([
+
+            'quantite' =>
+
+            'required|integer|min:1',
+
+            'motif' =>
+
+            'required',
+
+            'date_rebut' =>
+
+            'required|date'
+
+        ]);
+
+
+        $article =
+
+            Article::findOrFail(
+                $id
+            );
+
+
+        if (
+            $article
+            ->stock_disponible
+            <
+            $request->quantite
+        ) {
+            return back()->with(
+
+                'error',
+
+                'Stock insuffisant'
+
+            );
+        }
+
+
+        $article->decrement(
+
+            'stock_disponible',
+
+            $request->quantite
+
+        );
+
+
+        MouvementStock::create([
+
+            'article_id' =>
+
+            $article->id,
+
+            'user_id' =>
+
+            auth()->id(),
+
+            'type' =>
+
+            'REBUT',
+
+            'quantite' =>
+
+            $request->quantite,
+
+            'motif' =>
+
+            $request->motif,
+
+            'date_mouvement' =>
+
+            $request->date_rebut
+
+        ]);
+
+
+        return back()->with(
+
+            'success',
+
+            'Article mis au rebut'
+
+        );
     }
 
     //Export Excel

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Models\Article;
 use App\Exports\CommandesExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\MouvementStock;
 
 class CommandeController extends Controller
 {
@@ -45,7 +46,7 @@ class CommandeController extends Controller
             'num_facture_proforma' => $request->num_facture_proforma,
             'date' => $request->date,
             'libelle' => $request->libelle,
-            //'montant' => $request->montant ?? 0,
+            'montant' => $request->montant ?? 0,
             'fournisseur_id' => $request->fournisseur_id,
             'validation' => 0,
             'livraison' => 0,
@@ -88,7 +89,7 @@ class CommandeController extends Controller
             'num_facture_proforma' => $request->num_facture_proforma,
             'date' => $request->date,
             'libelle' => $request->libelle,
-            //'montant' => $request->montant,
+            'montant' => $request->montant,
             'fournisseur_id' => $request->fournisseur_id,
         ]);
 
@@ -130,28 +131,139 @@ class CommandeController extends Controller
     }
 
     // 🔥 LIVRAISON
-    public function livrer($id)
+    public function livrer(Request $request, $id)
     {
-        $commande = Commande::findOrFail($id);
+        $commande = Commande::with(
+            'articles.article'
+        )->findOrFail($id);
 
-        if (!$commande->validation) {
-            return back()->with('error', 'Validez d’abord la commande');
+        // commande non validée
+
+        if (
+            !$commande->validation
+        ) {
+            return back()->with(
+                'error',
+                'Validez d’abord la commande'
+            );
         }
 
-        if ($commande->livraison) {
-            return back()->with('error', 'Déjà livrée');
+
+        // déjà réceptionnée
+
+        if (
+            $commande->livraison
+        ) {
+            return back()->with(
+                'error',
+                'Déjà livrée'
+            );
         }
 
-        foreach ($commande->articles as $ligne) {
-            if (!$ligne->article) continue;
-            $ligne->article->increment('stock_disponible', $ligne->quantite);
+
+        foreach (
+            $commande->articles as $ligne
+        ) {
+
+            if (
+                !$ligne->article
+            ) {
+                continue;
+            }
+
+
+            /*
+        Première réception
+        */
+
+            if (
+                $ligne
+                ->article
+                ->stock_initial
+                == 0
+            ) {
+
+                $ligne
+                    ->article
+                    ->increment(
+
+                        'stock_initial',
+
+                        $ligne->quantite
+
+                    );
+            }
+
+
+            /*
+        Stock disponible
+        */
+
+            $ligne
+                ->article
+                ->increment(
+
+                    'stock_disponible',
+
+                    $ligne->quantite
+
+                );
+
+
+            /*
+        Historique
+        */
+
+            MouvementStock::create([
+
+                'article_id' =>
+
+                $ligne
+                    ->article
+                    ->id,
+
+                'user_id' =>
+
+                auth()->id(),
+
+                'type' =>
+
+                'ENTREE',
+
+                'quantite' =>
+
+                $ligne
+                    ->quantite,
+
+                'motif' =>
+
+                'Réception commande N° ' . $commande->id,
+                'date_mouvement' => $request->date_livraison
+
+
+
+            ]);
         }
+
+
         $commande->update([
+
             'livraison' => 1,
-            'date_livraison' => now()
+
+            'date_livraison' =>
+
+            now()
+
         ]);
 
-        return back()->with('success', 'Commande livrée');
+
+        return back()->with(
+
+            'success',
+
+            'Commande réceptionnée'
+
+        );
     }
 
 

@@ -23,6 +23,10 @@ return new class extends Migration
 
             $table->integer('quantite');
             $table->boolean('archiver')->default(0);
+
+            $table->integer(
+                'quantite_accordee'
+            )->nullable();
             $table->timestamps();
         });
     }

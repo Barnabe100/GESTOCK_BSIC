@@ -46,7 +46,7 @@
                                 <th>Code</th>
                                 <th>Libellé</th>
                                 <th>Prix</th>
-                                <th>Stock</th>
+                                <th>Stock disponible</th>
                                 <th>Statut stock</th>
                                 <th>Catégorie</th>
                                 <th width="180px">Actions</th>
@@ -113,6 +113,15 @@
                                             <i class="fas fa-edit"></i>
                                         </a>
 
+                                        <button class="btn btn-secondary btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#rebut{{ $article->id }}" title="Mise au rebut">
+
+                                            <i class="fas fa-archive"></i>
+
+
+
+                                        </button>
+
                                         <!-- SUPPRIMER -->
                                         <form action="{{ route('articles.destroy', $article->id) }}" method="POST"
                                             style="display:inline-block">
@@ -126,6 +135,91 @@
                                             </button>
 
                                         </form>
+
+
+
+                                        <div class="modal fade" id="rebut{{ $article->id }}">
+
+                                            <div class="modal-dialog">
+
+                                                <div class="modal-content">
+
+                                                    <div class="modal-header bg-danger text-white">
+
+                                                        <h5>
+
+                                                            Mise au rebut
+
+                                                        </h5>
+
+                                                    </div>
+
+                                                    <form action="{{ route('articles.rebut', $article->id) }}"
+                                                        method="POST">
+
+                                                        @csrf
+
+                                                        @method('PUT')
+
+                                                        <div class="modal-body">
+
+                                                            <label>
+
+                                                                Quantité
+
+                                                            </label>
+
+                                                            <input type="number" name="quantite" min="1"
+                                                                class="form-control" required>
+
+
+                                                            <label class="mt-2">
+
+                                                                Date rebut
+
+                                                            </label>
+
+                                                            <input type="date" name="date_rebut" class="form-control"
+                                                                required value="{{ date('Y-m-d') }}">
+
+
+                                                            <label class="mt-2">
+
+                                                                Motif
+
+                                                            </label>
+
+                                                            <textarea name="motif" class="form-control" required></textarea>
+
+
+                                                        </div>
+
+
+                                                        <div class="modal-footer">
+
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">
+
+                                                                Annuler
+
+                                                            </button>
+
+
+                                                            <button class="btn btn-danger">
+
+                                                                Valider
+
+                                                            </button>
+
+                                                        </div>
+
+                                                    </form>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
 
                                     </td>
 

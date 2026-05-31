@@ -18,7 +18,9 @@ use App\Http\Controllers\ArticleCommandeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Etats\EtatDemandeController;
 use App\Http\Controllers\Etats\EtatArticleController;
-
+use App\Http\Controllers\MouvementStockController;
+use App\Http\Controllers\EtatStockController;
+use App\Http\Controllers\Etats\EtatMouvementStockController;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,13 +67,55 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('categories', CategorieController::class);
 
     Route::resource('articles', ArticleController::class);
+
+    Route::get('/mouvements-stock', [MouvementStockController::class, 'index'])
+        ->name(
+            'mouvements.index'
+        );
+
+
     Route::resource('users', UserController::class);
     Route::resource('commandes', CommandeController::class);
     Route::resource('fournisseurs', FournisseurController::class);
     Route::resource('demandes', DemandeController::class);
     Route::get('/mes-demandes', [DemandeController::class, 'mesDemandes'])->name('mes.demandes');
-    Route::post('demandes/{id}/valider', [DemandeController::class, 'valider'])->name('demandes.valider');
+    Route::put('demandes/{id}/valider', [DemandeController::class, 'valider'])->name('demandes.valider');
     Route::post('demandes/{id}/livrer', [DemandeController::class, 'livrer'])->name('demandes.livrer');
+
+    // DEMANDES SUPERIEUR
+    Route::get('/demandes-a-valider/', [DemandeController::class, 'demandesSuperieur'])
+        ->name('demandes.superieur');
+    // VALIDER
+    Route::put('/demandes/{id}/valider-superieur', [DemandeController::class, 'validerSuperieur'])
+        ->name('demandes.valider.superieur');
+    // REJETER
+    Route::put('/demandes/{id}/rejeter-superieur', [DemandeController::class, 'rejeterSuperieur'])
+        ->name('demandes.rejeter.superieur');
+    //Rejet Gestionnaire
+    Route::put('/demandes/{id}/rejeter-gestionnaire', [DemandeController::class, 'rejeterGestionnaire'])
+        ->name('demandes.rejeter.gestionnaire');
+    //Validation demandeur
+    Route::put('/demandes/{id}/valider-demandeur', [DemandeController::class, 'validerDemandeur'])
+        ->name(
+            'demandes.valider.demandeur'
+        );
+    //Validation finale
+    Route::get('/demandes-validation-finale', [DemandeController::class, 'validationFinaleIndex'])
+        ->name(
+            'demandes.validation.finale.index'
+        );
+    // Action validation
+    Route::put('/demandes/{id}/validation-finale', [DemandeController::class, 'validationFinale'])
+        ->name(
+            'demandes.validation.finale'
+        );
+    //Confirmation de la reception
+    Route::put('/demandes/{id}/confirmer-reception', [DemandeController::class, 'confirmerReception'])
+        ->name(
+            'demandes.confirmer.reception'
+        );
+
+
     Route::resource('departements', DepartementController::class);
     Route::resource('services', ServiceController::class);
     Route::resource('agences', AgenceController::class);
@@ -97,7 +141,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('commandes/{id}/valider', [CommandeController::class, 'valider'])
         ->name('commandes.valider');
 
-    Route::post('commandes/{id}/livrer', [CommandeController::class, 'livrer'])
+    Route::put('commandes/{id}/livrer', [CommandeController::class, 'livrer'])
         ->name('commandes.livrer');
 
     Route::post('article-commande', [ArticleCommandeController::class, 'store'])
@@ -105,6 +149,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::delete('article-commande/{id}', [ArticleCommandeController::class, 'destroy'])
         ->name('article_commande.destroy');
+
+    Route::put('/articles/{id}/rebut', [ArticleController::class, 'miseRebut'])
+        ->name(
+            'articles.rebut'
+        );
 
 
     //Export Categories
@@ -242,6 +291,62 @@ Route::middleware(['auth'])->group(function () {
         'etats/articles/stock-par-article/pdf',
         [EtatArticleController::class, 'stockParArticlePdf']
     )->name('etats.articles.stock_par_article.pdf');
+
+
+    //Etats stock Controller
+    Route::get('/etats/stocks', [EtatStockController::class, 'index'])
+        ->name(
+            'etats.stocks.index'
+        );
+    Route::post('/etats/stocks/excel', [EtatStockController::class, 'exportExcel'])
+        ->name(
+            'etats.stocks.excel'
+        );
+    Route::post('/etats/stocks/pdf', [EtatStockController::class, 'exportPdf'])
+        ->name(
+            'etats.stocks.pdf'
+        );
+
+    Route::post('/etats/stocks-valorises/excel', [EtatStockController::class, 'exportExcelValorise'])
+        ->name(
+            'etats.stocks_valorises.excel'
+        );
+    Route::post('/etats/stocks-valorises/pdf', [EtatStockController::class, 'exportPdfValorise'])
+        ->name(
+            'etats.stocks_valorises.pdf'
+        );
+
+
+
+    Route::post('/etats/entrees-stock/excel', [EtatMouvementStockController::class, 'exportExcelEntrees'])
+        ->name(
+            'etats.entrees_stock.excel'
+        );
+
+    Route::post('/etats/entrees-stock/pdf', [EtatMouvementStockController::class, 'exportPdfEntrees'])
+        ->name(
+            'etats.entrees_stock.pdf'
+        );
+
+    Route::post('/etats/sorties-stock/excel', [EtatMouvementStockController::class, 'exportExcelSorties'])
+        ->name(
+            'etats.sorties_stock.excel'
+        );
+
+    Route::post('/etats/sorties-stock/pdf', [EtatMouvementStockController::class, 'exportPdfSorties'])
+        ->name(
+            'etats.sorties_stock.pdf'
+        );
+
+    Route::post('/etats/stock-final/excel', [EtatMouvementStockController::class, 'exportExcelStockFinal'])
+        ->name(
+            'etats.stock_final.excel'
+        );
+
+    Route::post('/etats/stock-final/pdf', [EtatMouvementStockController::class, 'exportPdfStockFinal'])
+        ->name(
+            'etats.stock_final.pdf'
+        );
 });
 
 

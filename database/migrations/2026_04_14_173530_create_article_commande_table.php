@@ -23,6 +23,8 @@ return new class extends Migration
 
             $table->integer('quantite');
             $table->decimal('prix', 10, 2);
+            $table->integer('quantite_livree')->default(0);
+            $table->integer('quantite_restante')->default(0);
             $table->boolean('archiver')->default(0);
             $table->timestamps();
         });

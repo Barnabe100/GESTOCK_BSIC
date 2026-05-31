@@ -45,6 +45,24 @@ class Commande extends Model
         return $this->hasMany(ArticleCommande::class);
     }
 
+    // public function articles()
+    // {
+    //     return $this->belongsToMany(
+    //         Article::class
+    //     )
+
+    //         ->withPivot([
+
+    //             //'libelle',
+    //             'quantite',
+
+    //             'quantite_livree',
+
+    //             'quantite_restante'
+
+    //         ]);
+    // }
+
     public function scopeActif($query)
     {
         return $query->where('archiver', 0);

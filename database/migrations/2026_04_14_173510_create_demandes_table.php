@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('objet');
             $table->text('description')->nullable();
 
-            $table->boolean('validation')->default(0);
+            $table->boolean('validation_gestionnaire')->default(0);
             $table->boolean('livraison')->default(0);
             $table->date('date_livraison')->nullable();
 
@@ -26,6 +26,54 @@ return new class extends Migration
             $table->foreignId('user_id')
                 ->constrained('users')
                 ->cascadeOnDelete();
+
+            $table->foreignId('superieur_id')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->boolean(
+                'validation_superieur'
+            )->default(false);
+
+            $table->timestamp(
+                'date_validation_superieur'
+            )->nullable();
+
+            $table->text(
+                'commentaire_superieur'
+            )->nullable();
+
+            $table->string(
+                'statut'
+            )->default(
+                'En attente supérieur'
+            );
+            $table->text(
+                'commentaire_gestionnaire'
+            )->nullable();
+
+            $table->timestamp(
+                'date_validation_gestionnaire'
+            )->nullable();
+            $table->boolean(
+                'validation_finale'
+            )->default(false);
+            $table->boolean(
+                'confirmation_reception'
+            )->default(false);
+
+            $table->text(
+                'commentaire_reception'
+            )->nullable();
+
+
+
+
+
+
+
+
             $table->timestamps();
         });
     }

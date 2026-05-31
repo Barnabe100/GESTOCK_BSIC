@@ -44,23 +44,20 @@
                     <div class="col-md-6 mb-3">
                         <label>Utilisateur</label>
                         <div class="form-control bg-light">
-                            {{ $demande->user->name }}
+                            {{ $demande->user->name }} {{ $demande->user->prenom }}
                         </div>
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label>Statut</label>
+
                         <div class="form-control bg-light">
 
-                            @if ($demande->validation)
-                                <span class="badge bg-success">Validée</span>
-                            @else
-                                <span class="badge bg-warning">En attente</span>
-                            @endif
 
-                            @if ($demande->livraison)
-                                <span class="badge bg-primary">Livrée</span>
-                            @endif
+
+                            @include('includes.statut-demande')
+
+
 
                         </div>
                     </div>
@@ -82,6 +79,20 @@
 
         </div>
 
+        @if ($demande->commentaire_reception)
+            <div class="alert alert-info">
+
+                <b>
+
+                    Retour demandeur :
+
+                </b>
+
+                {{ $demande->commentaire_reception }}
+
+            </div>
+        @endif
+
         <!-- 🔥 AJOUT ARTICLE -->
         <div class="card mt-4 shadow-sm">
 
@@ -92,7 +103,7 @@
 
             <div class="card-body">
 
-                @if (!$demande->validation)
+                @if (!$demande->validation_superieur)
 
                     <form method="POST" action="{{ route('article_demande.store') }}">
                         @csrf
@@ -171,10 +182,13 @@
                         <tr>
                             <th>#</th>
                             <th>Article</th>
-                            <th>Quantité</th>
+                            <th>Quantité demandée</th>
+                            <th>Quantité accordée</th>
                             <th width="120px">Actions</th>
                         </tr>
                     </thead>
+
+
 
                     <tbody>
 
@@ -189,7 +203,27 @@
 
                                 <td>
 
-                                    @if (!$demande->validation)
+                                    @if ($ligne->quantite_accordee)
+                                        <span class="badge bg-success">
+
+                                            {{ $ligne->quantite_accordee }}
+
+                                        </span>
+                                    @else
+                                        <span class="text-muted">
+
+                                            -
+
+                                        </span>
+                                    @endif
+
+                                </td>
+
+
+
+                                <td>
+
+                                    @if (!$demande->validation_superieur && $demande->user_id == auth()->id())
                                         <form action="{{ route('article_demande.destroy', $ligne->id) }}" method="POST"
                                             style="display:inline-block">
 
@@ -226,6 +260,8 @@
                         @endforelse
 
                     </tbody>
+
+
 
                 </table>
 

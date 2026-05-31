@@ -71,7 +71,7 @@
 
             </a>
         @endif
-        @if (auth()->user()->hasAnyRole(['ValidateurDemande', 'Gestionnaire', 'SuperAdmin']))
+        @if (auth()->user()->hasAnyRole(['Gestionnaire', 'SuperAdmin']))
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle"
                 href="{{ route('fournisseurs.index') }}">
 
@@ -86,6 +86,15 @@
             </a>
         @endif
 
+        @role('ValidateurDemande')
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle"
+                href="{{ route('demandes.validation.finale.index') }}">
+
+                Demandes à valider
+
+            </a>
+        @endrole
+
 
 
         @can('gerer-stock')
@@ -95,6 +104,22 @@
 
             </a>
         @endcan
+
+        @role('Superieur')
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('demandes.superieur') }}">
+
+                Demandes à valider
+
+            </a>
+        @endrole
+
+        @role('Gestionnaire')
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('mouvements.index') }}">
+
+                Mouvements stock
+
+            </a>
+        @endrole
 
     </div>
 

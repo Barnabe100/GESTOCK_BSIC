@@ -39,27 +39,32 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
+                            <label>Libellé</label>
+                            <input type="text" name="libelle" class="form-control">
+                        </div>
+
+
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
                             <label>Fournisseur</label>
-                            <select name="fournisseur_id" class="form-control">
+                            <select name="fournisseur_id" class="form-control select2">
+                                <option value=""></option>
                                 @foreach ($fournisseurs as $f)
                                     <option value="{{ $f->id }}">{{ $f->nom }}</option>
                                 @endforeach
                             </select>
                         </div>
 
-                    </div>
-
-                    <div class="row">
-
-                        {{-- <div class="col-md-6 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label>Montant</label>
                             <input type="number" name="montant" class="form-control">
-                        </div> --}}
-
-                        <div class="col-md-12 mb-3">
-                            <label>Libellé</label>
-                            <input type="text" name="libelle" class="form-control">
                         </div>
+
+
 
                     </div>
 
@@ -77,3 +82,17 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+
+            $('.select2').select2({
+                placeholder: 'Sélectionner ...',
+                allowClear: true,
+                width: '100%'
+            });
+
+        });
+    </script>
+@endpush

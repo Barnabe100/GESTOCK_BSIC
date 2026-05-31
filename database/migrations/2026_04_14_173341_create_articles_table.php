@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->string('libelle');
             $table->decimal('prix_unitaire', 10, 2);
+            $table->integer('stock_initial')->default(0);
+
             $table->integer('stock_disponible')->default(0);
             $table->integer('stock_securite')->default(0);
             $table->boolean('archiver')->default(0);
@@ -23,8 +25,8 @@ return new class extends Migration
             $table->foreignId('categorie_id')
                 ->constrained('categories')
                 ->cascadeOnDelete();
-                    $table->timestamps();
-                });
+            $table->timestamps();
+        });
     }
 
     /**

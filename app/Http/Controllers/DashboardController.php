@@ -24,6 +24,8 @@ class DashboardController extends Controller
                 'SuperAdmin',
                 'Admin',
                 'ValidateurCommande',
+                'Superieur',
+                'ValidateurDemande'
             ])
         ) {
             return view('accueil');

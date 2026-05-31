@@ -197,7 +197,7 @@
 
                                 <td>{{ $key + 1 }}</td>
 
-                                <td>{{ $ligne->article->libelle }}</td>
+                                <td>{{ $ligne-- > libelle }}</td>
 
                                 <td>{{ $ligne->quantite }}</td>
 

@@ -13,11 +13,23 @@ class Demande extends Model
         'date',
         'objet',
         'description',
-        'validation',
+        'validation_gestionnaire',
         'livraison',
         'date_livraison',
         'archiver',
-        'user_id'
+        'user_id',
+        'superieur_id',
+        'statut',
+        'commentaire_superieur',
+        'validation_superieur',
+        'date_validation_superieur',
+        'commentaire_gestionnaire',
+        'date_validation_gestionnaire',
+        'validation_finale',
+        'confirmation_reception',
+        'commentaire_reception'
+
+
     ];
 
     protected $casts = [
@@ -43,10 +55,18 @@ class Demande extends Model
         return $this->hasMany(ArticleDemande::class);
     }
 
-    
+
 
     public function scopeActif($query)
     {
         return $query->where('archiver', 0);
+    }
+
+    public function superieur()
+    {
+        return $this->belongsTo(
+            User::class,
+            'superieur_id'
+        );
     }
 }

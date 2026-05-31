@@ -11,7 +11,7 @@
             <!-- HEADER -->
             <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
                 <h5 class="mb-0">Liste des demandes</h5>
-                @if (auth()->user()->hasAnyRole(['ValidateurDemande', 'SuperAdmin', 'Admin', 'Gestionnaire']))
+                @if (auth()->user()->hasAnyRole(['SuperAdmin', 'Admin', 'Gestionnaire']))
                     @if (!($estMesDemandes ?? false))
                         <div class="d-flex gap-2">
                             <!-- EXCEL -->
@@ -50,7 +50,8 @@
                             <th>Utilisateur</th>
                             <th>Validation</th>
                             <th>Livraison</th>
-                            <th width="180px">Actions</th>
+                            <th>Statut</th>
+                            <th width="100px">Actions</th>
                         </tr>
                     </thead>
 
@@ -67,7 +68,7 @@
                                 <td>{{ $demande->user->name ?? '' }}</td>
 
                                 <td>
-                                    @if ($demande->validation)
+                                    @if ($demande->validation_gestionnaire)
                                         <span class="badge bg-success">Validée</span>
                                     @else
                                         <span class="badge bg-warning">En attente</span>
@@ -83,6 +84,12 @@
                                 </td>
 
                                 <td>
+
+                                    @include('includes.statut-demande')
+
+                                </td>
+
+                                <td>
                                     @if (
                                         $demande->user_id == auth()->id() ||
                                             auth()->user()->hasAnyRole(['SuperAdmin', 'Gestionnaire']))
@@ -94,7 +101,7 @@
                                     @if (
                                         $demande->user_id == auth()->id() ||
                                             auth()->user()->hasAnyRole(['SuperAdmin']))
-                                        @if (!$demande->livraison)
+                                        @if (!$demande->validation_superieur)
                                             <a href="{{ route('demandes.edit', $demande->id) }}" title="Editer"
                                                 class="btn btn-warning btn-sm">
                                                 <i class="fas fa-edit"></i>
@@ -116,9 +123,9 @@
                                         </form>
                                     @endrole
 
-                                    @if (auth()->user()->hasAnyRole(['ValidateurDemande', 'SuperAdmin']))
-                                        @if (!$demande->validation)
-                                            <form action="{{ route('demandes.valider', $demande->id) }}" method="POST"
+                                    @if (auth()->user()->hasAnyRole(['Gestionnaire', 'SuperAdmin']))
+                                        @if (!$demande->validation_gestionnaire && $demande->statut == 'En attente gestionnaire')
+                                            {{-- <form action="{{ route('demandes.valider', $demande->id) }}" method="POST"
                                                 style="display:inline-block">
                                                 @csrf
 
@@ -128,10 +135,223 @@
 
                                                     <i class="fas fa-check"></i>
                                                 </button>
-                                            </form>
+                                            </form> --}}
+
+                                            <button class="btn btn-success btn-sm" data-bs-toggle="modal"
+                                                data-bs-target="#validationModal{{ $demande->id }}">
+
+                                                <i class="fas fa-check"></i>
+
+                                            </button>
+
+                                            <div class="modal fade" id="validationModal{{ $demande->id }}" tabindex="-1">
+
+                                                <div class="modal-dialog modal-lg">
+
+                                                    <div class="modal-content">
+
+                                                        <div class="modal-header bg-success text-white">
+
+                                                            <h5>
+
+                                                                Validation gestionnaire
+
+                                                            </h5>
+
+                                                            <button class="btn-close" data-bs-dismiss="modal">
+
+                                                            </button>
+
+                                                        </div>
+
+                                                        <form action="{{ route('demandes.valider', $demande->id) }}"
+                                                            method="POST">
+
+                                                            @csrf
+                                                            @method('PUT')
+
+                                                            <div class="modal-body">
+
+                                                                <table class="table">
+
+                                                                    <thead>
+
+                                                                        <tr>
+
+                                                                            <th>
+
+                                                                                Article
+
+                                                                            </th>
+
+                                                                            <th>
+
+                                                                                Demandée
+
+                                                                            </th>
+
+                                                                            <th>
+
+                                                                                Disponible
+
+                                                                            </th>
+
+                                                                            <th>
+
+                                                                                Accordée
+
+                                                                            </th>
+
+                                                                        </tr>
+
+                                                                    </thead>
+
+                                                                    <tbody>
+
+                                                                        @foreach ($demande->articles as $item)
+                                                                            <tr>
+
+                                                                                <td>
+
+                                                                                    {{ $item->article->libelle }}
+
+                                                                                </td>
+
+                                                                                <td>
+
+                                                                                    {{ $item->quantite }}
+
+                                                                                </td>
+
+                                                                                <td>
+
+                                                                                    {{ $item->article->stock_disponible }}
+
+                                                                                </td>
+
+                                                                                <td>
+
+                                                                                    <input type="number"
+                                                                                        name="quantite_accordee[{{ $item->article->id }}]"
+                                                                                        class="form-control" min="0"
+                                                                                        max="{{ $item->article->stock_disponible }}"
+                                                                                        value="{{ min($item->quantite, $item->article->stock_disponible) }}">
+
+                                                                                </td>
+
+                                                                            </tr>
+                                                                        @endforeach
+
+                                                                    </tbody>
+
+                                                                </table>
+
+                                                            </div>
+
+                                                            <div class="modal-footer">
+
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-bs-dismiss="modal">
+
+                                                                    Annuler
+
+                                                                </button>
+
+                                                                <button type="submit" class="btn btn-success">
+
+                                                                    Valider
+
+                                                                </button>
+
+                                                            </div>
+
+                                                        </form>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+                                            {{-- Fin validation demande --}}
+                                            {{-- Rejet demande --}}
+
+                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                                data-bs-target="#rejetModal{{ $demande->id }}">
+
+                                                <i class="fas fa-times"></i>
+
+                                            </button>
+
+                                            <!-- Modal rejet -->
+
+                                            <div class="modal fade" id="rejetModal{{ $demande->id }}" tabindex="-1"
+                                                aria-hidden="true">
+
+                                                <div class="modal-dialog">
+
+                                                    <div class="modal-content">
+
+                                                        <div class="modal-header bg-danger text-white">
+
+                                                            <h5 class="modal-title">
+
+                                                                Motif du rejet
+
+                                                            </h5>
+
+                                                            <button type="button" class="btn-close"
+                                                                data-bs-dismiss="modal">
+
+                                                            </button>
+
+                                                        </div>
+
+                                                        <form
+                                                            action="{{ route('demandes.rejeter.gestionnaire', $demande->id) }}"
+                                                            method="POST">
+
+                                                            @csrf
+                                                            @method('PUT')
+
+                                                            <div class="modal-body">
+
+                                                                <label>
+
+                                                                    Veuillez renseigner le motif :
+
+                                                                </label>
+
+                                                                <textarea name="commentaire" class="form-control" rows="4" required></textarea>
+
+                                                            </div>
+
+                                                            <div class="modal-footer">
+
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-bs-dismiss="modal">
+
+                                                                    Annuler$demande->statut == 'En attente gestionnaire'
+
+                                                                </button>
+
+                                                                <button class="btn btn-danger">
+
+                                                                    Confirmer
+
+                                                                </button>
+
+                                                            </div>
+
+                                                        </form>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
                                         @endif
 
-                                        @if ($demande->validation && !$demande->livraison)
+                                        @if ($demande->validation_finale && !$demande->livraison)
                                             <form action="{{ route('demandes.livrer', $demande->id) }}" method="POST"
                                                 style="display:inline-block">
                                                 @csrf
@@ -143,6 +363,104 @@
                                             </form>
                                         @endif
                                     @endif
+
+                                    @if (
+                                        ($estMesDemandes ?? false) &&
+                                            $demande->user_id == auth()->id() &&
+                                            $demande->statut == 'En attente accord demandeur')
+                                        <form action="{{ route('demandes.valider.demandeur', $demande->id) }}"
+                                            method="POST" class="d-inline">
+
+                                            @csrf
+                                            @method('PUT')
+
+                                            <button class="btn btn-success btn-sm" title="Accepter">
+
+                                                <i class="fas fa-check-circle"></i>
+
+                                            </button>
+
+                                        </form>
+                                    @endif
+
+                                    {{-- confirmation demande recepteur --}}
+                                    @if ($demande->statut == 'En attente réception demandeur' && $demande->user_id == auth()->id())
+                                        <button class="btn btn-success btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#receptionModal{{ $demande->id }}"
+                                            title="Confirmer réception">
+
+                                            <i class="fas fa-check-circle"></i>
+
+
+                                        </button>
+                                    @endif
+
+                                    <div class="modal fade" id="receptionModal{{ $demande->id }}">
+
+                                        <div class="modal-dialog">
+
+                                            <div class="modal-content">
+
+                                                <div class="modal-header bg-success text-white">
+
+                                                    <h5>
+
+                                                        Retour réception
+
+                                                    </h5>
+
+                                                </div>
+
+
+                                                <form action="{{ route('demandes.confirmer.reception', $demande->id) }}"
+                                                    method="POST">
+
+                                                    @csrf
+
+                                                    @method('PUT')
+
+
+                                                    <div class="modal-body">
+
+                                                        <label>
+
+                                                            Votre retour :
+
+                                                        </label>
+
+                                                        <textarea name="commentaire" class="form-control" rows="4" required
+                                                            placeholder="Bien reçu conforme / Quantité insuffisante / Article manquant...">
+
+</textarea>
+
+                                                    </div>
+
+
+                                                    <div class="modal-footer">
+
+                                                        <button type="button" class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">
+
+                                                            Annuler
+
+                                                        </button>
+
+
+                                                        <button type="submit" class="btn btn-success">
+
+                                                            Envoyer
+
+                                                        </button>
+
+                                                    </div>
+
+                                                </form>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
 
                                 </td>
 

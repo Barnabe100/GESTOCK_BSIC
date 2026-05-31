@@ -144,14 +144,86 @@
 
                                             <!-- LIVRER -->
                                             @if ($commande->validation && !$commande->livraison)
-                                                <form action="{{ route('commandes.livrer', $commande->id) }}"
+                                                {{-- <form action="{{ route('commandes.livrer', $commande->id) }}"
                                                     method="POST" style="display:inline-block">
                                                     @csrf
                                                     <button type="button" title="Recevoir" class="btn btn-success btn-sm"
                                                         onclick="confirmAction(this.form, 'Confirmer la reception de cette commande ?')">
                                                         <i class="fas fa-box-open"></i>
                                                     </button>
-                                                </form>
+                                                </form> --}}
+
+                                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                                    data-bs-target="#livrer{{ $commande->id }}">
+
+                                                    <i class="fas fa-box-open"></i>
+
+                                                </button>
+
+                                                <div class="modal fade" id="livrer{{ $commande->id }}">
+
+                                                    <div class="modal-dialog">
+
+                                                        <div class="modal-content">
+
+                                                            <div class="modal-header bg-primary text-white">
+
+                                                                <h5>
+
+                                                                    Réception commande
+
+                                                                </h5>
+
+                                                            </div>
+
+                                                            <form action="{{ route('commandes.livrer', $commande->id) }}"
+                                                                method="POST">
+
+                                                                @csrf
+
+                                                                @method('PUT')
+
+
+                                                                <div class="modal-body">
+
+                                                                    <label>
+
+                                                                        Date réelle réception
+
+                                                                    </label>
+
+                                                                    <input type="date" name="date_livraison"
+                                                                        class="form-control" required
+                                                                        value="{{ date('Y-m-d') }}">
+
+                                                                </div>
+
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button" class="btn btn-secondary"
+                                                                        data-bs-dismiss="modal">
+
+                                                                        Annuler
+
+                                                                    </button>
+
+
+                                                                    <button type="submit" class="btn btn-success">
+
+                                                                        Valider
+
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </form>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
                                             @endif
                                         @endif
                                     </td>

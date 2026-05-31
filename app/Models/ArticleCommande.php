@@ -12,7 +12,9 @@ class ArticleCommande extends Model
         'commande_id',
         'article_id',
         'quantite',
-        'prix_unitaire'
+        'prix_unitaire',
+        'quantite_livree',
+        'quantite_restante',
     ];
 
     public function commande()

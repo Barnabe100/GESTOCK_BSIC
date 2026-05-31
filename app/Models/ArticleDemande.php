@@ -15,7 +15,8 @@ class ArticleDemande extends Model
         'demande_id',
         'article_id',
         'quantite',
-        'archiver'
+        'archiver',
+        'quantite_accordee',
     ];
 
     public function demande()

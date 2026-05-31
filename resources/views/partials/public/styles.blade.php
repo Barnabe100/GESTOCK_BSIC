@@ -70,4 +70,13 @@
 
         color: #000;
     }
+
+    th {
+        background: #ddd;
+        font-weight: bold;
+    }
+
+    thead tr:first-child th {
+        vertical-align: middle;
+    }
 </style>
