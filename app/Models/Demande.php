@@ -27,7 +27,11 @@ class Demande extends Model
         'date_validation_gestionnaire',
         'validation_finale',
         'confirmation_reception',
-        'commentaire_reception'
+        'commentaire_reception',
+        'commentaire_validation_finale',
+        'gestionnaire_id',
+        'validateur_final_id',
+        'date_validation_finale',
 
 
     ];
@@ -67,6 +71,22 @@ class Demande extends Model
         return $this->belongsTo(
             User::class,
             'superieur_id'
+        );
+    }
+
+    public function gestionnaire()
+    {
+        return $this->belongsTo(
+            User::class,
+            'gestionnaire_id'
+        );
+    }
+
+    public function validateurFinal()
+    {
+        return $this->belongsTo(
+            User::class,
+            'validateur_final_id'
         );
     }
 }

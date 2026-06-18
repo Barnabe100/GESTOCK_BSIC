@@ -24,7 +24,7 @@
 
                     @include('etats.demandes.menu')
 
-                    @include('etats.articles.menu')
+                    {{-- @include('etats.articles.menu') --}}
 
                     @include('etats.stocks-periode.menu')
 
@@ -48,5 +48,8 @@
     @include('etats.scripts.etats-stock')
 
     @include('etats.modals.stock-final')
+
+    @include('etats.modals.demandes-par-agence')
+    @include('etats.modals.demandes-par-departement')
 
 @endsection

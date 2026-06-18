@@ -20,31 +20,34 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Code</label>
-                            <input type="text" name="code" class="form-control" value="{{ old('code') }}">
+                            <span class="text-danger">*</span>
+                            <input type="text" name="code" class="form-control" value="{{ old('code') }}" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label>Libellé</label>
-                            <input type="text" name="libelle" class="form-control" value="{{ old('libelle') }}">
+                            <span class="text-danger">*</span>
+                            <input type="text" name="libelle" class="form-control" value="{{ old('libelle') }}" required>
                         </div>
 
                     </div>
 
                     <div class="row">
-
-                        <div class="col-md-6 mb-3">
-                            <label>Prix unitaire</label>
-                            <input type="number" name="prix_unitaire" class="form-control">
-                        </div>
-
                         <div class="col-md-6 mb-3">
                             <label>Catégorie</label>
-                            <select name="categorie_id" class="form-control select2">
+                            <span class="text-danger">*</span>
+                            <select name="categorie_id" class="form-control select2" style="height: 42px;" required>
                                 <option value=""></option>
                                 @foreach ($categories as $cat)
                                     <option value="{{ $cat->id }}">{{ $cat->libelle }}</option>
                                 @endforeach
                             </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label>Prix unitaire</label>
+                            {{-- <span class="text-danger">*</span> --}}
+                            <input type="number" name="prix_unitaire" class="form-control">
                         </div>
 
                     </div>
@@ -53,11 +56,13 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Stock disponible</label>
+                            {{-- <span class="text-danger">*</span> --}}
                             <input type="number" name="stock_disponible" class="form-control">
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label>Stock sécurité</label>
+                            {{-- <span class="text-danger">*</span> --}}
                             <input type="number" name="stock_securite" class="form-control">
                         </div>
 
@@ -83,7 +88,8 @@
             $('.select2').select2({
                 placeholder: 'Sélectionner ...',
                 allowClear: true,
-                width: '100%'
+                width: '100%',
+                //height: 42 px!important;
             });
 
         });

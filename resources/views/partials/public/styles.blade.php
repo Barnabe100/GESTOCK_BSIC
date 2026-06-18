@@ -2,14 +2,25 @@
 <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet">
 
 <!-- DATATABLE-->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="{{ asset('assets/css/dataTables.bootstrap5.min.css') }}">
 <!-- ICON-->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{{-- <link rel="stylesheet" href="{{ asset('assets/css/all.min.css') }}"> --}}
 
 <!-- selection sur un champs-->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="{{ asset('assets/css/select2.min.css') }}" rel="stylesheet" />
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- FONT AWESOME-->
+<link rel="stylesheet" href="{{ asset('assets/css/all.min.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/webfonts/brands.min.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/webfonts/fontawesome.min.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/webfonts/regular.min.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/webfonts/solid.min.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/webfonts/svg-with-js.min.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/webfonts/v4-font-face.min.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/webfonts/v4-shims.min.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/webfonts/v5-font-face.min.css') }}">
+<!-- FONT AWESOME-->
 
 <style>
     .dropdown-submenu {
@@ -78,5 +89,9 @@
 
     thead tr:first-child th {
         vertical-align: middle;
+    }
+
+    .select2-container .select2-selection--single {
+        height: 37px !important;
     }
 </style>

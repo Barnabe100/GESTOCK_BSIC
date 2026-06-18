@@ -28,7 +28,7 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label>Num facture proforma</label>
+                            <label>Numéro facture</label>
                             <input type="text" name="num_facture_proforma" class="form-control"
                                 value="{{ old('num_facture_proforma', $commande->num_facture_proforma) }}">
                         </div>

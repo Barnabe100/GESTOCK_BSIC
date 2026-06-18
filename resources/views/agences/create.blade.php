@@ -20,12 +20,14 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Code</label>
-                            <input type="text" name="code" class="form-control">
+                            <span class="text-danger">*</span>
+                            <input type="text" name="code" class="form-control" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label>Nom</label>
-                            <input type="text" name="nom" class="form-control">
+                            <span class="text-danger">*</span>
+                            <input type="text" name="nom" class="form-control" required>
                         </div>
 
                     </div>

@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('article_commande', function (Blueprint $table) {
             $table->id();
+            $table->integer('quantite');
+            $table->decimal('prix_unitaire', 10, 2);
+            $table->integer('quantite_livree')->default(0);
+            $table->integer('quantite_restante')->default(0);
+            $table->boolean('archiver')->default(0);
             $table->foreignId('commande_id')
                 ->constrained('commandes')
                 ->cascadeOnDelete();
@@ -20,12 +25,6 @@ return new class extends Migration
             $table->foreignId('article_id')
                 ->constrained('articles')
                 ->cascadeOnDelete();
-
-            $table->integer('quantite');
-            $table->decimal('prix', 10, 2);
-            $table->integer('quantite_livree')->default(0);
-            $table->integer('quantite_restante')->default(0);
-            $table->boolean('archiver')->default(0);
             $table->timestamps();
         });
     }

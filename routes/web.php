@@ -75,9 +75,24 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::resource('users', UserController::class);
+
+
     Route::resource('commandes', CommandeController::class);
+
+    Route::put(
+        '/article-commandes/{id}',
+        [ArticleCommandeController::class, 'update']
+    )->name('article-commandes.update');
+
+
     Route::resource('fournisseurs', FournisseurController::class);
     Route::resource('demandes', DemandeController::class);
+
+    Route::put(
+        '/article-demandes/{id}',
+        [ArticleDemandeController::class, 'update']
+    )->name('article-demandes.update');
+
     Route::get('/mes-demandes', [DemandeController::class, 'mesDemandes'])->name('mes.demandes');
     Route::put('demandes/{id}/valider', [DemandeController::class, 'valider'])->name('demandes.valider');
     Route::post('demandes/{id}/livrer', [DemandeController::class, 'livrer'])->name('demandes.livrer');
@@ -94,6 +109,10 @@ Route::middleware(['auth'])->group(function () {
     //Rejet Gestionnaire
     Route::put('/demandes/{id}/rejeter-gestionnaire', [DemandeController::class, 'rejeterGestionnaire'])
         ->name('demandes.rejeter.gestionnaire');
+
+    Route::get('/demandes-gestionnaire', [DemandeController::class, 'indexGestionnaire'])
+        ->name('demandes.gestionnaire');
+
     //Validation demandeur
     Route::put('/demandes/{id}/valider-demandeur', [DemandeController::class, 'validerDemandeur'])
         ->name(
@@ -103,6 +122,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/demandes-validation-finale', [DemandeController::class, 'validationFinaleIndex'])
         ->name(
             'demandes.validation.finale.index'
+        );
+
+    Route::put('/demandes/{id}/rejet-finale', [DemandeController::class, 'rejeterFinale'])
+        ->name(
+            'demandes.rejet.finale'
         );
     // Action validation
     Route::put('/demandes/{id}/validation-finale', [DemandeController::class, 'validationFinale'])
@@ -117,6 +141,23 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::resource('departements', DepartementController::class);
+
+    Route::get(
+        '/departements/{id}/services',
+        [DepartementController::class, 'services']
+    );
+
+    Route::get(
+        '/departements/par-agence/{agence}',
+        [UserController::class, 'getDepartementsParAgence']
+    );
+
+    Route::get(
+        '/services/par-departement/{departement}',
+        [UserController::class, 'getServicesParDepartement']
+    );
+
+
     Route::resource('services', ServiceController::class);
     Route::resource('agences', AgenceController::class);
     Route::resource('users', UserController::class);
@@ -275,7 +316,13 @@ Route::middleware(['auth'])->group(function () {
     )->name('etats.demandes.par_departement.excel');
 
     // 🔥 PDF
-    Route::get(
+    // Route::get(
+    //     'etats/demandes/par-departement/pdf',
+    //     [EtatDemandeController::class, 'demandesParDepartementPdf']
+    // )->name('etats.demandes.par_departement.pdf');
+
+    Route::match(
+        ['get', 'post'],
         'etats/demandes/par-departement/pdf',
         [EtatDemandeController::class, 'demandesParDepartementPdf']
     )->name('etats.demandes.par_departement.pdf');
@@ -302,7 +349,7 @@ Route::middleware(['auth'])->group(function () {
         ->name(
             'etats.stocks.excel'
         );
-    Route::post('/etats/stocks/pdf', [EtatStockController::class, 'exportPdf'])
+    Route::get('/etats/stocks/pdf', [EtatStockController::class, 'exportPdf'])
         ->name(
             'etats.stocks.pdf'
         );
@@ -311,7 +358,7 @@ Route::middleware(['auth'])->group(function () {
         ->name(
             'etats.stocks_valorises.excel'
         );
-    Route::post('/etats/stocks-valorises/pdf', [EtatStockController::class, 'exportPdfValorise'])
+    Route::get('/etats/stocks-valorises/pdf', [EtatStockController::class, 'exportPdfValorise'])
         ->name(
             'etats.stocks_valorises.pdf'
         );
@@ -323,7 +370,7 @@ Route::middleware(['auth'])->group(function () {
             'etats.entrees_stock.excel'
         );
 
-    Route::post('/etats/entrees-stock/pdf', [EtatMouvementStockController::class, 'exportPdfEntrees'])
+    Route::get('/etats/entrees-stock/pdf', [EtatMouvementStockController::class, 'exportPdfEntrees'])
         ->name(
             'etats.entrees_stock.pdf'
         );
@@ -333,7 +380,7 @@ Route::middleware(['auth'])->group(function () {
             'etats.sorties_stock.excel'
         );
 
-    Route::post('/etats/sorties-stock/pdf', [EtatMouvementStockController::class, 'exportPdfSorties'])
+    Route::get('/etats/sorties-stock/pdf', [EtatMouvementStockController::class, 'exportPdfSorties'])
         ->name(
             'etats.sorties_stock.pdf'
         );
@@ -343,7 +390,7 @@ Route::middleware(['auth'])->group(function () {
             'etats.stock_final.excel'
         );
 
-    Route::post('/etats/stock-final/pdf', [EtatMouvementStockController::class, 'exportPdfStockFinal'])
+    Route::get('/etats/stock-final/pdf', [EtatMouvementStockController::class, 'exportPdfStockFinal'])
         ->name(
             'etats.stock_final.pdf'
         );

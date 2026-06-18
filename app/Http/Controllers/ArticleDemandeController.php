@@ -37,6 +37,117 @@ class ArticleDemandeController extends Controller
         return back()->with('success', 'Article ajouté et stock mis à jour');
     }
 
+    public function update(
+        Request $request,
+        $id
+    ) {
+
+        $ligne = ArticleDemande::with(
+            'demande',
+            'article'
+        )->findOrFail($id);
+
+        $request->validate([
+
+            'article_id' => 'required|exists:articles,id',
+
+            'quantite' => 'required|integer|min:1'
+
+        ]);
+
+        // Empêcher modification après validation
+
+        if ($ligne->demande->validation) {
+
+            return back()->with(
+
+                'error',
+
+                'Cette demande ne peut plus être modifiée.'
+
+            );
+        }
+
+        // Vérifier si l'article existe déjà
+        // dans la même demande
+
+        $existe = ArticleDemande::where(
+
+            'demande_id',
+
+            $ligne->demande_id
+
+        )
+            ->where(
+
+                'article_id',
+
+                $request->article_id
+
+            )
+            ->where(
+
+                'id',
+
+                '!=',
+
+                $ligne->id
+
+            )
+            ->exists();
+
+        if ($existe) {
+
+            return back()->with(
+
+                'error',
+
+                'Cet article existe déjà dans la demande.'
+
+            );
+        }
+
+        $article = Article::findOrFail(
+            $request->article_id
+        );
+
+        // Vérifier stock disponible
+
+        if (
+
+            $request->quantite >
+            $article->stock_disponible
+
+        ) {
+
+            return back()->with(
+
+                'error',
+
+                'Stock insuffisant pour cet article.'
+
+            );
+        }
+
+        $ligne->update([
+
+            'article_id' =>
+            $request->article_id,
+
+            'quantite' =>
+            $request->quantite
+
+        ]);
+
+        return back()->with(
+
+            'success',
+
+            'Article modifié avec succès.'
+
+        );
+    }
+
     /**
      * Supprimer un article de la demande
      */

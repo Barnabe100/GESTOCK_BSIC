@@ -114,33 +114,130 @@ class EtatSortieStockExport implements
 
 
 
-        foreach (
+        // foreach (
+        //     $this->data
+        //     as
+        //     $item
+        // ) {
+
+        //     $sheet->setCellValue(
+        //         'A' . $ligne,
+        //         $item['date']
+        //     );
+
+        //     $sheet->setCellValue(
+        //         'B' . $ligne,
+        //         $item['article']
+        //     );
+
+        //     $sheet->setCellValue(
+        //         'C' . $ligne,
+        //         $item['quantite']
+        //     );
+
+        //     $sheet->setCellValue(
+        //         'D' . $ligne,
+        //         $item['valeur']
+        //     );
+
+        //     $ligne++;
+        // }
+
+        $groupes = collect(
             $this->data
-            as
-            $item
+        )->groupBy(
+            'article'
+        );
+
+        foreach (
+            $groupes
+            as $article => $lignesArticle
         ) {
 
+            /*
+    Ligne article
+    */
+
+            $sheet->mergeCells(
+                'A' . $ligne .
+                    ':D' . $ligne
+            );
+
             $sheet->setCellValue(
+
                 'A' . $ligne,
-                $item['date']
+
+                'ARTICLE : '
+                    .
+                    strtoupper($article)
+
             );
 
-            $sheet->setCellValue(
-                'B' . $ligne,
-                $item['article']
-            );
+            $sheet->getStyle(
+                'A' . $ligne
+            )->applyFromArray([
 
-            $sheet->setCellValue(
-                'C' . $ligne,
-                $item['quantite']
-            );
+                'font' => [
 
-            $sheet->setCellValue(
-                'D' . $ligne,
-                $item['valeur']
-            );
+                    'bold' => true
+
+                ],
+
+                'alignment' => [
+
+                    'horizontal' => 'left'
+
+                ],
+
+                'fill' => [
+
+                    'fillType' =>
+                    \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+
+                    'startColor' => [
+
+                        'rgb' => 'D9D9D9'
+
+                    ]
+
+                ]
+
+            ]);
 
             $ligne++;
+
+            /*
+    Détails
+    */
+
+            foreach (
+                $lignesArticle
+                as
+                $item
+            ) {
+
+                $sheet->setCellValue(
+                    'A' . $ligne,
+                    $item['date']
+                );
+
+                $sheet->setCellValue(
+                    'B' . $ligne,
+                    $item['article']
+                );
+
+                $sheet->setCellValue(
+                    'C' . $ligne,
+                    $item['quantite']
+                );
+
+                $sheet->setCellValue(
+                    'D' . $ligne,
+                    $item['valeur']
+                );
+
+                $ligne++;
+            }
         }
 
 
@@ -245,7 +342,10 @@ class EtatSortieStockExport implements
         */
 
         $sheet->getStyle(
-            'A5:D' . ($ligne - 1)
+            'A5:D' . max(
+                $ligne - 1,
+                7
+            )
         )->applyFromArray([
 
             'borders' => [

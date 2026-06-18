@@ -20,217 +20,457 @@
 
             <div class="card-body">
 
-                @if (session('success'))
+                {{-- @if (session('success'))
                     <div class="alert alert-success">
 
                         {{ session('success') }}
 
                     </div>
-                @endif
+                @endif --}}
 
-                <div class="table-responsive">
+                <ul class="nav nav-pills mb-3">
 
-                    <table class="table table-bordered table-hover">
+                    <li class="nav-item">
 
-                        <thead class="table-primary">
+                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#attente">
 
-                            <tr>
+                            À valider
 
-                                <th>#</th>
+                            <span class="badge bg-warning text-dark ms-1">
 
-                                <th>Date</th>
+                                {{ $enAttente->count() }}
 
-                                <th>Objet</th>
+                            </span>
 
-                                <th>Demandeur</th>
+                        </button>
 
-                                <th>Département</th>
+                    </li>
 
-                                <th>Statut</th>
+                    <li class="nav-item">
 
-                                <th width="220">
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#validees">
 
-                                    Actions
+                            Validées
 
-                                </th>
+                            <span class="badge bg-success ms-1">
 
-                            </tr>
+                                {{ $validees->count() }}
 
-                        </thead>
+                            </span>
 
-                        <tbody>
+                        </button>
 
-                            @forelse($demandes as $demande)
-                                <tr>
+                    </li>
 
-                                    <td>
+                    <li class="nav-item">
 
-                                        {{ $loop->iteration }}
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#rejetees">
 
-                                    </td>
+                            Rejetées
 
-                                    <td>
+                            <span class="badge bg-danger ms-1">
 
-                                        {{ $demande->date }}
+                                {{ $rejetees->count() }}
 
-                                    </td>
+                            </span>
 
-                                    <td>
+                        </button>
 
-                                        {{ $demande->objet }}
+                    </li>
 
-                                    </td>
+                </ul>
 
-                                    <td>
+                <div class="tab-content">
 
-                                        {{ $demande->user->prenom }}
+                    <div class="tab-pane fade show active" id="attente">
 
-                                        {{ $demande->user->name }}
+                        <div class="table-responsive">
 
-                                    </td>
+                            <table id="table-attente" class="table table-bordered table-hover table-striped datatable">
 
-                                    <td>
+                                <thead class="table-primary">
 
-                                        {{ $demande->user->departement->nom ?? '-' }}
+                                    <tr>
 
-                                    </td>
+                                        <th>#</th>
 
-                                    <td>
+                                        <th>Date</th>
 
-                                        @include('includes.statut-demande')
+                                        <th>Objet</th>
 
-                                    </td>
+                                        <th>Demandeur</th>
 
-                                    <td class="text-nowrap">
+                                        <th>Département</th>
 
-                                        <!-- Détails -->
+                                        <th>Statut</th>
 
-                                        <a href="{{ route('demandes.show', $demande->id) }}" class="btn btn-info btn-sm">
+                                        <th width="220">
 
-                                            <i class="fas fa-eye"></i>
+                                            Actions
 
-                                        </a>
+                                        </th>
 
-                                        <!-- Valider -->
+                                    </tr>
 
-                                        <form action="{{ route('demandes.valider.superieur', $demande->id) }}"
-                                            method="POST" class="d-inline">
+                                </thead>
 
-                                            @csrf
+                                <tbody>
 
-                                            @method('PUT')
+                                    @forelse($enAttente as $demande)
+                                        <tr>
 
-                                            {{-- <button class="btn btn-success btn-sm">
+                                            <td>
+
+                                                {{ $loop->iteration }}
+
+                                            </td>
+
+                                            <td>
+
+                                                {{ $demande->date }}
+
+                                            </td>
+
+                                            <td>
+
+                                                {{ $demande->objet }}
+
+                                            </td>
+
+                                            <td>
+
+                                                {{ $demande->user->prenom }}
+
+                                                {{ $demande->user->name }}
+
+                                            </td>
+
+                                            <td>
+
+                                                {{ $demande->user->departement->nom ?? '-' }}
+
+                                            </td>
+
+                                            <td>
+
+                                                @include('includes.statut-demande')
+
+                                            </td>
+
+                                            <td class="text-nowrap">
+
+                                                <!-- Détails -->
+
+                                                <a href="{{ route('demandes.show', $demande->id) }}"
+                                                    class="btn btn-info btn-sm">
+
+                                                    <i class="fas fa-eye"></i>
+
+                                                </a>
+
+                                                <!-- Valider -->
+
+                                                <form action="{{ route('demandes.valider.superieur', $demande->id) }}"
+                                                    method="POST" class="d-inline">
+
+                                                    @csrf
+
+                                                    @method('PUT')
+
+                                                    {{-- <button class="btn btn-success btn-sm">
 
                                                 <i class="fas fa-check"></i>
 
                                             </button> --}}
 
-                                            <button type="button" title="Valider" class="btn btn-success btn-sm"
-                                                onclick="confirmAction(this.form, 'Confirmer la validation de cette demande ?')">
+                                                    <button type="button" title="Valider" class="btn btn-success btn-sm"
+                                                        onclick="confirmAction(this.form, 'Confirmer la validation de cette demande ?')">
 
-                                                <i class="fas fa-check"></i>
-                                            </button>
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
 
-                                        </form>
+                                                </form>
 
-                                        <!-- Rejeter -->
-                                        <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                            data-bs-target="#rejetModal{{ $demande->id }}">
+                                                <!-- Rejeter -->
+                                                <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                                    data-bs-target="#rejetModal{{ $demande->id }}">
 
-                                            <i class="fas fa-times"></i>
+                                                    <i class="fas fa-times"></i>
 
-                                        </button>
+                                                </button>
 
-                                        <!-- Modal rejet -->
+                                                <!-- Modal rejet -->
 
-                                        <div class="modal fade" id="rejetModal{{ $demande->id }}" tabindex="-1"
-                                            aria-hidden="true">
+                                                <div class="modal fade" id="rejetModal{{ $demande->id }}" tabindex="-1"
+                                                    aria-hidden="true">
 
-                                            <div class="modal-dialog">
+                                                    <div class="modal-dialog">
 
-                                                <div class="modal-content">
+                                                        <div class="modal-content">
 
-                                                    <div class="modal-header bg-danger text-white">
+                                                            <div class="modal-header bg-danger text-white">
 
-                                                        <h5 class="modal-title">
+                                                                <h5 class="modal-title">
 
-                                                            Motif du rejet
+                                                                    Motif du rejet
 
-                                                        </h5>
+                                                                </h5>
 
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal">
+                                                                <button type="button" class="btn-close"
+                                                                    data-bs-dismiss="modal">
 
-                                                        </button>
+                                                                </button>
+
+                                                            </div>
+
+                                                            <form
+                                                                action="{{ route('demandes.rejeter.superieur', $demande->id) }}"
+                                                                method="POST">
+
+                                                                @csrf
+                                                                @method('PUT')
+
+                                                                <div class="modal-body">
+
+                                                                    <label>
+
+                                                                        Veuillez renseigner le motif :
+
+                                                                    </label>
+
+                                                                    <textarea name="commentaire" class="form-control" rows="4" required></textarea>
+
+                                                                </div>
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button" class="btn btn-secondary"
+                                                                        data-bs-dismiss="modal">
+
+                                                                        Annuler
+
+                                                                    </button>
+
+                                                                    <button class="btn btn-danger">
+
+                                                                        Confirmer
+
+                                                                    </button>
+
+
+                                                                </div>
+
+                                                            </form>
+
+                                                        </div>
 
                                                     </div>
 
-                                                    <form action="{{ route('demandes.rejeter.superieur', $demande->id) }}"
-                                                        method="POST">
-
-                                                        @csrf
-                                                        @method('PUT')
-
-                                                        <div class="modal-body">
-
-                                                            <label>
-
-                                                                Veuillez renseigner le motif :
-
-                                                            </label>
-
-                                                            <textarea name="commentaire" class="form-control" rows="4" required></textarea>
-
-                                                        </div>
-
-                                                        <div class="modal-footer">
-
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-bs-dismiss="modal">
-
-                                                                Annuler
-
-                                                            </button>
-
-                                                            <button class="btn btn-danger">
-
-                                                                Confirmer
-
-                                                            </button>
-
-
-                                                        </div>
-
-                                                    </form>
-
                                                 </div>
 
-                                            </div>
+                                            </td>
 
-                                        </div>
+                                        </tr>
 
-                                    </td>
+                                    @empty
 
-                                </tr>
+                                        {{-- <tr>
 
-                            @empty
+                                            <td colspan="7" class="text-center">
 
-                                <tr>
+                                                Aucune demande à valider
 
-                                    <td colspan="7" class="text-center">
+                                            </td>
 
-                                        Aucune demande à valider
+                                        </tr> --}}
+                                    @endforelse
 
-                                    </td>
+                                </tbody>
 
-                                </tr>
-                            @endforelse
+                            </table>
 
-                        </tbody>
+                        </div>
 
-                    </table>
+                    </div>
+
+                    {{-- Demandes validees --}}
+
+                    <div class="tab-pane fade" id="validees">
+
+                        <div class="table-responsive">
+
+                            <table id="table-validees" class="table table-bordered table-hover table-striped datatable">
+                                <thead class="table-success">
+
+                                    <tr>
+
+                                        <th>#</th>
+                                        <th>Date</th>
+                                        <th>Objet</th>
+                                        <th>Demandeur</th>
+                                        <th>Département</th>
+                                        <th>Statut</th>
+                                        <th width="80">Actions</th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @forelse($validees as $demande)
+                                        <tr>
+
+                                            <td>{{ $loop->iteration }}</td>
+
+                                            <td>{{ $demande->date }}</td>
+
+                                            <td>{{ $demande->objet }}</td>
+
+                                            <td>
+
+                                                {{ $demande->user->prenom }}
+
+                                                {{ $demande->user->name }}
+
+                                            </td>
+
+                                            <td>
+
+                                                {{ $demande->user->departement->nom ?? '-' }}
+
+                                            </td>
+
+                                            <td>
+
+                                                @include('includes.statut-demande')
+
+                                            </td>
+
+                                            <td>
+
+                                                <a href="{{ route('demandes.show', $demande->id) }}"
+                                                    class="btn btn-info btn-sm">
+
+                                                    <i class="fas fa-eye"></i>
+
+                                                </a>
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        {{-- <tr>
+
+                                            <td colspan="7" class="text-center">
+
+                                                Aucune demande validée
+
+                                            </td>
+
+                                        </tr> --}}
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                    <div class="tab-pane fade" id="rejetees">
+
+                        <div class="table-responsive">
+
+                            <table id="table-rejetees" class="table table-bordered table-hover datatable">
+
+                                <thead class="table-danger">
+
+                                    <tr>
+
+                                        <th>#</th>
+                                        <th>Date</th>
+                                        <th>Objet</th>
+                                        <th>Demandeur</th>
+                                        <th>Département</th>
+                                        <th>Statut</th>
+                                        <th width="80">Actions</th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @forelse($rejetees as $demande)
+                                        <tr>
+
+                                            <td>{{ $loop->iteration }}</td>
+
+                                            <td>{{ $demande->date }}</td>
+
+                                            <td>{{ $demande->objet }}</td>
+
+                                            <td>
+
+                                                {{ $demande->user->prenom }}
+
+                                                {{ $demande->user->name }}
+
+                                            </td>
+
+                                            <td>
+
+                                                {{ $demande->user->departement->nom ?? '-' }}
+
+                                            </td>
+
+                                            <td>
+
+                                                @include('includes.statut-demande')
+
+                                            </td>
+
+                                            <td>
+
+                                                <a href="{{ route('demandes.show', $demande->id) }}"
+                                                    class="btn btn-info btn-sm">
+
+                                                    <i class="fas fa-eye"></i>
+
+                                                </a>
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        {{-- <tr>
+
+                                            <td colspan="7" class="text-center">
+
+                                                Aucune demande rejetée
+
+                                            </td>
+
+                                        </tr> --}}
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
 
                 </div>
+
+
 
             </div>
 

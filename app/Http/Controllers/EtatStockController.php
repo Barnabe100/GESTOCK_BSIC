@@ -158,15 +158,27 @@ class EtatStockController extends Controller
             $stockFin = $stockDebut + $entrees - $sorties;
             $resultats[] = [
                 //'date' => date_mouvement,
-                'date' => $dernierMouvement
-                    ? $dernierMouvement->date_mouvement
-                    : null,
+                // 'date' => $dernierMouvement
+                //     ? $dernierMouvement->date_mouvement
+                //     : null,
                 'article' => $article->libelle,
                 'stock_debut' => $stockDebut,
                 'entrees' => $entrees,
                 'sorties' => $sorties,
                 'stock_fin' => $stockFin
             ];
+
+            if (
+                $stockDebut == 0
+                &&
+                $entrees == 0
+                &&
+                $sorties == 0
+                &&
+                $stockFin == 0
+            ) {
+                continue;
+            }
         }
 
         return $resultats;
@@ -329,6 +341,27 @@ class EtatStockController extends Controller
                     'quantite'
                 );
 
+            $entreeValeur = MouvementStock::where(
+                'article_id',
+                $article->id
+            )
+                ->where(
+                    'type',
+                    'ENTREE'
+                )
+                ->whereBetween(
+                    'date_mouvement',
+                    [$dateDebut, $dateFin]
+                )
+                ->get()
+                ->sum(function ($mouvement) {
+
+                    return
+                        $mouvement->quantite
+                        *
+                        $mouvement->prix_unitaire;
+                });
+
             $sorties =
                 MouvementStock::where(
                     'article_id',
@@ -357,43 +390,57 @@ class EtatStockController extends Controller
                 + $entrees
                 - $sorties;
 
-            $pu =
-                $article->prix_unitaire;
+            // $pu = $article->prix_unitaire;
+            $cmp = $article->cmp;
 
             $resultats[] = [
 
                 //'date' =>$dateFin,
 
-                'date' => $mouvement->date_mouvement,
+                //'date' => $mouvement->date_mouvement,
 
                 'article' =>
                 $article->libelle,
+
+                'cmp' => $cmp,
 
                 'stock_debut_qte' =>
                 $stockDebut,
 
                 'stock_debut_valeur' =>
-                $stockDebut * $pu,
+                $stockDebut * $cmp,
 
                 'entree_qte' =>
                 $entrees,
 
-                'entree_valeur' =>
-                $entrees * $pu,
+                'entree_valeur' => $entreeValeur,
 
                 'sortie_qte' =>
                 $sorties,
 
                 'sortie_valeur' =>
-                $sorties * $pu,
+                $sorties * $cmp,
 
                 'stock_fin_qte' =>
                 $stockFin,
 
                 'stock_fin_valeur' =>
-                $stockFin * $pu
+                $stockFin * $cmp,
 
             ];
+            if (
+                empty($article->prix_unitaire)
+                &&
+                $stockDebut == 0
+                &&
+                $entrees == 0
+                &&
+                $sorties == 0
+                &&
+                $stockFin == 0
+            ) {
+                continue;
+            }
         }
 
         return $resultats;

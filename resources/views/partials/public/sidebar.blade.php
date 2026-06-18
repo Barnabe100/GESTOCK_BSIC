@@ -71,15 +71,19 @@
 
             </a>
         @endif
-        @if (auth()->user()->hasAnyRole(['Gestionnaire', 'SuperAdmin']))
+        @if (auth()->user()->hasAnyRole(['SuperAdmin', 'Gestionnaire']))
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle"
                 href="{{ route('fournisseurs.index') }}">
 
                 Fournisseurs
 
             </a>
+        @endif
 
-            <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('demandes.index') }}">
+
+        @if (auth()->user()->hasAnyRole(['Gestionnaire']))
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle"
+                href="{{ route('demandes.gestionnaire') }}">
 
                 Demandes
 
@@ -90,7 +94,7 @@
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle"
                 href="{{ route('demandes.validation.finale.index') }}">
 
-                Demandes à valider
+                Demandes
 
             </a>
         @endrole
@@ -108,7 +112,7 @@
         @role('Superieur')
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('demandes.superieur') }}">
 
-                Demandes à valider
+                Demandes
 
             </a>
         @endrole

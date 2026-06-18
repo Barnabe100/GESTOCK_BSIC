@@ -17,6 +17,7 @@ class MouvementStock extends Model
         'quantite',
         'motif',
         'date_mouvement',
+        'prix_unitaire',
 
     ];
 

@@ -8,6 +8,7 @@
 
         <div class="card shadow-sm">
 
+
             <!-- HEADER -->
             <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
                 <h5 class="mb-0">Liste des demandes</h5>
@@ -47,7 +48,9 @@
                             <th>#</th>
                             <th>Objet</th>
                             <th>Date</th>
-                            <th>Utilisateur</th>
+                            @if (!($estMesDemandes ?? false))
+                                <th>Utilisateur</th>
+                            @endif
                             <th>Validation</th>
                             <th>Livraison</th>
                             <th>Statut</th>
@@ -65,7 +68,9 @@
 
                                 <td>{{ $demande->date }}</td>
 
-                                <td>{{ $demande->user->name ?? '' }}</td>
+                                @if (!($estMesDemandes ?? false))
+                                    <td>{{ ($demande->user->prenom ?? '') . ' ' . ($demande->user->name ?? '') }}</td>
+                                @endif
 
                                 <td>
                                     @if ($demande->validation_gestionnaire)
@@ -108,6 +113,7 @@
                                             </a>
                                         @endif
                                     @endif
+
                                     @role('SuperAdmin')
                                         <form action="{{ route('demandes.destroy', $demande->id) }}" method="POST"
                                             style="display:inline-block">
@@ -124,232 +130,228 @@
                                     @endrole
 
                                     @if (auth()->user()->hasAnyRole(['Gestionnaire', 'SuperAdmin']))
-                                        @if (!$demande->validation_gestionnaire && $demande->statut == 'En attente gestionnaire')
-                                            {{-- <form action="{{ route('demandes.valider', $demande->id) }}" method="POST"
-                                                style="display:inline-block">
-                                                @csrf
-
-
-                                                <button type="button" title="Valider" class="btn btn-success btn-sm"
-                                                    onclick="confirmAction(this.form, 'Confirmer la validation de cette demande ?')">
-
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                            </form> --}}
-
+                                        @if (!$demande->validation_gestionnaire)
                                             <button class="btn btn-success btn-sm" data-bs-toggle="modal"
-                                                data-bs-target="#validationModal{{ $demande->id }}">
+                                                data-bs-target="#validationModal{{ $demande->id }}" title="Valider">
 
                                                 <i class="fas fa-check"></i>
 
                                             </button>
+                                        @endif
 
-                                            <div class="modal fade" id="validationModal{{ $demande->id }}" tabindex="-1">
 
-                                                <div class="modal-dialog modal-lg">
 
-                                                    <div class="modal-content">
 
-                                                        <div class="modal-header bg-success text-white">
+                                        <div class="modal fade" id="validationModal{{ $demande->id }}" tabindex="-1">
 
-                                                            <h5>
+                                            <div class="modal-dialog modal-lg">
 
-                                                                Validation gestionnaire
+                                                <div class="modal-content">
 
-                                                            </h5>
+                                                    <div class="modal-header bg-success text-white">
 
-                                                            <button class="btn-close" data-bs-dismiss="modal">
+                                                        <h5>
+
+                                                            Validation gestionnaire
+
+                                                        </h5>
+
+                                                        <button class="btn-close" data-bs-dismiss="modal">
+
+                                                        </button>
+
+                                                    </div>
+
+                                                    <form action="{{ route('demandes.valider', $demande->id) }}"
+                                                        method="POST">
+
+                                                        @csrf
+                                                        @method('PUT')
+
+                                                        <div class="modal-body">
+
+                                                            <table class="table">
+
+                                                                <thead>
+
+                                                                    <tr>
+
+                                                                        <th>
+
+                                                                            Article
+
+                                                                        </th>
+
+                                                                        <th>
+
+                                                                            Demandée
+
+                                                                        </th>
+
+                                                                        <th>
+
+                                                                            Disponible
+
+                                                                        </th>
+
+                                                                        <th>
+
+                                                                            Accordée
+
+                                                                        </th>
+
+                                                                    </tr>
+
+                                                                </thead>
+
+                                                                <tbody>
+
+                                                                    @foreach ($demande->articles as $item)
+                                                                        <tr>
+
+                                                                            <td>
+
+                                                                                {{ $item->article->libelle }}
+
+                                                                            </td>
+
+                                                                            <td>
+
+                                                                                {{ $item->quantite }}
+
+                                                                            </td>
+
+                                                                            <td>
+
+                                                                                {{ $item->article->stock_disponible }}
+
+                                                                            </td>
+
+                                                                            <td>
+
+                                                                                <input type="number"
+                                                                                    name="quantite_accordee[{{ $item->article->id }}]"
+                                                                                    class="form-control" min="0"
+                                                                                    max="{{ min($item->quantite, $item->article->stock_disponible) }}"
+                                                                                    value="{{ $item->quantite_accordee ?? min($item->quantite, $item->article->stock_disponible) }}">
+
+                                                                            </td>
+
+                                                                        </tr>
+                                                                    @endforeach
+
+                                                                </tbody>
+
+                                                            </table>
+
+                                                        </div>
+
+                                                        <div class="modal-footer">
+
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">
+
+                                                                Annuler
+
+                                                            </button>
+
+                                                            <button type="submit" class="btn btn-success">
+
+                                                                Valider
 
                                                             </button>
 
                                                         </div>
 
-                                                        <form action="{{ route('demandes.valider', $demande->id) }}"
-                                                            method="POST">
-
-                                                            @csrf
-                                                            @method('PUT')
-
-                                                            <div class="modal-body">
-
-                                                                <table class="table">
-
-                                                                    <thead>
-
-                                                                        <tr>
-
-                                                                            <th>
-
-                                                                                Article
-
-                                                                            </th>
-
-                                                                            <th>
-
-                                                                                Demandée
-
-                                                                            </th>
-
-                                                                            <th>
-
-                                                                                Disponible
-
-                                                                            </th>
-
-                                                                            <th>
-
-                                                                                Accordée
-
-                                                                            </th>
-
-                                                                        </tr>
-
-                                                                    </thead>
-
-                                                                    <tbody>
-
-                                                                        @foreach ($demande->articles as $item)
-                                                                            <tr>
-
-                                                                                <td>
-
-                                                                                    {{ $item->article->libelle }}
-
-                                                                                </td>
-
-                                                                                <td>
-
-                                                                                    {{ $item->quantite }}
-
-                                                                                </td>
-
-                                                                                <td>
-
-                                                                                    {{ $item->article->stock_disponible }}
-
-                                                                                </td>
-
-                                                                                <td>
-
-                                                                                    <input type="number"
-                                                                                        name="quantite_accordee[{{ $item->article->id }}]"
-                                                                                        class="form-control" min="0"
-                                                                                        max="{{ $item->article->stock_disponible }}"
-                                                                                        value="{{ min($item->quantite, $item->article->stock_disponible) }}">
-
-                                                                                </td>
-
-                                                                            </tr>
-                                                                        @endforeach
-
-                                                                    </tbody>
-
-                                                                </table>
-
-                                                            </div>
-
-                                                            <div class="modal-footer">
-
-                                                                <button type="button" class="btn btn-secondary"
-                                                                    data-bs-dismiss="modal">
-
-                                                                    Annuler
-
-                                                                </button>
-
-                                                                <button type="submit" class="btn btn-success">
-
-                                                                    Valider
-
-                                                                </button>
-
-                                                            </div>
-
-                                                        </form>
-
-                                                    </div>
+                                                    </form>
 
                                                 </div>
 
                                             </div>
-                                            {{-- Fin validation demande --}}
-                                            {{-- Rejet demande --}}
 
+                                        </div>
+                                        {{-- Fin validation demande --}}
+
+                                        {{-- Rejet demande --}}
+
+                                        @if (!$demande->validation_gestionnaire && $demande->statut == 'En attente gestionnaire')
                                             <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
                                                 data-bs-target="#rejetModal{{ $demande->id }}">
 
                                                 <i class="fas fa-times"></i>
 
                                             </button>
+                                        @endif
+                                        <!-- Modal rejet -->
 
-                                            <!-- Modal rejet -->
+                                        <div class="modal fade" id="rejetModal{{ $demande->id }}" tabindex="-1"
+                                            aria-hidden="true">
 
-                                            <div class="modal fade" id="rejetModal{{ $demande->id }}" tabindex="-1"
-                                                aria-hidden="true">
+                                            <div class="modal-dialog">
 
-                                                <div class="modal-dialog">
+                                                <div class="modal-content">
 
-                                                    <div class="modal-content">
+                                                    <div class="modal-header bg-danger text-white">
 
-                                                        <div class="modal-header bg-danger text-white">
+                                                        <h5 class="modal-title">
 
-                                                            <h5 class="modal-title">
+                                                            Motif du rejet
 
-                                                                Motif du rejet
+                                                        </h5>
 
-                                                            </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal">
 
-                                                            <button type="button" class="btn-close"
+                                                        </button>
+
+                                                    </div>
+
+                                                    <form
+                                                        action="{{ route('demandes.rejeter.gestionnaire', $demande->id) }}"
+                                                        method="POST">
+
+                                                        @csrf
+                                                        @method('PUT')
+
+                                                        <div class="modal-body">
+
+                                                            <label>
+
+                                                                Veuillez renseigner le motif :
+
+                                                            </label>
+
+                                                            <textarea name="commentaire" class="form-control" rows="4" required></textarea>
+
+                                                        </div>
+
+                                                        <div class="modal-footer">
+
+                                                            <button type="button" class="btn btn-secondary"
                                                                 data-bs-dismiss="modal">
+
+                                                                Annuler
+
+                                                            </button>
+
+                                                            <button class="btn btn-danger">
+
+                                                                Confirmer
 
                                                             </button>
 
                                                         </div>
 
-                                                        <form
-                                                            action="{{ route('demandes.rejeter.gestionnaire', $demande->id) }}"
-                                                            method="POST">
-
-                                                            @csrf
-                                                            @method('PUT')
-
-                                                            <div class="modal-body">
-
-                                                                <label>
-
-                                                                    Veuillez renseigner le motif :
-
-                                                                </label>
-
-                                                                <textarea name="commentaire" class="form-control" rows="4" required></textarea>
-
-                                                            </div>
-
-                                                            <div class="modal-footer">
-
-                                                                <button type="button" class="btn btn-secondary"
-                                                                    data-bs-dismiss="modal">
-
-                                                                    Annuler$demande->statut == 'En attente gestionnaire'
-
-                                                                </button>
-
-                                                                <button class="btn btn-danger">
-
-                                                                    Confirmer
-
-                                                                </button>
-
-                                                            </div>
-
-                                                        </form>
-
-                                                    </div>
+                                                    </form>
 
                                                 </div>
 
                                             </div>
-                                        @endif
+
+                                        </div>
+
+
+
+
 
                                         @if ($demande->validation_finale && !$demande->livraison)
                                             <form action="{{ route('demandes.livrer', $demande->id) }}" method="POST"

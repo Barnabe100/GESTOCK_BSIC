@@ -123,7 +123,7 @@ class EtatStockExport implements
 
                 [
 
-                    'DATE ARTICLE',
+                    // 'DATE ARTICLE',
                     'INTITULE ARTICLE',
 
                     'STOCK EN DEBUT DE PERIODE',

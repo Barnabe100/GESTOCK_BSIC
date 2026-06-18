@@ -43,7 +43,7 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Département</label>
-                            <select name="departement_id" class="form-control">
+                            <select name="departement_id" class="form-control select2">
                                 @foreach ($departements as $dep)
                                     <option value="{{ $dep->id }}"
                                         {{ $dep->id == $service->departement_id ? 'selected' : '' }}>
@@ -67,3 +67,17 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+
+            $('.select2').select2({
+                placeholder: 'Sélectionner ...',
+                allowClear: true,
+                width: '100%'
+            });
+
+        });
+    </script>
+@endpush

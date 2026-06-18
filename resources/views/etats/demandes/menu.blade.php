@@ -13,44 +13,13 @@
         <ul class="dropdown-menu w-100">
 
             <!-- 🔥 PAR AGENCE -->
-            <li class="dropdown-submenu">
+            <li>
 
-                <a class="dropdown-item" href="#">
+                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#etatDemandesAgenceModal">
 
-                    Par agence
+                    Etat des demandes par agence
 
                 </a>
-
-                <!-- FORMATS -->
-                <ul class="dropdown-menu">
-
-                    <!-- EXCEL -->
-                    <li>
-
-                        <a class="dropdown-item" href="{{ route('etats.demandes.par_agence.excel') }}">
-
-                            <i class="fas fa-file-excel text-success"></i>
-
-                            Excel
-
-                        </a>
-
-                    </li>
-
-                    <!-- PDF -->
-                    <li>
-
-                        <a class="dropdown-item" href="{{ route('etats.demandes.par_agence.pdf') }}" target="_blank">
-
-                            <i class="fas fa-file-pdf text-danger"></i>
-
-                            PDF
-
-                        </a>
-
-                    </li>
-
-                </ul>
 
             </li>
 
@@ -59,8 +28,27 @@
                 <hr class="dropdown-divider">
             </li>
 
+            <!-- 🔥 PAR DEPARTEMENT -->
+            <li>
+
+                <a class="dropdown-item" href="#" data-bs-toggle="modal"
+                    data-bs-target="#etatDemandesDepartementModal">
+
+                    Etat des demandes par departement
+
+                </a>
+
+            </li>
+
+            <!-- 🔥 SÉPARATEUR -->
+            {{-- <li>
+                <hr class="dropdown-divider">
+            </li> --}}
+
+
+
             <!-- 🔥 PAR SERVICE -->
-            <li class="dropdown-submenu">
+            {{-- <li class="dropdown-submenu">
 
                 <a class="dropdown-item" href="#">
 
@@ -98,15 +86,15 @@
 
                 </ul>
 
-            </li>
+            </li> --}}
 
             <!-- 🔥 SÉPARATEUR -->
-            <li>
+            {{-- <li>
                 <hr class="dropdown-divider">
-            </li>
+            </li> --}}
 
             <!-- 🔥 PAR DEPARTEMENT -->
-            <li class="dropdown-submenu">
+            {{-- <li class="dropdown-submenu">
 
                 <a class="dropdown-item" href="#">
 
@@ -145,15 +133,15 @@
 
                 </ul>
 
-            </li>
+            </li> --}}
 
             <!-- 🔥 SÉPARATEUR -->
-            <li>
+            {{-- <li>
                 <hr class="dropdown-divider">
-            </li>
+            </li> --}}
 
             <!-- 🔥 VALIDÉES -->
-            <li class="dropdown-submenu">
+            {{-- <li class="dropdown-submenu">
 
                 <a class="dropdown-item" href="#">
 
@@ -191,7 +179,7 @@
 
                 </ul>
 
-            </li>
+            </li> --}}
 
         </ul>
 

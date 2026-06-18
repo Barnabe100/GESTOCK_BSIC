@@ -53,12 +53,17 @@ class EtatMouvementStockController extends Controller
             $mouvement
         ) {
 
-            $pu =
+            // $pu =
 
-                $mouvement
-                ->article
-                ->prix_unitaire;
+            //     $mouvement
+            //     ->article
+            //     ->prix_unitaire;
 
+            $pu = $mouvement->prix_unitaire;
+
+            if ($pu === null) {
+                continue;
+            }
 
             $resultats[] = [
 
@@ -75,15 +80,9 @@ class EtatMouvementStockController extends Controller
 
                 'quantite' =>
 
-                $mouvement
-                    ->quantite,
+                $mouvement->quantite,
 
-                'valeur' =>
-
-                $mouvement
-                    ->quantite
-                    *
-                    $pu
+                'valeur' => $mouvement->quantite * $mouvement->prix_unitaire
 
             ];
         }
@@ -183,19 +182,18 @@ class EtatMouvementStockController extends Controller
         );
     }
 
-    //Sorties
+    //Etat des sorties
     private function getEtatSorties(
         $dateDebut,
-        $dateFin
+        $dateFin,
+        $articleId = null
     ) {
 
         $resultats = [];
 
-        $mouvements =
-
-            MouvementStock::with(
-                'article'
-            )
+        $query = MouvementStock::with(
+            'article'
+        )
 
             ->whereIn(
                 'type',
@@ -211,14 +209,27 @@ class EtatMouvementStockController extends Controller
                     $dateDebut,
                     $dateFin
                 ]
-            )
+            );
+
+        /*
+    Filtre article optionnel
+    */
+
+        if (!empty($articleId)) {
+
+            $query->where(
+                'article_id',
+                $articleId
+            );
+        }
+
+        $mouvements = $query
 
             ->orderBy(
                 'date_mouvement'
             )
 
             ->get();
-
 
         foreach (
             $mouvements
@@ -228,6 +239,8 @@ class EtatMouvementStockController extends Controller
 
             if (
                 !$mouvement->article
+                ||
+                $mouvement->article->cmp === null
             ) {
                 continue;
             }
@@ -235,24 +248,32 @@ class EtatMouvementStockController extends Controller
             $resultats[] = [
 
                 'date' =>
+
                 $mouvement->date_mouvement,
 
                 'article' =>
+
                 $mouvement->article->libelle,
 
                 'quantite' =>
+
                 $mouvement->quantite,
 
+                'cmp' =>
+
+                $mouvement->article->cmp,
+
                 'valeur' =>
+
                 $mouvement->quantite
                     *
-                    $mouvement->article->prix_unitaire
+                    $mouvement->article->cmp
 
             ];
         }
-
         return $resultats;
     }
+
 
     public function exportExcelSorties(
         Request $request
@@ -275,7 +296,8 @@ class EtatMouvementStockController extends Controller
 
                 $request->date_debut,
 
-                $request->date_fin
+                $request->date_fin,
+                $request->article_id
 
             );
 
@@ -318,7 +340,8 @@ class EtatMouvementStockController extends Controller
 
                 $request->date_debut,
 
-                $request->date_fin
+                $request->date_fin,
+                $request->article_id
 
             );
 
@@ -341,10 +364,13 @@ class EtatMouvementStockController extends Controller
 
         );
 
+        //dd($request->all());
+
         return $pdf->stream(
             'etat_sorties_stock.pdf'
         );
     }
+
 
 
     //Etat stock Final
@@ -409,6 +435,14 @@ class EtatMouvementStockController extends Controller
                 }
             }
 
+            if (
+                $article->prix_unitaire === null
+                &&
+                $stock == 0
+            ) {
+                continue;
+            }
+
             $resultats[] = [
 
                 'date' =>
@@ -420,10 +454,16 @@ class EtatMouvementStockController extends Controller
                 'quantite' =>
                 $stock,
 
+                // 'valeur' =>
+                // $stock
+                //     *
+                //     $article->prix_unitaire
+
+                'cmp' =>
+                $article->cmp,
+
                 'valeur' =>
-                $stock
-                    *
-                    $article->prix_unitaire
+                $stock * $article->cmp
 
             ];
         }

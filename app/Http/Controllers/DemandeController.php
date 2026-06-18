@@ -48,27 +48,197 @@ class DemandeController extends Controller
         }
     }
 
+    public function indexGestionnaire()
+    {
+        $user = Auth::user();
+        if ($user->hasRole(['Gestionnaire'])) {
+
+            $enAttente = Demande::with(
+                'user',
+                'articles.article'
+            )
+                ->where(
+                    'statut',
+                    'En attente gestionnaire'
+                )
+                ->where(
+                    'archiver',
+                    0
+                )
+                ->get();
+
+            $traitees = Demande::with(
+                'user',
+                'articles.article'
+            )
+                ->where(
+                    'validation_gestionnaire',
+                    1
+                )
+                ->where(
+                    'validation_finale',
+                    0
+                )
+                ->where(
+                    'archiver',
+                    0
+                )
+                ->get();
+
+            $rejetees = Demande::with(
+                'user',
+                'articles.article'
+            )
+                ->where(
+                    'statut',
+                    'Rejetée gestionnaire'
+                )
+                ->where(
+                    'archiver',
+                    0
+                )
+                ->get();
+
+            $enAttenteLivraison = Demande::with(
+                'user',
+                'articles.article'
+            )
+                ->where(
+                    'validation_finale',
+                    1
+                )
+                ->where(
+                    'archiver',
+                    0
+                )
+                ->where(
+                    'statut',
+                    'En attente livraison'
+                )
+                ->get();
+
+            $enAttenteReception = Demande::with(
+                'user',
+                'articles.article'
+            )
+                ->where(
+                    'validation_finale',
+                    1
+                )
+                ->where(
+                    'archiver',
+                    0
+                )
+                ->where(
+                    'statut',
+                    'En attente réception demandeur'
+                )
+                ->get();
+
+            $cloturees = Demande::with(
+                'user',
+                'articles.article'
+            )
+                ->where(
+                    'validation_finale',
+                    1
+                )
+                ->where(
+                    'archiver',
+                    0
+                )
+                ->where(
+                    'statut',
+                    'Livrée - Demande clôturée'
+                )
+                ->get();
+
+            return view(
+                'demandes.gestionnaire',
+                compact(
+                    'enAttente',
+                    'traitees',
+                    'rejetees',
+                    'cloturees',
+                    'enAttenteLivraison',
+                    'enAttenteReception'
+                )
+            );
+        }
+    }
+
     //Demandes vues par le superieur
     public function demandesSuperieur()
     {
-        $demandes = Demande::with([
+        $superieur = auth()->user();
+
+        $baseQuery = Demande::with([
             'user',
+            'user.agence',
             'user.departement'
         ])
-            ->where(
-                'superieur_id',
-                auth()->id()
-            )
+            ->whereHas('user', function ($q) use ($superieur) {
+
+                // Supérieur rattaché à un département
+                if (!empty($superieur->departement_id) /*|| $superieur->departement_id != 'Département Réseau'*/) {
+
+                    $q->where(
+                        'agence_id',
+                        $superieur->agence_id
+                    )
+                        ->where(
+                            'departement_id',
+                            $superieur->departement_id
+                        );
+                } else {
+
+                    // Supérieur d'agence
+                    $q->where(
+                        'agence_id',
+                        $superieur->agence_id
+                    )
+                        ->whereNull(
+                            'departement_id'
+                        );
+                }
+            });
+
+        $enAttente = (clone $baseQuery)
             ->where(
                 'statut',
                 'En attente supérieur'
+            )->where(
+                'archiver',
+                0
+            )
+            ->get();
+
+        $validees = (clone $baseQuery)
+            ->where(
+                'validation_superieur',
+                1
+            )->where(
+                'archiver',
+                0
+            )
+            ->get();
+
+        $rejetees = (clone $baseQuery)
+            ->where(
+                'statut',
+                'Rejetée'
+            )->where(
+                'archiver',
+                0
             )
             ->get();
 
         return view(
             'demandes.indexSuperieur',
             compact(
-                'demandes'
+                'enAttente',
+                'validees',
+                'rejetees'
             )
         );
     }
@@ -86,9 +256,9 @@ class DemandeController extends Controller
         $superieur = null;
 
         if (
-            $user->departement->nom != 'Département Réseau'
-            &&
-            $user->agence->nom != 'Agence du siège'
+            // $user->departement->nom != 'Département Réseau'
+            // &&
+            $user->agence->nom != 'AGENCE PRINCIPALE SIEGE'
         ) {
             // supérieur agence
 
@@ -214,10 +384,19 @@ class DemandeController extends Controller
 
     public function show($id)
     {
-        $articles = Article::where(
-            'archiver',
-            0
-        )->get();
+        $articles = Article::whereNotNull('prix_unitaire')
+            ->whereNotNull(
+                'stock_securite'
+            )
+
+            ->where(
+                'stock_disponible',
+                '>',
+                0
+            )
+            ->where('archiver', 0)
+            ->orderBy('libelle')
+            ->get();
 
         // ADMIN : accès à toutes les demandes
         if (auth()->user()->hasRole(['SuperAdmin', 'Gestionnaire', 'Superieur', 'ValidateurDemande'])) {
@@ -297,14 +476,21 @@ class DemandeController extends Controller
     //     return back()->with('success', 'Demande validée');
     // }
 
+    //Validation gestionnaire
     public function valider(Request $request, $id)
     {
         $demande = Demande::findOrFail($id);
 
-        if ($demande->validation_gestionnaire) {
+        /*
+        Interdire uniquement si
+        validation finale déjà faite
+        */
+
+        if ($demande->validation_finale) {
+
             return back()->with(
                 'error',
-                'Demande déjà validée'
+                'La demande est déjà validée définitivement'
             );
         }
 
@@ -330,20 +516,51 @@ class DemandeController extends Controller
                     'quantite_accordee' => $quantite
 
                 ]);
+
+            $demande->update([
+
+                'statut' => 'En attente validation finale',
+                'commentaire_validation_finale' => null,
+                'validation_finale' => false,
+
+            ]);
         }
 
-        $demande->update([
+        /*
+        Première validation seulement
+        */
 
-            'validation_gestionnaire' => 1,
-            'statut' => 'En attente validation finale'
+        if (
+            !$demande->validation_gestionnaire
+        ) {
 
-        ]);
+            $demande->update([
+
+                'validation_gestionnaire' => 1,
+
+                'gestionnaire_id' => auth()->id(),
+
+                'date_validation_gestionnaire' => now(),
+
+                'statut' => 'En attente validation finale',
+
+                'commentaire_validation_finale' => null,
+                'validation_finale' => false,
+
+            ]);
+        }
 
         return back()->with(
+
             'success',
-            'Quantités accordées enregistrées'
+
+            $demande->validation_gestionnaire
+                ? 'Quantités accordées modifiées'
+                : 'Quantités accordées enregistrées'
+
         );
     }
+
     //Livraison
     public function livrer($id)
     {
@@ -423,6 +640,9 @@ class DemandeController extends Controller
         $demande = Demande::findOrFail($id);
         $demande->update([
             'validation_superieur' => 1,
+
+            'superieur_id' => auth()->id(),
+
             'date_validation_superieur' => now(),
             'statut' => 'En attente gestionnaire'
         ]);
@@ -479,33 +699,96 @@ class DemandeController extends Controller
     // VUE Validation finale
     public function validationFinaleIndex()
     {
-        $demandes = Demande::with(
+        $enAttente = Demande::with(
             'user',
             'articles.article'
         )
-
             ->where(
                 'validation_gestionnaire',
                 1
             )
-
             ->where(
                 'validation_finale',
                 0
             )
+            ->where(
+                'archiver',
+                0
+            )->whereNotIn(
+                'statut',
+                [
+                    'Rejetée validation finale',
+                    'Rejetée gestionnaire'
+                ]
+            )
+            ->get();
 
+        $validees = Demande::with(
+            'user',
+            'articles.article'
+        )
+            ->where(
+                'validation_finale',
+                1
+            )
             ->where(
                 'archiver',
                 0
             )
+            ->get();
 
+        $rejetees = Demande::with(
+            'user',
+            'articles.article'
+        )
+            ->where(
+                'statut',
+                'Rejetée validation finale'
+            )
+            ->where(
+                'archiver',
+                0
+            )
             ->get();
 
         return view(
             'demandes.validationFinale.index',
             compact(
-                'demandes'
+                'enAttente',
+                'validees',
+                'rejetees'
             )
+        );
+    }
+
+    //Rejet validateur finale
+    public function rejeterFinale(
+        Request $request,
+        $id
+    ) {
+        $demande =
+            Demande::findOrFail(
+                $id
+            );
+
+        $demande->update([
+
+            'validation_finale' => 0,
+
+            'commentaire_validation_finale' =>
+            $request->motif_rejet,
+
+            'statut' =>
+            'Rejetée validation finale'
+
+        ]);
+
+        return back()->with(
+
+            'success',
+
+            'Demande rejetée.'
+
         );
     }
 
@@ -526,8 +809,11 @@ class DemandeController extends Controller
 
             'validation_finale' => 1,
 
-            'statut' =>
-            'En attente livraison'
+            'validateur_final_id' => auth()->id(),
+
+            'date_validation_finale' => now(),
+
+            'statut' => 'En attente livraison'
 
         ]);
 

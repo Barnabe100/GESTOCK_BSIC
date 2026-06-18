@@ -20,13 +20,13 @@
 
             <div class="card-body">
 
-                @if (session('success'))
+                {{-- @if (session('success'))
                     <div class="alert alert-success">
 
                         {{ session('success') }}
 
                     </div>
-                @endif
+                @endif --}}
 
                 @if (session('error'))
                     <div class="alert alert-danger">
@@ -36,144 +36,464 @@
                     </div>
                 @endif
 
+                <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
 
-                <div class="table-responsive">
+                    <li class="nav-item" role="presentation">
 
-                    <table class="table table-bordered table-hover">
+                        <button class="nav-link active" id="attente-tab" data-bs-toggle="pill" data-bs-target="#attente"
+                            type="button">
 
-                        <thead class="table-primary">
+                            À valider
 
-                            <tr>
+                            <span class="badge bg-warning text-dark ms-1">
 
-                                <th>#</th>
+                                {{ $enAttente->count() }}
 
-                                <th>Date</th>
+                            </span>
 
-                                <th>Objet</th>
+                        </button>
 
-                                <th>Demandeur</th>
+                    </li>
 
-                                <th>Département</th>
+                    <li class="nav-item" role="presentation">
 
-                                <th>Agence</th>
+                        <button class="nav-link" id="validees-tab" data-bs-toggle="pill" data-bs-target="#validees"
+                            type="button">
 
-                                <th>Statut</th>
+                            Validées
 
-                                <th width="180">
+                            <span class="badge bg-success ms-1">
 
-                                    Actions
+                                {{ $validees->count() }}
 
-                                </th>
+                            </span>
 
-                            </tr>
+                        </button>
 
-                        </thead>
+                    </li>
 
-                        <tbody>
+                    <li class="nav-item" role="presentation">
 
-                            @forelse($demandes as $demande)
-                                <tr>
+                        <button class="nav-link" id="rejetees-tab" data-bs-toggle="pill" data-bs-target="#rejetees"
+                            type="button">
 
-                                    <td>
+                            Rejetées
 
-                                        {{ $loop->iteration }}
+                            <span class="badge bg-danger ms-1">
 
-                                    </td>
+                                {{ $rejetees->count() }}
 
-                                    <td>
+                            </span>
 
-                                        {{ $demande->date }}
+                        </button>
 
-                                    </td>
+                    </li>
 
-                                    <td>
+                </ul>
 
-                                        {{ $demande->objet }}
+                <div class="tab-content" id="pills-tabContent">
 
-                                    </td>
+                    <div class="tab-pane fade show active" id="attente" role="tabpanel">
 
-                                    <td>
+                        <!-- LE TABLEAU ACTUEL SERA ICI -->
 
-                                        {{ $demande->user->prenom }}
+                        <div class="table-responsive">
 
-                                        {{ $demande->user->name }}
+                            <table class="table table-bordered table-hover datatable">
 
-                                    </td>
+                                <thead class="table-primary">
 
-                                    <td>
+                                    <tr>
 
-                                        {{ $demande->user->departement->nom ?? '-' }}
+                                        <th>#</th>
 
-                                    </td>
+                                        <th>Date</th>
 
-                                    <td>
+                                        <th>Objet</th>
 
-                                        {{ $demande->user->agence->nom ?? '-' }}
+                                        <th>Demandeur</th>
 
-                                    </td>
+                                        <th>Département</th>
 
-                                    <td>
+                                        <th>Agence</th>
 
-                                        @include('includes.statut-demande')
+                                        <th>Statut</th>
 
-                                    </td>
+                                        <th width="180">
 
-                                    <td class="text-nowrap">
+                                            Actions
 
-                                        <!-- détail -->
+                                        </th>
 
-                                        <a href="{{ route('demandes.show', $demande->id) }}" class="btn btn-info btn-sm">
+                                    </tr>
 
-                                            <i class="fas fa-eye"></i>
+                                </thead>
 
-                                        </a>
+                                <tbody>
 
-                                        <!-- validation finale -->
+                                    {{-- @forelse($demandes as $demande) --}}
+                                    @forelse($enAttente as $demande)
+                                        <tr>
 
-                                        <form action="{{ route('demandes.validation.finale', $demande->id) }}"
-                                            method="POST" class="d-inline">
+                                            <td>
 
-                                            @csrf
+                                                {{ $loop->iteration }}
 
-                                            @method('PUT')
+                                            </td>
 
-                                            {{-- <button class="btn btn-success btn-sm"
+                                            <td>
+
+                                                {{ $demande->date }}
+
+                                            </td>
+
+                                            <td>
+
+                                                {{ $demande->objet }}
+
+                                            </td>
+
+                                            <td>
+
+                                                {{ $demande->user->prenom }}
+
+                                                {{ $demande->user->name }}
+
+                                            </td>
+
+                                            <td>
+
+                                                {{ $demande->user->departement->nom ?? '-' }}
+
+                                            </td>
+
+                                            <td>
+
+                                                {{ $demande->user->agence->nom ?? '-' }}
+
+                                            </td>
+
+                                            <td>
+
+                                                @include('includes.statut-demande')
+
+                                            </td>
+
+                                            <td class="text-nowrap">
+
+                                                <!-- détail -->
+
+                                                <a href="{{ route('demandes.show', $demande->id) }}"
+                                                    class="btn btn-info btn-sm">
+
+                                                    <i class="fas fa-eye"></i>
+
+                                                </a>
+
+                                                <!-- validation finale -->
+
+                                                <form action="{{ route('demandes.validation.finale', $demande->id) }}"
+                                                    method="POST" class="d-inline">
+
+                                                    @csrf
+
+                                                    @method('PUT')
+
+                                                    {{-- <button class="btn btn-success btn-sm"
                                                 onclick="return confirm('Effectuer la validation finale ?')">
 
                                                 <i class="fas fa-check"></i>
 
                                             </button> --}}
 
-                                            <button type="button" title="Valider" class="btn btn-success btn-sm"
-                                                onclick="confirmAction(this.form, 'Effectuer la validation finale ?')">
+                                                    <button type="button" title="Valider" class="btn btn-success btn-sm"
+                                                        onclick="confirmAction(this.form, 'Effectuer la validation finale ?')">
 
-                                                <i class="fas fa-check"></i>
-                                            </button>
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
 
-                                        </form>
+                                                </form>
 
-                                    </td>
+                                                <!-- rejet final -->
 
-                                </tr>
+                                                <button type="button" title="Rejeter" class="btn btn-danger btn-sm"
+                                                    data-bs-toggle="modal" data-bs-target="#rejetModal{{ $demande->id }}">
 
-                            @empty
+                                                    <i class="fas fa-times"></i>
 
-                                <tr>
+                                                </button>
 
-                                    <td colspan="8" class="text-center">
+                                            </td>
 
-                                        Aucune demande en attente de validation finale
+                                        </tr>
 
-                                    </td>
 
-                                </tr>
-                            @endforelse
+                                        <div class="modal fade" id="rejetModal{{ $demande->id }}" tabindex="-1">
 
-                        </tbody>
+                                            <div class="modal-dialog">
 
-                    </table>
+                                                <div class="modal-content">
+
+                                                    <form action="{{ route('demandes.rejet.finale', $demande->id) }}"
+                                                        method="POST">
+
+                                                        @csrf
+
+                                                        @method('PUT')
+
+                                                        <div class="modal-header bg-danger text-white">
+
+                                                            <h5>
+
+                                                                Rejet de la demande
+
+                                                            </h5>
+
+                                                            <button type="button" class="btn-close btn-close-white"
+                                                                data-bs-dismiss="modal">
+
+                                                            </button>
+
+                                                        </div>
+
+                                                        <div class="modal-body">
+
+                                                            <label>
+
+                                                                Motif du rejet
+
+                                                                <span class="text-danger">*</span>
+
+                                                            </label>
+
+                                                            <textarea name="motif_rejet" class="form-control" rows="4" required></textarea>
+
+                                                        </div>
+
+                                                        <div class="modal-footer">
+
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">
+
+                                                                Annuler
+
+                                                            </button>
+
+                                                            <button type="submit" class="btn btn-danger">
+
+                                                                Rejeter
+
+                                                            </button>
+
+                                                        </div>
+
+                                                    </form>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    @empty
+
+                                        {{-- <tr>
+
+                                            <td colspan="8" class="text-center">
+
+                                                Aucune demande en attente de validation finale
+
+                                            </td>
+
+                                        </tr> --}}
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                    <div class="tab-pane fade" id="validees" role="tabpanel">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-bordered table-hover datatable">
+
+                                <thead class="table-success">
+
+                                    <tr>
+
+                                        <th>#</th>
+                                        <th>Date</th>
+                                        <th>Objet</th>
+                                        <th>Demandeur</th>
+                                        <th>Département</th>
+                                        <th>Agence</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @forelse($validees as $demande)
+                                        <tr>
+
+                                            <td>{{ $loop->iteration }}</td>
+
+                                            <td>{{ $demande->date }}</td>
+
+                                            <td>{{ $demande->objet }}</td>
+
+                                            <td>
+                                                {{ $demande->user->prenom }}
+                                                {{ $demande->user->name }}
+                                            </td>
+
+                                            <td>
+                                                {{ $demande->user->departement->nom ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $demande->user->agence->nom ?? '-' }}
+                                            </td>
+
+                                            <td>
+
+                                                @include('includes.statut-demande')
+
+                                            </td>
+
+                                            <td>
+
+                                                <a href="{{ route('demandes.show', $demande->id) }}"
+                                                    class="btn btn-info btn-sm">
+
+                                                    <i class="fas fa-eye"></i>
+
+                                                </a>
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        {{-- <tr>
+
+                                            <td colspan="8" class="text-center">
+
+                                                Aucune demande validée
+
+                                            </td>
+
+                                        </tr> --}}
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                    <div class="tab-pane fade" id="rejetees" role="tabpanel">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-bordered table-hover datatable">
+
+                                <thead class="table-danger">
+
+                                    <tr>
+
+                                        <th>#</th>
+                                        <th>Date</th>
+                                        <th>Objet</th>
+                                        <th>Demandeur</th>
+                                        <th>Département</th>
+                                        <th>Agence</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @forelse($rejetees as $demande)
+                                        <tr>
+
+                                            <td>{{ $loop->iteration }}</td>
+
+                                            <td>{{ $demande->date }}</td>
+
+                                            <td>{{ $demande->objet }}</td>
+
+                                            <td>
+                                                {{ $demande->user->prenom }}
+                                                {{ $demande->user->name }}
+                                            </td>
+
+                                            <td>
+                                                {{ $demande->user->departement->nom ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $demande->user->agence->nom ?? '-' }}
+                                            </td>
+
+                                            <td>
+
+                                                @include('includes.statut-demande')
+
+                                            </td>
+
+                                            <td>
+
+                                                <a href="{{ route('demandes.show', $demande->id) }}"
+                                                    class="btn btn-info btn-sm">
+
+                                                    <i class="fas fa-eye"></i>
+
+                                                </a>
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        {{-- <tr>
+
+                                            <td colspan="8" class="text-center">
+
+                                                Aucune demande rejetée
+
+                                            </td>
+
+                                        </tr> --}}
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
 
                 </div>
+
+
+
 
             </div>
 

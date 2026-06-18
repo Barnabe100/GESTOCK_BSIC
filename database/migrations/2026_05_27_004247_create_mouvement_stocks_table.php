@@ -33,6 +33,7 @@ return new class extends Migration
             );
 
             $table->integer('quantite');
+            $table->decimal('prix_unitaire', 15, 2)->nullable();
             $table->text('motif')->nullable();
             $table->date('date_mouvement')->nullable();
             $table->timestamps();

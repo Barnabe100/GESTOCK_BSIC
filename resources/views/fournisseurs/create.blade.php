@@ -21,12 +21,14 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Code</label>
-                            <input type="text" name="code" class="form-control" value="{{ old('code') }}">
+                            <span class="text-danger">*</span>
+                            <input type="text" name="code" class="form-control" value="{{ old('code') }}" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label>Nom</label>
-                            <input type="text" name="nom" class="form-control" value="{{ old('nom') }}">
+                            <span class="text-danger">*</span>
+                            <input type="text" name="nom" class="form-control" value="{{ old('nom') }}" required>
                         </div>
 
                     </div>

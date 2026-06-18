@@ -21,12 +21,14 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Numéro bon commande</label>
-                            <input type="text" name="numero_bon_commande" class="form-control">
+                            <span class="text-danger">*</span>
+                            <input type="text" name="numero_bon_commande" class="form-control" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label>Numéro facture proforma</label>
-                            <input type="text" name="num_facture_proforma" class="form-control">
+                            <label>Numéro facture</label>
+                            <span class="text-danger">*</span>
+                            <input type="text" name="num_facture_proforma" class="form-control" required>
                         </div>
 
                     </div>
@@ -35,12 +37,14 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Date</label>
-                            <input type="date" name="date" class="form-control">
+                            <span class="text-danger">*</span>
+                            <input type="date" name="date" class="form-control" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label>Libellé</label>
-                            <input type="text" name="libelle" class="form-control">
+                            <span class="text-danger">*</span>
+                            <input type="text" name="libelle" class="form-control" required>
                         </div>
 
 
@@ -51,7 +55,8 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Fournisseur</label>
-                            <select name="fournisseur_id" class="form-control select2">
+                            <span class="text-danger">*</span>
+                            <select name="fournisseur_id" class="form-control select2" required>
                                 <option value=""></option>
                                 @foreach ($fournisseurs as $f)
                                     <option value="{{ $f->id }}">{{ $f->nom }}</option>
@@ -61,7 +66,8 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Montant</label>
-                            <input type="number" name="montant" class="form-control">
+                            <span class="text-danger">*</span>
+                            <input type="number" name="montant" class="form-control" required>
                         </div>
 
 

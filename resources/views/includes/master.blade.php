@@ -26,6 +26,12 @@
             <!-- CONTENU PRINCIPAL -->
             <div class="container-fluid">
 
+                @if (session('error'))
+                    <div class="alert alert-danger">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
                 @if (session('success'))
                     <div class="alert alert-success m-3">
                         {{ session('success') }}

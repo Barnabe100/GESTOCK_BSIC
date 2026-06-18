@@ -78,11 +78,27 @@
 
                                     <!-- LIVRAISON -->
                                     <td>
-                                        @if ($commande->livraison)
-                                            <span class="badge bg-primary">Livrée</span>
+
+                                        @if ($commande->articles->sum('quantite_livree') == 0)
+                                            <span class="badge bg-danger">
+
+                                                En attente
+
+                                            </span>
+                                        @elseif($commande->articles->sum('quantite_restante') > 0)
+                                            <span class="badge bg-warning">
+
+                                                Partielle
+
+                                            </span>
                                         @else
-                                            <span class="badge bg-danger">Non livrée</span>
+                                            <span class="badge bg-success">
+
+                                                Receptionnée
+
+                                            </span>
                                         @endif
+
                                     </td>
 
                                     <td>
@@ -143,7 +159,9 @@
 
 
                                             <!-- LIVRER -->
-                                            @if ($commande->validation && !$commande->livraison)
+
+                                            {{-- @if ($commande->validation && !$commande->livraison) --}}
+                                            @if ($commande->validation && $commande->articles->sum('quantite_restante') > 0)
                                                 {{-- <form action="{{ route('commandes.livrer', $commande->id) }}"
                                                     method="POST" style="display:inline-block">
                                                     @csrf
@@ -162,7 +180,7 @@
 
                                                 <div class="modal fade" id="livrer{{ $commande->id }}">
 
-                                                    <div class="modal-dialog">
+                                                    <div class="modal-dialog modal-xl">
 
                                                         <div class="modal-content">
 
@@ -171,6 +189,8 @@
                                                                 <h5>
 
                                                                     Réception commande
+
+                                                                    {{ $commande->numero_bon_commande }}
 
                                                                 </h5>
 
@@ -183,21 +203,116 @@
 
                                                                 @method('PUT')
 
-
                                                                 <div class="modal-body">
 
-                                                                    <label>
+                                                                    <div class="mb-3">
 
-                                                                        Date réelle réception
+                                                                        <label>
 
-                                                                    </label>
+                                                                            Date réelle réception
 
-                                                                    <input type="date" name="date_livraison"
-                                                                        class="form-control" required
-                                                                        value="{{ date('Y-m-d') }}">
+                                                                        </label>
+
+                                                                        <input type="date" name="date_livraison"
+                                                                            class="form-control" required
+                                                                            value="{{ date('Y-m-d') }}">
+
+                                                                    </div>
+
+                                                                    <table class="table table-bordered">
+
+                                                                        <thead>
+
+                                                                            <tr>
+
+                                                                                <th>
+
+                                                                                    Article
+
+                                                                                </th>
+
+                                                                                <th>
+
+                                                                                    Commandée
+
+                                                                                </th>
+
+                                                                                <th>
+
+                                                                                    Livrée
+
+                                                                                </th>
+
+                                                                                <th>
+
+                                                                                    Restante
+
+                                                                                </th>
+
+                                                                                <th>
+
+                                                                                    Réception du jour
+
+                                                                                </th>
+
+                                                                            </tr>
+
+                                                                        </thead>
+
+                                                                        <tbody>
+
+                                                                            @foreach ($commande->articles as $ligne)
+                                                                                @if ($ligne->quantite_restante > 0)
+                                                                                    <tr>
+
+                                                                                        <td>
+
+                                                                                            {{ $ligne->article->libelle }}
+
+                                                                                        </td>
+
+                                                                                        <td>
+
+                                                                                            {{ $ligne->quantite }}
+
+                                                                                        </td>
+
+                                                                                        <td>
+
+                                                                                            {{ $ligne->quantite_livree }}
+
+                                                                                        </td>
+
+                                                                                        <td>
+
+                                                                                            <span class="badge bg-warning">
+
+                                                                                                {{ $ligne->quantite_restante }}
+
+                                                                                            </span>
+
+                                                                                        </td>
+
+                                                                                        <td>
+
+                                                                                            <input type="number"
+                                                                                                class="form-control"
+                                                                                                name="quantites[{{ $ligne->id }}]"
+                                                                                                value="0"
+                                                                                                min="0"
+                                                                                                max="{{ $ligne->quantite_restante }}">
+
+                                                                                        </td>
+
+                                                                                    </tr>
+                                                                                @endif
+                                                                            @endforeach
+
+                                                                        </tbody>
+
+                                                                    </table>
 
                                                                 </div>
-
 
                                                                 <div class="modal-footer">
 
@@ -208,10 +323,9 @@
 
                                                                     </button>
 
-
                                                                     <button type="submit" class="btn btn-success">
 
-                                                                        Valider
+                                                                        Enregistrer réception
 
                                                                     </button>
 

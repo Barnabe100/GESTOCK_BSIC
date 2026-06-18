@@ -20,8 +20,9 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Code</label>
+                            <span class="text-danger">*</span>
                             <input type="text" name="code" class="form-control @error('code') is-invalid @enderror"
-                                value="{{ old('code') }}">
+                                value="{{ old('code') }}" required>
                             @error('code')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -29,8 +30,9 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Nom</label>
+                            <span class="text-danger">*</span>
                             <input type="text" name="nom" class="form-control @error('nom') is-invalid @enderror"
-                                value="{{ old('nom') }}">
+                                value="{{ old('nom') }}" required>
                             @error('nom')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -38,7 +40,8 @@
 
                         <div class="col-md-12 mb-3">
                             <label>Agence</label>
-                            <select name="agence_id" class="form-control select2">
+                            <span class="text-danger">*</span>
+                            <select name="agence_id" class="form-control select2" required>
                                 <option value=""></option>
                                 @foreach ($agences as $ag)
                                     <option value="{{ $ag->id }}">{{ $ag->nom }}</option>

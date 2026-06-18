@@ -42,6 +42,7 @@
                     <!-- Code -->
                     <div class="mb-3">
                         <label class="form-label">Code de la catégorie</label>
+                        <span class="text-danger">*</span>
                         <input type="text" name="code" class="form-control @error('libelle') is-invalid @enderror"
                             value="{{ old('code') }}" required>
 
@@ -55,6 +56,7 @@
                     <!-- libelle -->
                     <div class="mb-3">
                         <label class="form-label">libelle de la catégorie</label>
+                        <span class="text-danger">*</span>
                         <input type="text" name="libelle" class="form-control @error('libelle') is-invalid @enderror"
                             placeholder="Ex: Informatique" value="{{ old('libelle') }}" required>
 

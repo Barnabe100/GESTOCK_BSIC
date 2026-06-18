@@ -49,7 +49,7 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Agence</label>
-                            <select name="agence_id" class="form-control">
+                            <select name="agence_id" class="form-control select2">
                                 @foreach ($agences as $ag)
                                     <option value="{{ $ag->id }}"
                                         {{ $ag->id == $departement->agence_id ? 'selected' : '' }}>
@@ -74,3 +74,7 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('assets/js/select.js') }}"></script>
+@endpush

@@ -103,4 +103,12 @@ class ServiceController extends Controller
             'services.csv'
         );
     }
+
+    public function services($id)
+    {
+        return Service::where(
+            'departement_id',
+            $id
+        )->get();
+    }
 }

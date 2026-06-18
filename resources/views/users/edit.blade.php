@@ -12,6 +12,12 @@
                 <h5>Modifier utilisateur</h5>
             </div>
 
+            @error('superieur')
+                <div class="alert alert-danger">
+                    {{ $message }}
+                </div>
+            @enderror
+
             <div class="card-body">
 
                 <form method="POST" action="{{ route('users.update', $user->id) }}">
@@ -35,10 +41,6 @@
                             <input type="email" name="email" class="form-control" value="{{ $user->email }}">
                         </div>
 
-                    </div>
-
-                    <div class="row">
-
                         <div class="col-md-6 mb-3">
                             <label>Mot de passe (optionnel)</label>
                             <input type="password" name="password" class="form-control">
@@ -48,9 +50,15 @@
 
                     <div class="row">
 
+
+
+                    </div>
+
+                    <div class="row">
+
                         <div class="col-md-4 mb-3">
                             <label>Agence</label>
-                            <select name="agence_id" class="form-control">
+                            <select id="agence_id" name="agence_id" class="form-control select2">
                                 @foreach ($agences as $agence)
                                     <option value="{{ $agence->id }}"
                                         {{ $user->agence_id == $agence->id ? 'selected' : '' }}>
@@ -62,7 +70,7 @@
 
                         <div class="col-md-4 mb-3">
                             <label>Département</label>
-                            <select name="departement_id" class="form-control">
+                            <select id="departement_id" name="departement_id" class="form-control select2">
                                 @foreach ($departements as $dep)
                                     <option value="{{ $dep->id }}"
                                         {{ $user->departement_id == $dep->id ? 'selected' : '' }}>
@@ -74,7 +82,7 @@
 
                         <div class="col-md-4 mb-3">
                             <label>Service</label>
-                            <select name="service_id" class="form-control">
+                            <select id="service_id" name="service_id" class="form-control select2">
                                 @foreach ($services as $service)
                                     <option value="{{ $service->id }}"
                                         {{ $user->service_id == $service->id ? 'selected' : '' }}>
@@ -131,3 +139,7 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('assets/js/users.js') }}"></script>
+@endpush

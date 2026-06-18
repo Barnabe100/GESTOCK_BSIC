@@ -84,6 +84,15 @@ class UserController extends Controller
                 }
             }
         }
+
+        $request->validate([
+            'name' => 'required',
+            'prenom' => 'required',
+            'email' => 'required',
+            'password' => 'required',
+            //'departement_id' => 'required',
+            //'service_id' => 'required',
+        ]);
         $user = User::create([
             'name' => $request->name,
             'prenom' => $request->prenom,
@@ -132,58 +141,6 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        if ($request->has('superieur')) {
-            $agenceExiste = User::where(
-                'agence_id',
-                $request->agence_id
-            )
-                ->where(
-                    'superieur',
-                    1
-                )
-                ->where(
-                    'id',
-                    '!=',
-                    $user->id
-                )
-                ->exists();
-
-            $departementExiste = User::where(
-                'departement_id',
-                $request->departement_id
-            )
-                ->where(
-                    'superieur',
-                    1
-                )
-                ->where(
-                    'id',
-                    '!=',
-                    $user->id
-                )
-                ->exists();
-
-            if ($agenceExiste) {
-                return back()->withErrors([
-
-                    'superieur' =>
-
-                    'Cette agence possède déjà un directeur.'
-
-                ]);
-            }
-
-            if ($departementExiste) {
-                return back()->withErrors([
-
-                    'superieur' =>
-
-                    'Ce département possède déjà un directeur.'
-
-                ]);
-            }
-        }
-
         $user->update([
             'name' => $request->name,
             'prenom' => $request->prenom,
@@ -194,37 +151,28 @@ class UserController extends Controller
             'superieur' => $request->has('superieur')
         ]);
 
-        if (
-            $user->superieur
-        ) {
-            if (
-                !$user->hasRole(
-                    'Superieur'
-                )
-            ) {
-                $user->assignRole(
-                    'Superieur'
-                );
+        if ($request->has('superieur')) {
+
+            if (!$user->hasRole('Superieur')) {
+
+                $user->assignRole('Superieur');
             }
         } else {
-            $user->removeRole(
-                'Superieur'
-            );
+
+            $user->removeRole('Superieur');
         }
 
-        // 🔥 PASSWORD
         if ($request->filled('password')) {
+
             $user->update([
-
-                'password' => $request->password
-
+                'password' => bcrypt($request->password)
             ]);
         }
 
-        // 🔥 multi rôles
         $user->syncRoles($request->roles ?? []);
 
-        return redirect()->route('users.index')
+        return redirect()
+            ->route('users.index')
             ->with('success', 'Utilisateur modifié');
     }
 
@@ -290,5 +238,29 @@ class UserController extends Controller
             'Utilisateur débloqué'
 
         );
+    }
+
+    public function getDepartementsParAgence(
+        $agenceId
+    ) {
+
+        return Departement::where(
+            'agence_id',
+            $agenceId
+        )
+            ->orderBy('nom')
+            ->get();
+    }
+
+    public function getServicesParDepartement(
+        $departementId
+    ) {
+
+        return Service::where(
+            'departement_id',
+            $departementId
+        )
+            ->orderBy('nom')
+            ->get();
     }
 }

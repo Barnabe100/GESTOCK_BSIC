@@ -8,6 +8,8 @@
 
         <div class="card shadow-sm">
 
+            {{-- {{ $article->cmp }} --}}
+
             <!-- HEADER -->
             <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
                 <h5 class="mb-0">Liste des articles</h5>
@@ -45,10 +47,11 @@
                                 <th>#</th>
                                 <th>Code</th>
                                 <th>Libellé</th>
+                                <th>Catégorie</th>
                                 <th>Prix</th>
                                 <th>Stock disponible</th>
                                 <th>Statut stock</th>
-                                <th>Catégorie</th>
+
                                 <th width="180px">Actions</th>
                             </tr>
                         </thead>
@@ -62,41 +65,80 @@
                                     <td>{{ $article->code }}</td>
 
                                     <td>{{ $article->libelle }}</td>
-
-                                    <td>{{ $article->prix_unitaire }}</td>
-
-                                    <!-- STOCK AVEC COULEUR -->
-                                    <td>
-                                        @if ($article->stock_disponible <= $article->stock_securite)
-                                            <span class="badge bg-danger">
-                                                {{ $article->stock_disponible }}
-                                            </span>
-                                        @else
-                                            <span class="badge bg-success">
-                                                {{ $article->stock_disponible }}
-                                            </span>
-                                        @endif
-                                    </td>
-
-                                    <td>
-                                        @if ($article->stock_disponible <= $article->stock_securite)
-                                            <span class="badge bg-danger">
-                                                <i class="fas fa-exclamation-triangle"></i> Critique
-                                            </span>
-                                        @elseif($article->stock_disponible <= $article->stock_securite + 5)
-                                            <span class="badge bg-warning text-dark">
-                                                ⚠ Faible
-                                            </span>
-                                        @else
-                                            <span class="badge bg-success">
-                                                <i class="fas fa-check"></i> OK
-                                            </span>
-                                        @endif
-                                    </td>
-
                                     <td>
                                         {{ $article->categorie->libelle ?? '' }}
                                     </td>
+
+                                    <td>
+
+                                        @if ($article->prix_unitaire === null)
+                                            <span class="badge bg-secondary">
+                                                Non paramétré
+                                            </span>
+                                        @else
+                                            {{ number_format($article->prix_unitaire, 2, ',', ' ') }}
+                                        @endif
+
+                                    </td>
+
+                                    <!-- STOCK AVEC COULEUR -->
+                                    <td>
+
+                                        @if ($article->prix_unitaire === null)
+                                            <span class="badge bg-secondary">
+                                                Non paramétré
+                                            </span>
+                                        @elseif($article->stock_disponible <= $article->stock_securite)
+                                            <span class="badge bg-danger">
+
+                                                {{ $article->stock_disponible }}
+
+                                            </span>
+                                        @else
+                                            <span class="badge bg-success">
+
+                                                {{ $article->stock_disponible }}
+
+                                            </span>
+                                        @endif
+
+                                    </td>
+
+                                    <td>
+
+                                        @if ($article->prix_unitaire === null)
+                                            <span class="badge bg-secondary">
+
+                                                Non paramétré
+
+                                            </span>
+                                        @elseif($article->stock_disponible <= $article->stock_securite)
+                                            <span class="badge bg-danger">
+
+                                                <i class="fas fa-exclamation-triangle"></i>
+
+                                                Critique
+
+                                            </span>
+                                        @elseif($article->stock_disponible <= $article->stock_securite + 5)
+                                            <span class="badge bg-warning text-dark">
+
+                                                ⚠ Faible
+
+                                            </span>
+                                        @else
+                                            <span class="badge bg-success">
+
+                                                <i class="fas fa-check"></i>
+
+                                                OK
+
+                                            </span>
+                                        @endif
+
+                                    </td>
+
+
 
                                     <!-- ACTIONS -->
                                     <td>

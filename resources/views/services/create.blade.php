@@ -20,12 +20,14 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Code</label>
-                            <input type="text" name="code" class="form-control" value="{{ old('code') }}">
+                            <span class="text-danger">*</span>
+                            <input type="text" name="code" class="form-control" value="{{ old('code') }}" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label>Nom</label>
-                            <input type="text" name="nom" class="form-control" value="{{ old('nom') }}">
+                            <span class="text-danger">*</span>
+                            <input type="text" name="nom" class="form-control" value="{{ old('nom') }}" required>
                         </div>
 
                     </div>
@@ -40,7 +42,8 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Département</label>
-                            <select name="departement_id" class="form-control select2">
+                            <span class="text-danger">*</span>
+                            <select name="departement_id" class="form-control select2" required>
                                 <option value=""></option>
                                 @foreach ($departements as $dep)
                                     <option value="{{ $dep->id }}">{{ $dep->nom }}</option>

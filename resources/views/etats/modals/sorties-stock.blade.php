@@ -1,4 +1,4 @@
-<!-- 🔥 POPUP ETAT DES SORTIES DE STOCK -->
+<!-- 🔥 POPUP ETAT DES SORTIES PAR ARTICLE -->
 
 <div class="modal fade" id="etatSortiesStockModal" tabindex="-1">
 
@@ -10,7 +10,7 @@
 
                 <h5 class="modal-title">
 
-                    Etat des sorties de stock
+                    Etat des sorties par article
 
                 </h5>
 
@@ -46,11 +46,37 @@
 
                 </div>
 
+                <div class="mb-3">
+
+                    <label>
+
+                        Article
+
+                    </label>
+
+                    <select id="article_sortie" class="form-control select2">
+
+                        <option value="">
+
+                            Tous les articles
+
+                        </option>
+
+                        @foreach ($articles as $article)
+                            <option value="{{ $article->id }}">
+
+                                {{ $article->libelle }}
+
+                            </option>
+                        @endforeach
+
+                    </select>
+
+                </div>
+
             </div>
 
             <div class="modal-footer justify-content-center gap-2">
-
-                <!-- ANNULER -->
 
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
 
@@ -64,11 +90,13 @@
 
                     @csrf
 
-                    <input type="hidden" name="date_debut" id="excel_debut_sortie">
+                    <input type="hidden" name="date_debut" id="excel_debut_sortie_article">
 
-                    <input type="hidden" name="date_fin" id="excel_fin_sortie">
+                    <input type="hidden" name="date_fin" id="excel_fin_sortie_article">
 
-                    <button type="submit" class="btn btn-success" onclick="prepareExcelSortie()">
+                    <input type="hidden" name="article_id" id="excel_article_sortie">
+
+                    <button type="submit" class="btn btn-success" onclick="prepareExcelSortieArticle()">
 
                         <i class="fas fa-file-excel"></i>
 
@@ -80,15 +108,17 @@
 
                 <!-- PDF -->
 
-                <form method="POST" action="{{ route('etats.sorties_stock.pdf') }}" target="_blank">
+                <form method="GET" action="{{ route('etats.sorties_stock.pdf') }}" target="_blank">
 
-                    @csrf
+                    {{-- @csrf --}}
 
-                    <input type="hidden" name="date_debut" id="pdf_debut_sortie">
+                    <input type="hidden" name="date_debut" id="pdf_debut_sortie_article">
 
-                    <input type="hidden" name="date_fin" id="pdf_fin_sortie">
+                    <input type="hidden" name="date_fin" id="pdf_fin_sortie_article">
 
-                    <button type="submit" class="btn btn-danger" onclick="preparePdfSortie()">
+                    <input type="hidden" name="article_id" id="pdf_article_sortie">
+
+                    <button type="submit" class="btn btn-danger" onclick="preparePdfSortieArticle()">
 
                         <i class="fas fa-file-pdf"></i>
 
@@ -105,3 +135,29 @@
     </div>
 
 </div>
+
+
+@push('scripts')
+    <script>
+        $('#etatSortiesStockModal').on('shown.bs.modal', function() {
+
+            if ($('#article_sortie').hasClass('select2-hidden-accessible')) {
+
+                $('#article_sortie').select2('destroy');
+            }
+
+            $('#article_sortie').select2({
+
+                placeholder: 'Sélectionner ...',
+
+                allowClear: true,
+
+                width: '100%',
+
+                dropdownParent: $('#etatSortiesStockModal')
+
+            });
+
+        });
+    </script>
+@endpush

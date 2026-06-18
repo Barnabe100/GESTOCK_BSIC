@@ -17,41 +17,175 @@ class ArticleCommandeController extends Controller
 
     public function store(Request $request)
     {
+        $commande = Commande::with('articles')
+            ->findOrFail(
+                $request->commande_id
+            );
+
+        $montantUtilise =
+            $commande->articles->sum(
+                function ($item) {
+                    return
+                        $item->quantite
+                        *
+                        $item->prix_unitaire;
+                }
+            );
+
+        $montantNouvelArticle =
+            $request->quantite
+            *
+            $request->prix_unitaire;
+
+        if (
+            ($montantUtilise + $montantNouvelArticle)
+            >
+            $commande->montant
+        ) {
+
+            $reste =
+                $commande->montant
+                -
+                $montantUtilise;
+
+            return back()->with(
+
+                'error',
+
+                'Montant dépassé. Reste disponible : '
+                    . number_format(
+                        $reste,
+                        2,
+                        ',',
+                        ' '
+                    )
+
+            );
+        }
+
         ArticleCommande::create([
-            'commande_id' => $request->commande_id,
-            'article_id' => $request->article_id,
-            'quantite' => $request->quantite,
-            'prix_unitaire' => $request->prix_unitaire,
+
+            'commande_id' =>
+            $request->commande_id,
+
+            'article_id' =>
+            $request->article_id,
+
+            'quantite' =>
+            $request->quantite,
+
+            'prix_unitaire' =>
+            $request->prix_unitaire,
+
+            'quantite_livree' => 0,
+
+            'quantite_restante' =>
+            $request->quantite
+
         ]);
 
-        // 🔥 recalcul montant
-        $commande = Commande::with('articles')->find($request->commande_id);
+        return back()->with(
+            'success',
+            'Article ajouté'
+        );
+    }
 
-        $total = $commande->articles->sum(function ($item) {
-            return $item->quantite * $item->prix;
-        });
+    public function update(
+        Request $request,
+        $id
+    ) {
 
-        $commande->update(['montant' => $total]);
+        $ligne = ArticleCommande::findOrFail($id);
 
-        return back()->with('success', 'Article ajouté');
+        $commande = $ligne->commande;
+
+        $request->validate([
+
+            'quantite' => 'required|numeric|min:1',
+
+            'prix_unitaire' => 'required|numeric|min:0',
+
+        ]);
+
+        $montantUtilise =
+            $commande->articles
+            ->where('id', '!=', $ligne->id)
+            ->sum(function ($item) {
+
+                return
+                    $item->quantite
+                    *
+                    $item->prix_unitaire;
+            });
+
+        $nouveauMontant =
+            $request->quantite
+            *
+            $request->prix_unitaire;
+
+        if (
+            ($montantUtilise + $nouveauMontant)
+            >
+            $commande->montant
+        ) {
+
+            $reste =
+                $commande->montant
+                -
+                $montantUtilise;
+
+            return back()->with(
+
+                'error',
+
+                'Montant dépassé. Disponible : '
+                    . number_format(
+                        $reste,
+                        2,
+                        ',',
+                        ' '
+                    )
+
+            );
+        }
+
+        $ligne->update([
+
+            'quantite' =>
+            $request->quantite,
+
+            'prix_unitaire' =>
+            $request->prix_unitaire,
+
+            'quantite_restante' =>
+            $request->quantite
+                -
+                $ligne->quantite_livree
+
+        ]);
+
+        return back()->with(
+
+            'success',
+
+            'Ligne modifiée avec succès'
+
+        );
     }
 
     public function destroy($id)
     {
         $ligne = ArticleCommande::findOrFail($id);
-        $commande = $ligne->commande;
 
         $ligne->delete();
 
-        // 🔥 recalcul montant
-        $total = $commande->articles->sum(function ($item) {
-            return $item->quantite * $item->prix_unitaire;
-        });
-
-        $commande->update(['montant' => $total]);
-
-        return back();
+        return back()->with(
+            'success',
+            'Article supprimé'
+        );
     }
+
+
 
 
     //Export Excel

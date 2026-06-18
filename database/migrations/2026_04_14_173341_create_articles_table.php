@@ -15,13 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('code')->unique();
             $table->string('libelle');
-            $table->decimal('prix_unitaire', 10, 2);
-            $table->integer('stock_initial')->default(0);
 
+            $table->decimal('prix_unitaire', 10, 2)->nullable();
+            $table->integer('stock_initial')->default(0);
             $table->integer('stock_disponible')->default(0);
             $table->integer('stock_securite')->default(0);
             $table->boolean('archiver')->default(0);
-
             $table->foreignId('categorie_id')
                 ->constrained('categories')
                 ->cascadeOnDelete();

@@ -50,9 +50,7 @@ class EtatStockValoriseExport implements
         Titre
         */
 
-        $sheet->mergeCells(
-            'A3:J3'
-        );
+        $sheet->mergeCells('A3:I3');
 
         $sheet->setCellValue(
 
@@ -72,41 +70,39 @@ class EtatStockValoriseExport implements
         Entêtes fusionnées
         */
 
-        $sheet->mergeCells('A5:A6');
-        $sheet->mergeCells('B5:B6');
+        /*
+Entêtes fusionnées
+*/
 
-        $sheet->mergeCells('C5:D5');
-        $sheet->mergeCells('E5:F5');
-        $sheet->mergeCells('G5:H5');
-        $sheet->mergeCells('I5:J5');
+        $sheet->mergeCells('A5:A6');
+
+        $sheet->mergeCells('B5:C5');
+        $sheet->mergeCells('D5:E5');
+        $sheet->mergeCells('F5:G5');
+        $sheet->mergeCells('H5:I5');
 
         $sheet->setCellValue(
             'A5',
-            'DATE'
-        );
-
-        $sheet->setCellValue(
-            'B5',
             'INTITULE'
         );
 
         $sheet->setCellValue(
-            'C5',
+            'B5',
             'STOCK EN DEBUT DE PERIODE'
         );
 
         $sheet->setCellValue(
-            'E5',
+            'D5',
             'ENTREE DE LA PERIODE'
         );
 
         $sheet->setCellValue(
-            'G5',
+            'F5',
             'SORTIE DE LA PERIODE'
         );
 
         $sheet->setCellValue(
-            'I5',
+            'H5',
             'STOCK EN FIN DE PERIODE'
         );
 
@@ -115,48 +111,52 @@ class EtatStockValoriseExport implements
         */
 
         $sheet->setCellValue(
-            'C6',
+            'B6',
             'QUANTITE'
+        );
+
+        $sheet->setCellValue(
+            'C6',
+            'VALEUR'
         );
 
         $sheet->setCellValue(
             'D6',
-            'VALEUR'
+            'QUANTITE'
         );
 
         $sheet->setCellValue(
             'E6',
-            'QUANTITE'
+            'VALEUR'
         );
 
         $sheet->setCellValue(
             'F6',
-            'VALEUR'
+            'QUANTITE'
         );
 
         $sheet->setCellValue(
             'G6',
-            'QUANTITE'
-        );
-
-        $sheet->setCellValue(
-            'H6',
             'VALEUR'
         );
 
         $sheet->setCellValue(
-            'I6',
+            'H6',
             'QUANTITE'
         );
 
         $sheet->setCellValue(
-            'J6',
+            'I6',
             'VALEUR'
         );
 
         /*
         Données
         */
+
+        /*
+Données
+*/
 
         $ligne = 7;
 
@@ -168,51 +168,46 @@ class EtatStockValoriseExport implements
 
             $sheet->setCellValue(
                 'A' . $ligne,
-                $item['date']
-            );
-
-            $sheet->setCellValue(
-                'B' . $ligne,
                 $item['article']
             );
 
             $sheet->setCellValue(
-                'C' . $ligne,
+                'B' . $ligne,
                 $item['stock_debut_qte']
             );
 
             $sheet->setCellValue(
-                'D' . $ligne,
+                'C' . $ligne,
                 $item['stock_debut_valeur']
             );
 
             $sheet->setCellValue(
-                'E' . $ligne,
+                'D' . $ligne,
                 $item['entree_qte']
             );
 
             $sheet->setCellValue(
-                'F' . $ligne,
+                'E' . $ligne,
                 $item['entree_valeur']
             );
 
             $sheet->setCellValue(
-                'G' . $ligne,
+                'F' . $ligne,
                 $item['sortie_qte']
             );
 
             $sheet->setCellValue(
-                'H' . $ligne,
+                'G' . $ligne,
                 $item['sortie_valeur']
             );
 
             $sheet->setCellValue(
-                'I' . $ligne,
+                'H' . $ligne,
                 $item['stock_fin_qte']
             );
 
             $sheet->setCellValue(
-                'J' . $ligne,
+                'I' . $ligne,
                 $item['stock_fin_valeur']
             );
 
@@ -224,9 +219,7 @@ class EtatStockValoriseExport implements
             count($this->data) == 0
         ) {
 
-            $sheet->mergeCells(
-                'A7:D7'
-            );
+            $sheet->mergeCells('A7:I7');
 
             $sheet->setCellValue(
 
@@ -274,7 +267,7 @@ class EtatStockValoriseExport implements
         */
 
         $sheet->getStyle(
-            'A3:J3'
+            'A3:I3'
         )->applyFromArray([
 
             'font' => [
@@ -298,7 +291,7 @@ class EtatStockValoriseExport implements
         */
 
         $sheet->getStyle(
-            'A5:J6'
+            'A5:I6'
         )->applyFromArray([
 
             'font' => [
@@ -322,7 +315,7 @@ class EtatStockValoriseExport implements
         */
 
         $sheet->getStyle(
-            'A5:J' . ($ligne - 1)
+            'A5:I' . ($ligne - 1)
         )->applyFromArray([
 
             'borders' => [
@@ -342,22 +335,22 @@ class EtatStockValoriseExport implements
         */
 
         $sheet->getStyle(
-            'D7:D' . ($ligne - 1)
+            'C7:C' . ($ligne - 1)
         )->getNumberFormat()
             ->setFormatCode('#,##0.00');
 
         $sheet->getStyle(
-            'F7:F' . ($ligne - 1)
+            'E7:E' . ($ligne - 1)
         )->getNumberFormat()
             ->setFormatCode('#,##0.00');
 
         $sheet->getStyle(
-            'H7:H' . ($ligne - 1)
+            'G7:G' . ($ligne - 1)
         )->getNumberFormat()
             ->setFormatCode('#,##0.00');
 
         $sheet->getStyle(
-            'J7:J' . ($ligne - 1)
+            'I7:I' . ($ligne - 1)
         )->getNumberFormat()
             ->setFormatCode('#,##0.00');
     }

@@ -21,21 +21,25 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Nom</label>
+                            <span class="text-danger">*</span>
                             <input type="text" name="name" class="form-control" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label>Prénom</label>
+                            <span class="text-danger">*</span>
                             <input type="text" name="prenom" class="form-control" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label>Email</label>
+                            <span class="text-danger">*</span>
                             <input type="email" name="email" class="form-control" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label>Mot de passe</label>
+                            <span class="text-danger">*</span>
                             <input type="password" name="password" class="form-control" required>
                         </div>
 
@@ -47,7 +51,8 @@
 
                         <div class="col-md-4 mb-3">
                             <label>Agence</label>
-                            <select name="agence_id" class="form-control select2">
+                            <span class="text-danger">*</span>
+                            <select id="agence_idd" name="agence_id" class="form-control select2">
                                 <option value=""></option>
                                 @foreach ($agences as $agence)
                                     <option value="{{ $agence->id }}">{{ $agence->nom }}</option>
@@ -57,7 +62,8 @@
 
                         <div class="col-md-4 mb-3">
                             <label>Département</label>
-                            <select name="departement_id" class="form-control select2">
+                            <span class="text-danger">*</span>
+                            <select id="departement_id" name="departement_id" class="form-control select2">
                                 <option value=""></option>
                                 @foreach ($departements as $dep)
                                     <option value="{{ $dep->id }}">{{ $dep->nom }}</option>
@@ -67,7 +73,8 @@
 
                         <div class="col-md-4 mb-3">
                             <label>Service</label>
-                            <select name="service_id" class="form-control select2">
+                            <span class="text-danger">*</span>
+                            <select id="service_id" name="service_id" class="form-control select2">
                                 <option value=""></option>
                                 @foreach ($services as $service)
                                     <option value="{{ $service->id }}">{{ $service->nom }}</option>
@@ -104,15 +111,5 @@
 @endsection
 
 @push('scripts')
-    <script>
-        $(document).ready(function() {
-
-            $('.select2').select2({
-                placeholder: 'Sélectionner ...',
-                allowClear: true,
-                width: '100%'
-            });
-
-        });
-    </script>
+    <script src="{{ asset('assets/js/users.js') }}"></script>
 @endpush

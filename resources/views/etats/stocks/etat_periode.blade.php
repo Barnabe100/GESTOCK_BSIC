@@ -146,11 +146,11 @@
 
             <tr>
 
-                <th>
+                {{-- <th>
 
                     DATE
 
-                </th>
+                </th> --}}
 
                 <th>
 
@@ -213,11 +213,11 @@
             @foreach ($data as $ligne)
                 <tr>
 
-                    <td>
+                    {{-- <td>
 
                         {{ $ligne['date'] }}
 
-                    </td>
+                    </td> --}}
 
                     <td>
 

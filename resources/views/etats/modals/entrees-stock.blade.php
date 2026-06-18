@@ -79,9 +79,9 @@
 
                 <!-- PDF -->
 
-                <form method="POST" action="{{ route('etats.entrees_stock.pdf') }}" target="_blank">
+                <form method="GET" action="{{ route('etats.entrees_stock.pdf') }}" target="_blank">
 
-                    @csrf
+                    {{-- @csrf --}}
 
                     <input type="hidden" name="date_debut" id="pdf_debut_entree">
 

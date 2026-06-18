@@ -126,16 +126,18 @@
         </thead>
 
         <tbody>
+
             @if (count($data) == 0)
+
                 <tr>
 
-                    <td colspan="4"
+                    <td colspan="3"
                         style="
-            font-weight:bold;
-            background-color:#f2f2f2;
-            color:#c0392b;
-            text-align:center;
-            ">
+                    font-weight:bold;
+                    background-color:#f2f2f2;
+                    color:#c0392b;
+                    text-align:center;
+                ">
 
                         AUCUNE DONNÉE DISPONIBLE
                         POUR LA PÉRIODE SÉLECTIONNÉE
@@ -143,37 +145,40 @@
                     </td>
 
                 </tr>
+            @else
+                @foreach (collect($data)->groupBy('article') as $article => $lignes)
+                    <tr>
+
+                        <td colspan="4"
+                            style="
+                            font-weight:bold;
+                            background-color:#f2f2f2;
+                            text-align:left;
+                        ">
+
+                            INTITULE :
+                            {{ strtoupper($article) }}
+
+                        </td>
+
+                    </tr>
+
+                    @foreach ($lignes as $ligne)
+                        <tr>
+
+                            <td>{{ $ligne['date'] }}</td>
+
+                            <td>{{ $ligne['article'] }}</td>
+
+                            <td>{{ $ligne['quantite'] }}</td>
+
+                            <td>{{ number_format($ligne['valeur'], 2, ',', ' ') }}</td>
+
+                        </tr>
+                    @endforeach
+                @endforeach
+
             @endif
-
-            @foreach ($data as $ligne)
-                <tr>
-
-                    <td>
-
-                        {{ $ligne['date'] }}
-
-                    </td>
-
-                    <td>
-
-                        {{ $ligne['article'] }}
-
-                    </td>
-
-                    <td>
-
-                        {{ $ligne['quantite'] }}
-
-                    </td>
-
-                    <td>
-
-                        {{ number_format($ligne['valeur'], 2, ',', ' ') }}
-
-                    </td>
-
-                </tr>
-            @endforeach
 
         </tbody>
 

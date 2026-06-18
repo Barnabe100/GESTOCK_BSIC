@@ -31,9 +31,9 @@ class ArticleController extends Controller
         $request->validate([
             'code' => 'required|unique:articles',
             'libelle' => 'required',
-            'prix_unitaire' => 'required|numeric',
-            'stock_disponible' => 'required|integer',
-            'stock_securite' => 'required|integer',
+            'prix_unitaire' => 'nullable|numeric',
+            'stock_disponible' => 'nullable|integer',
+            'stock_securite' => 'nullable|integer',
             'categorie_id' => 'required|exists:categories,id',
         ]);
 
@@ -42,13 +42,17 @@ class ArticleController extends Controller
             'libelle' => $request->libelle,
             'prix_unitaire' => $request->prix_unitaire,
             'stock_initial' => 0,
-            'stock_disponible' => $request->stock_disponible,
-            'stock_securite' => $request->stock_securite,
+            'stock_disponible' => $request->stock_disponible ?? 0,
+            'stock_securite' => $request->stock_securite ?? 0,
             'categorie_id' => $request->categorie_id,
         ]);
 
-        return redirect()->route('articles.index')
-            ->with('success', 'Article créé avec succès');
+        return redirect()
+            ->route('articles.index')
+            ->with(
+                'success',
+                'Article créé avec succès'
+            );
     }
 
     public function show($id)
@@ -193,6 +197,8 @@ class ArticleController extends Controller
 
         );
     }
+
+
 
     //Export Excel
     public function exportExcel()

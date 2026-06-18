@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('article_demande', function (Blueprint $table) {
             $table->id();
+            $table->integer('quantite');
+            $table->integer('quantite_accordee')->nullable();
+            $table->boolean('archiver')->default(0);
+
             $table->foreignId('demande_id')
                 ->constrained('demandes')
                 ->cascadeOnDelete();
@@ -20,13 +24,6 @@ return new class extends Migration
             $table->foreignId('article_id')
                 ->constrained('articles')
                 ->cascadeOnDelete();
-
-            $table->integer('quantite');
-            $table->boolean('archiver')->default(0);
-
-            $table->integer(
-                'quantite_accordee'
-            )->nullable();
             $table->timestamps();
         });
     }

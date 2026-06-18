@@ -185,6 +185,62 @@
 </script>
 
 <script>
+    function prepareExcelSortieArticle() {
+
+        document.getElementById(
+                'excel_debut_sortie_article'
+            ).value =
+
+            document.getElementById(
+                'date_debut_sortie'
+            ).value;
+
+        document.getElementById(
+                'excel_fin_sortie_article'
+            ).value =
+
+            document.getElementById(
+                'date_fin_sortie'
+            ).value;
+
+        document.getElementById(
+                'excel_article_sortie'
+            ).value =
+
+            document.getElementById(
+                'article_sortie'
+            ).value;
+    }
+
+    function preparePdfSortieArticle() {
+
+        document.getElementById(
+                'pdf_debut_sortie_article'
+            ).value =
+
+            document.getElementById(
+                'date_debut_sortie'
+            ).value;
+
+        document.getElementById(
+                'pdf_fin_sortie_article'
+            ).value =
+
+            document.getElementById(
+                'date_fin_sortie'
+            ).value;
+
+        document.getElementById(
+                'pdf_article_sortie'
+            ).value =
+
+            document.getElementById(
+                'article_sortie'
+            ).value;
+    }
+</script>
+
+<script>
     function prepareExcelStockFinal() {
 
         document.getElementById(
@@ -225,3 +281,52 @@
 
     }
 </script>
+
+
+{{-- <script>
+    function prepareExcelSortieArticle() {
+        document.getElementById(
+                'excel_debut_sortie_article'
+            ).value =
+            document.getElementById(
+                'date_debut_sortie_article'
+            ).value;
+
+        document.getElementById(
+                'excel_fin_sortie_article'
+            ).value =
+            document.getElementById(
+                'date_fin_sortie_article'
+            ).value;
+
+        document.getElementById(
+                'excel_article_sortie'
+            ).value =
+            document.getElementById(
+                'article_sortie'
+            ).value;
+    }
+
+    function preparePdfSortieArticle() {
+        document.getElementById(
+                'pdf_debut_sortie_article'
+            ).value =
+            document.getElementById(
+                'date_debut_sortie_article'
+            ).value;
+
+        document.getElementById(
+                'pdf_fin_sortie_article'
+            ).value =
+            document.getElementById(
+                'date_fin_sortie_article'
+            ).value;
+
+        document.getElementById(
+                'pdf_article_sortie'
+            ).value =
+            document.getElementById(
+                'article_sortie'
+            ).value;
+    }
+</script> --}}

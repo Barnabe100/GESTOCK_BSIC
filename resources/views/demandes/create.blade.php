@@ -21,12 +21,14 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Date</label>
-                            <input type="date" name="date" class="form-control">
+                            <span class="text-danger">*</span>
+                            <input type="date" name="date" class="form-control" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label>Objet</label>
-                            <input type="text" name="objet" class="form-control">
+                            <span class="text-danger">*</span>
+                            <input type="text" name="objet" class="form-control" required>
                         </div>
 
                     </div>

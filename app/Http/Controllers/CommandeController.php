@@ -19,7 +19,14 @@ class CommandeController extends Controller
     public function index()
     {
 
-        $commandes = Commande::with('fournisseur')
+        // $commandes = Commande::with('fournisseur')
+        //     ->where('archiver', 0)
+        //     ->get();
+
+        $commandes = Commande::with([
+            'fournisseur',
+            'articles.article'
+        ])
             ->where('archiver', 0)
             ->get();
 
@@ -59,9 +66,17 @@ class CommandeController extends Controller
 
     public function show($id)
     {
-        $commande = Commande::with('fournisseur')->findOrFail($id);
+        //$commande = Commande::with('fournisseur')->findOrFail($id);
+        $commande = Commande::with([
+            'fournisseur',
+            'articles.article'
+        ])->findOrFail($id);
 
-        $articles = Article::where('archiver', 0)->get();
+        //$articles = Article::where('archiver', 0)->get();
+        $articles = Article::whereNotNull('prix_unitaire')
+            ->where('archiver', 0)
+            ->orderBy('libelle')
+            ->get();
         return view('commandes.show', compact('commande', 'articles'));
     }
 
@@ -83,6 +98,16 @@ class CommandeController extends Controller
         if ($commande->validation) {
             return back()->with('error', 'Commande déjà validée');
         }
+
+        $request->validate([
+            'numero_bon_commande' => 'required',
+            'num_facture_proforma' => 'required',
+            'date' => 'required',
+            'libelle' => 'required',
+            'montant' => 'required',
+            'fournisseur_id' => 'required',
+        ]);
+
 
         $commande->update([
             'numero_bon_commande' => $request->numero_bon_commande,
@@ -131,137 +156,179 @@ class CommandeController extends Controller
     }
 
     // 🔥 LIVRAISON
-    public function livrer(Request $request, $id)
-    {
+    public function livrer(
+        Request $request,
+        $id
+    ) {
+
         $commande = Commande::with(
             'articles.article'
         )->findOrFail($id);
 
-        // commande non validée
-
         if (
             !$commande->validation
         ) {
+
             return back()->with(
                 'error',
                 'Validez d’abord la commande'
             );
         }
 
-
-        // déjà réceptionnée
-
-        if (
-            $commande->livraison
-        ) {
-            return back()->with(
-                'error',
-                'Déjà livrée'
-            );
-        }
-
+        $dateReception =
+            $request->date_livraison;
 
         foreach (
-            $commande->articles as $ligne
+            $commande->articles
+            as
+            $ligne
         ) {
 
-            if (
-                !$ligne->article
-            ) {
-                continue;
-            }
+            $quantiteRecue =
 
+                intval(
+
+                    $request
+                        ->quantites[$ligne->id]
+                        ?? 0
+
+                );
 
             /*
-        Première réception
+        Rien reçu
         */
 
             if (
-                $ligne
-                ->article
-                ->stock_initial
+                $quantiteRecue <= 0
+            ) {
+
+                continue;
+            }
+
+            /*
+        Sécurité
+        */
+
+            if (
+                $quantiteRecue
+                >
+                $ligne->quantite_restante
+            ) {
+
+                return back()->with(
+
+                    'error',
+
+                    'Quantité reçue supérieure à la quantité restante pour '
+                        .
+                        $ligne->article->libelle
+
+                );
+            }
+
+            /*
+        Mise à jour ligne commande
+        */
+
+            $ligne->update([
+
+                'quantite_livree' =>
+
+                $ligne->quantite_livree
+                    +
+                    $quantiteRecue,
+
+                'quantite_restante' =>
+
+                $ligne->quantite_restante
+                    -
+                    $quantiteRecue
+
+            ]);
+
+            /*
+        Première entrée stock
+        */
+
+            if (
+                $ligne->article->stock_initial
                 == 0
             ) {
 
-                $ligne
-                    ->article
-                    ->increment(
+                $ligne->article->increment(
 
-                        'stock_initial',
+                    'stock_initial',
 
-                        $ligne->quantite
+                    $quantiteRecue
 
-                    );
+                );
             }
-
 
             /*
         Stock disponible
         */
 
-            $ligne
-                ->article
-                ->increment(
+            $ligne->article->increment(
 
-                    'stock_disponible',
+                'stock_disponible',
 
-                    $ligne->quantite
+                $quantiteRecue
 
-                );
-
+            );
 
             /*
-        Historique
+        Historique mouvement
         */
 
             MouvementStock::create([
 
-                'article_id' =>
-
-                $ligne
-                    ->article
-                    ->id,
-
-                'user_id' =>
-
-                auth()->id(),
-
-                'type' =>
-
-                'ENTREE',
-
-                'quantite' =>
-
-                $ligne
-                    ->quantite,
-
-                'motif' =>
-
-                'Réception commande N° ' . $commande->id,
-                'date_mouvement' => $request->date_livraison
-
-
+                'article_id' => $ligne->article->id,
+                'user_id' => auth()->id(),
+                'type' => 'ENTREE',
+                'quantite' => $quantiteRecue,
+                'prix_unitaire' => $ligne->prix_unitaire,
+                'motif' => 'Réception commande N° ' . $commande->numero_bon_commande,
+                'date_mouvement' => $dateReception
 
             ]);
         }
 
+        /*
+    Recharger la commande
+    */
 
-        $commande->update([
+        $commande->refresh();
 
-            'livraison' => 1,
+        /*
+    Commande totalement reçue ?
+    */
 
-            'date_livraison' =>
+        if (
+            $commande
+            ->articles
+            ->sum(
+                'quantite_restante'
+            )
+            ==
+            0
+        ) {
 
-            now()
+            $commande->update([
 
-        ]);
+                'livraison' => 1,
 
+                'date_livraison' =>
+
+                $dateReception
+
+            ]);
+        }
 
         return back()->with(
 
             'success',
 
-            'Commande réceptionnée'
+            'Réception enregistrée'
 
         );
     }
