@@ -32,31 +32,20 @@
                         <!-- MENU -->
                         <ul class="dropdown-menu dropdown-menu-end">
 
-                            <!-- VOIR PROFIL -->
+                            <!-- MON PROFIL -->
                             <li>
 
-                                <a class="dropdown-item" href="{{ route('users.show', Auth::user()->id) }}">
+                                <a class="dropdown-item" href="{{ route('mon.profil') }}">
 
                                     <i class="fas fa-user me-2"></i>
 
-                                    Voir profil
+                                    Mon profil
 
                                 </a>
 
                             </li>
 
-                            <!-- MODIFIER PROFIL -->
-                            <li>
 
-                                <a class="dropdown-item" href="{{ route('users.edit', Auth::user()->id) }}">
-
-                                    <i class="fas fa-user-edit me-2"></i>
-
-                                    Modifier profil
-
-                                </a>
-
-                            </li>
 
                             <!-- SEPARATEUR -->
                             <li>

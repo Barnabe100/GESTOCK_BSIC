@@ -13,7 +13,19 @@
                 <h5 class="mb-0">Liste des utilisateurs</h5>
 
 
+
+
+
+
                 <div class="d-flex gap-2">
+
+                    <a href="{{ route('users.import.form') }}" class="btn btn-primary btn-sm">
+
+                        <i class="fas fa-file-import"></i>
+
+                        Importer
+
+                    </a>
                     <!-- EXCEL -->
                     <a href="{{ route('users.export.excel') }}" class="btn btn-success btn-sm">
 

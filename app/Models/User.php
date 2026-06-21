@@ -31,6 +31,7 @@ class User extends Authenticatable
         'prenom',
         'email',
         'password',
+        'force_password_change',
         'departement_id',
         'agence_id',
         'service_id',

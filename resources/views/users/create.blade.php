@@ -22,20 +22,31 @@
                         <div class="col-md-6 mb-3">
                             <label>Nom</label>
                             <span class="text-danger">*</span>
-                            <input type="text" name="name" class="form-control" required>
+                            <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label>Prénom</label>
                             <span class="text-danger">*</span>
-                            <input type="text" name="prenom" class="form-control" required>
+                            <input type="text" name="prenom" class="form-control" value="{{ old('prenom') }}" required>
                         </div>
 
-                        <div class="col-md-6 mb-3">
+
+
+
+
+                    </div>
+                    <div class="row">
+
+                        <div class="col-md-12 mb-3">
                             <label>Email</label>
                             <span class="text-danger">*</span>
-                            <input type="email" name="email" class="form-control" required>
+                            <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
                         </div>
+                    </div>
+
+                    <div class="row">
+
 
                         <div class="col-md-6 mb-3">
                             <label>Mot de passe</label>
@@ -43,8 +54,19 @@
                             <input type="password" name="password" class="form-control" required>
                         </div>
 
-                    </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Confirmation du mot de passe</label>
+                            <span class="text-danger">*</span>
+                            <input type="password" name="password_confirmation" class="form-control">
+                        </div>
 
+                        @error('password')
+                            <div class="alert alert-danger mt-2">
+                                {{ $message }}
+                            </div>
+                        @enderror
+
+                    </div>
 
 
                     <div class="row">
@@ -52,7 +74,7 @@
                         <div class="col-md-4 mb-3">
                             <label>Agence</label>
                             <span class="text-danger">*</span>
-                            <select id="agence_idd" name="agence_id" class="form-control select2">
+                            <select id="agence_id" name="agence_id" class="form-control select2">
                                 <option value=""></option>
                                 @foreach ($agences as $agence)
                                     <option value="{{ $agence->id }}">{{ $agence->nom }}</option>
@@ -62,7 +84,7 @@
 
                         <div class="col-md-4 mb-3">
                             <label>Département</label>
-                            <span class="text-danger">*</span>
+
                             <select id="departement_id" name="departement_id" class="form-control select2">
                                 <option value=""></option>
                                 @foreach ($departements as $dep)
@@ -73,7 +95,7 @@
 
                         <div class="col-md-4 mb-3">
                             <label>Service</label>
-                            <span class="text-danger">*</span>
+
                             <select id="service_id" name="service_id" class="form-control select2">
                                 <option value=""></option>
                                 @foreach ($services as $service)

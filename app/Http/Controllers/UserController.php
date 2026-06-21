@@ -11,6 +11,7 @@ use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use App\Exports\UsersExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\UsersImport;
 
 class UserController extends Controller
 {
@@ -85,19 +86,40 @@ class UserController extends Controller
             }
         }
 
-        $request->validate([
-            'name' => 'required',
-            'prenom' => 'required',
-            'email' => 'required',
-            'password' => 'required',
-            //'departement_id' => 'required',
-            //'service_id' => 'required',
-        ]);
+        $request->validate(
+            [
+                'name' => 'required',
+                'prenom' => 'required',
+                'email' => 'required',
+
+                'password' => [
+                    'required',
+                    'confirmed',
+                    'min:8'
+                ],
+
+                //'departement_id' => 'required',
+                //'service_id' => 'required',
+            ],
+            [
+                'password.required' =>
+                'Le mot de passe est obligatoire.',
+
+                'password.confirmed' =>
+                'Les mots de passe ne correspondent pas.',
+
+                'password.min' =>
+                'Le mot de passe doit contenir au moins 8 caractères.'
+            ]
+        );
+
+
         $user = User::create([
             'name' => $request->name,
             'prenom' => $request->prenom,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'force_password_change' => true,
             'agence_id' => $request->agence_id,
             'departement_id' => $request->departement_id,
             'service_id' => $request->service_id,
@@ -141,39 +163,85 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        $user->update([
-            'name' => $request->name,
-            'prenom' => $request->prenom,
-            'email' => $request->email,
-            'agence_id' => $request->agence_id,
-            'departement_id' => $request->departement_id,
-            'service_id' => $request->service_id,
-            'superieur' => $request->has('superieur')
-        ]);
+        $profilPersonnel = auth()->id() == $user->id;
 
-        if ($request->has('superieur')) {
-
-            if (!$user->hasRole('Superieur')) {
-
-                $user->assignRole('Superieur');
-            }
-        } else {
-
-            $user->removeRole('Superieur');
-        }
-
-        if ($request->filled('password')) {
+        if (!$profilPersonnel) {
 
             $user->update([
-                'password' => bcrypt($request->password)
+                'name' => $request->name,
+                'prenom' => $request->prenom,
+                'email' => $request->email,
+                'agence_id' => $request->agence_id,
+                'departement_id' => $request->departement_id,
+                'service_id' => $request->service_id,
+                'superieur' => $request->has('superieur')
             ]);
         }
 
-        $user->syncRoles($request->roles ?? []);
+        if (!$profilPersonnel) {
+
+            if ($request->has('superieur')) {
+
+                if (!$user->hasRole('Superieur')) {
+
+                    $user->assignRole('Superieur');
+                }
+            } else {
+
+                $user->removeRole('Superieur');
+            }
+        }
+        if ($request->filled('password')) {
+
+            $request->validate(
+                [
+                    'password' => [
+                        'confirmed',
+                        'min:8'
+                    ]
+                ],
+                [
+                    'password.confirmed' =>
+                    'Les mots de passe ne correspondent pas.',
+
+                    'password.min' =>
+                    'Le mot de passe doit contenir au moins 8 caractères.'
+                ]
+            );
+
+            $user->update([
+                'password' => Hash::make($request->password),
+                'force_password_change' =>
+                $profilPersonnel
+                    ? false
+                    : true
+
+            ]);
+        }
+
+        if (!$profilPersonnel) {
+
+            $user->syncRoles(
+                $request->roles ?? []
+            );
+        }
+
+        if ($profilPersonnel) {
+
+            return redirect()
+                ->route('mon.profil')
+                ->with(
+                    'success',
+                    'Mot de passe modifié avec succès'
+                );
+        }
 
         return redirect()
             ->route('users.index')
-            ->with('success', 'Utilisateur modifié');
+            ->with(
+                'success',
+                'Utilisateur modifié'
+            );
     }
 
     public function destroy($id)
@@ -262,5 +330,42 @@ class UserController extends Controller
         )
             ->orderBy('nom')
             ->get();
+    }
+
+
+    public function importForm()
+    {
+        return view(
+            'users.import'
+        );
+    }
+
+    public function import(
+        Request $request
+    ) {
+
+        // dd('Import appelé');
+        $request->validate([
+            'file' => 'required|file'
+        ]);
+
+
+
+        Excel::import(
+
+            new UsersImport,
+
+            $request->file('file')
+
+        );
+
+
+
+        return redirect()
+            ->route('users.index')
+            ->with(
+                'success',
+                'Import effectué avec succès.'
+            );
     }
 }

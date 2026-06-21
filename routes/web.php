@@ -56,14 +56,27 @@ Route::post('/register', [RegisterController::class, 'store'])->name('register.s
 //    return view('dashboard');
 //})->middleware(['auth', 'verified'])->name('dashboard');
 
+// Route::middleware('auth')->group(function () {});
+
+
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get(
+        '/force-password-change',
+        [App\Http\Controllers\ForcePasswordController::class, 'show']
+    )->name('force.password.change');
+
+    Route::post(
+        '/force-password-change',
+        [App\Http\Controllers\ForcePasswordController::class, 'update']
+    )->name('force.password.update');
 });
 
+Route::middleware([
+    'auth',
+    'force.password.change'
+])->group(function () {
 
-Route::middleware(['auth'])->group(function () {
     Route::resource('categories', CategorieController::class);
 
     Route::resource('articles', ArticleController::class);
@@ -76,6 +89,33 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('users', UserController::class);
 
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get(
+        '/mon-profil',
+        function () {
+
+            return view(
+                'users.show',
+                [
+                    'user' => auth()->user()
+                ]
+            );
+        }
+    )->middleware('auth')
+        ->name('mon.profil');
+
+    Route::get(
+        '/users-import',
+        [UserController::class, 'importForm']
+    )->name('users.import.form');
+
+    Route::post(
+        '/users-import',
+        [UserController::class, 'import']
+    )->name('users.import');
 
     Route::resource('commandes', CommandeController::class);
 

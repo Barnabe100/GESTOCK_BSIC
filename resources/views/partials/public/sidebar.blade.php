@@ -64,14 +64,16 @@
 
             </a>
         @endcan
-        @if (auth()->user()->hasAnyRole(['ValidateurCommande', 'Gestionnaire', 'SuperAdmin']))
+        @if (auth()->check() &&
+                auth()->user()->hasAnyRole(['ValidateurCommande', 'Gestionnaire', 'SuperAdmin']))
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('commandes.index') }}">
 
                 Commandes
 
             </a>
         @endif
-        @if (auth()->user()->hasAnyRole(['SuperAdmin', 'Gestionnaire']))
+        @if (auth()->check() &&
+                auth()->user()->hasAnyRole(['SuperAdmin', 'Gestionnaire']))
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle"
                 href="{{ route('fournisseurs.index') }}">
 
@@ -81,7 +83,8 @@
         @endif
 
 
-        @if (auth()->user()->hasAnyRole(['Gestionnaire']))
+        @if (auth()->check() &&
+                auth()->user()->hasAnyRole(['Gestionnaire']))
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle"
                 href="{{ route('demandes.gestionnaire') }}">
 

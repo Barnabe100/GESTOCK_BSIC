@@ -6,6 +6,18 @@
 
     <div class="container-fluid mt-4">
 
+        {{-- @if (auth()->id() == $user->id && $user->force_password_change)
+            <div class="alert alert-warning">
+
+                <i class="fas fa-key"></i>
+
+                Pour des raisons de sécurité,
+                veuillez modifier votre mot de passe
+                avant de continuer à utiliser l'application.
+
+            </div>
+        @endif --}}
+
         <div class="card shadow-sm">
 
             <!-- HEADER -->
@@ -36,7 +48,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-12 mb-3">
                         <label>Email</label>
                         <div class="form-control bg-light">
                             {{ $user->email }}
@@ -70,30 +82,50 @@
 
                 </div>
 
+
+
                 <!-- ROLES -->
-                <div class="row">
 
-                    <div class="col-md-12 mb-3">
-                        <label>Rôles</label>
+                @if (auth()->check() &&
+                        auth()->user()->hasAnyRole(['Admin', 'SuperAdmin']))
+                    <div class="row">
 
-                        <div class="form-control bg-light">
+                        <div class="col-md-12 mb-3">
+                            <label>Rôles</label>
 
-                            @forelse($user->roles as $role)
-                                <span class="badge bg-primary">
-                                    {{ $role->name }}
-                                </span>
-                            @empty
-                                Aucun rôle
-                            @endforelse
+                            <div class="form-control bg-light">
 
+                                @forelse($user->roles as $role)
+                                    <span class="badge bg-primary">
+                                        {{ $role->name }}
+                                    </span>
+                                @empty
+                                    Aucun rôle
+                                @endforelse
+
+                            </div>
                         </div>
-                    </div>
 
-                </div>
+                    </div>
+                @endif
 
             </div>
 
         </div>
+
+        @if (auth()->id() == $user->id)
+            <div class="mt-3">
+
+                <a href="{{ route('users.edit', $user->id) }}" class="btn btn-warning">
+
+                    <i class="fas fa-key"></i>
+
+                    Modifier mon mot de passe
+
+                </a>
+
+            </div>
+        @endif
 
     </div>
 
