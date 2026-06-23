@@ -112,7 +112,7 @@
 
                     <button class="nav-link" data-bs-toggle="pill" data-bs-target="#enAttenteReception">
 
-                        Attente Demandeur
+                        En attente réception
 
                         <span class="badge bg-info ms-1">
 
@@ -128,7 +128,7 @@
 
                     <button class="nav-link" data-bs-toggle="pill" data-bs-target="#cloturees">
 
-                        Clôturées
+                        Receptionnées
 
                         <span class="badge bg-primary ms-1">
 

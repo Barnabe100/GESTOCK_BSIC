@@ -64,6 +64,30 @@
                     @endif
 
                     {{-- Mot de passe visible pour tous --}}
+
+                    @if ($profilPersonnel)
+                        <div class="alert alert-info">
+
+                            <i class="fas fa-info-circle"></i>
+
+                            Le mot de passe doit contenir :
+
+                            <ul class="mb-0 mt-2">
+
+                                <li>Au moins 8 caractères</li>
+
+                                <li>Une majuscule</li>
+
+                                <li>Une minuscule</li>
+
+                                <li>Un chiffre</li>
+
+                                <li>Un caractère spécial</li>
+
+                            </ul>
+
+                        </div>
+                    @endif
                     <div class="row">
 
                         <div class="col-md-6 mb-3">
@@ -72,7 +96,19 @@
                                 Nouveau mot de passe
                             </label>
 
-                            <input type="password" name="password" class="form-control">
+                            <div class="input-group">
+
+                                <input type="password" name="password" id="password" class="form-control">
+
+                                <button type="button" class="btn btn-outline-secondary"
+                                    onclick="togglePassword('password','eyeIcon1')">
+
+                                    <i class="fas fa-eye" id="eyeIcon1"></i>
+
+                                </button>
+
+                            </div>
+
 
                         </div>
 
@@ -82,7 +118,19 @@
                                 Confirmation du mot de passe
                             </label>
 
-                            <input type="password" name="password_confirmation" class="form-control">
+                            <div class="input-group">
+
+                                <input type="password" name="password_confirmation" id="password_confirmation"
+                                    class="form-control">
+
+                                <button type="button" class="btn btn-outline-secondary"
+                                    onclick="togglePassword('password_confirmation','eyeIcon2')">
+
+                                    <i class="fas fa-eye" id="eyeIcon2"></i>
+
+                                </button>
+
+                            </div>
 
                         </div>
 
@@ -226,4 +274,5 @@
 
 @push('scripts')
     <script src="{{ asset('assets/js/users.js') }}"></script>
+    <script src="{{ asset('assets/js/passeyes.js') }}"></script>
 @endpush

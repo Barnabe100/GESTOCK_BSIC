@@ -22,7 +22,7 @@ class UsersImport implements ToModel, WithHeadingRow
             'email' => $row['email'],
 
             'password' => Hash::make(
-                'Gestok@2026'  //'Gesbsic@2026'
+                'Gesbsic@2026'  //'Gestok@2026'  
             ),
 
             'force_password_change' => true,

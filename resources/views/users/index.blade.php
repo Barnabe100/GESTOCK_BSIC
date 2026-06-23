@@ -19,7 +19,7 @@
 
                 <div class="d-flex gap-2">
 
-                    <a href="{{ route('users.import.form') }}" class="btn btn-primary btn-sm">
+                    <a href="{{ route('users.import.form') }}" class="btn btn-dark">
 
                         <i class="fas fa-file-import"></i>
 

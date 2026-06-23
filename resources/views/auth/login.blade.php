@@ -27,7 +27,7 @@
 
             <label>Email</label>
 
-            <input type="email" name="email" class="form-control" required>
+            <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
 
         </div>
 
@@ -41,10 +41,9 @@
                 <input type="password" name="password" id="password" class="form-control" required>
 
                 <!-- BOUTON -->
-                <button type="button" class="btn btn-outline-secondary" onclick="togglePassword()">
+                <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('password','eyeIcon1')">
 
-                    <i class="fas fa-eye" id="eyeIcon"></i>
-
+                    <i class="fas fa-eye" id="eyeIcon1"></i>
 
                 </button>
 

@@ -192,22 +192,54 @@ class UserController extends Controller
             }
         }
         if ($request->filled('password')) {
+            if ($profilPersonnel) {
 
-            $request->validate(
-                [
-                    'password' => [
-                        'confirmed',
-                        'min:8'
+                $request->validate(
+                    [
+                        'password' => [
+                            'confirmed',
+                            'min:8',
+                            'regex:/[A-Z]/',
+                            'regex:/[a-z]/',
+                            'regex:/[0-9]/',
+                            'regex:/[@$!%*#?&]/'
+                        ]
+                    ],
+                    [
+                        'password.confirmed' =>
+                        'Les mots de passe ne correspondent pas.',
+
+                        'password.min' =>
+                        'Le mot de passe doit contenir au moins 8 caractères.',
+
+                        'password.regex' =>
+                        'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial.'
                     ]
-                ],
-                [
-                    'password.confirmed' =>
-                    'Les mots de passe ne correspondent pas.',
+                );
 
-                    'password.min' =>
-                    'Le mot de passe doit contenir au moins 8 caractères.'
-                ]
-            );
+                if (
+                    Hash::check(
+                        $request->password,
+                        $user->password
+                    )
+                ) {
+
+                    return back()->withErrors([
+                        'password' =>
+                        'Le nouveau mot de passe doit être différent du mot de passe actuel.'
+                    ]);
+                }
+            } else {
+
+                $request->validate(
+                    [
+                        'password' => [
+                            'confirmed',
+                            'min:8'
+                        ]
+                    ]
+                );
+            }
 
             $user->update([
                 'password' => Hash::make($request->password),
