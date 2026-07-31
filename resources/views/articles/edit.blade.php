@@ -16,7 +16,6 @@
             <!-- BODY -->
             <div class="card-body">
 
-                <!-- ERREURS -->
                 @if ($errors->any())
                     <div class="alert alert-danger">
                         <ul class="mb-0">
@@ -27,17 +26,22 @@
                     </div>
                 @endif
 
-                <!-- FORMULAIRE -->
                 <form method="POST" action="{{ route('articles.update', $article->id) }}">
+
                     @csrf
                     @method('PUT')
 
                     <!-- LIGNE 1 -->
                     <div class="row">
 
-                        <!-- CODE -->
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Code</label>
+
+                            <label class="form-label">
+                                Code
+                            </label>
+
+                            <span class="text-danger">*</span>
+
                             <input type="text" name="code" class="form-control @error('code') is-invalid @enderror"
                                 value="{{ old('code', $article->code) }}" required>
 
@@ -46,11 +50,17 @@
                                     {{ $message }}
                                 </div>
                             @enderror
+
                         </div>
 
-                        <!-- LIBELLE -->
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Libellé</label>
+
+                            <label class="form-label">
+                                Libellé
+                            </label>
+
+                            <span class="text-danger">*</span>
+
                             <input type="text" name="libelle" class="form-control @error('libelle') is-invalid @enderror"
                                 value="{{ old('libelle', $article->libelle) }}" required>
 
@@ -59,81 +69,105 @@
                                     {{ $message }}
                                 </div>
                             @enderror
+
                         </div>
 
                     </div>
 
                     <!-- LIGNE 2 -->
+
                     <div class="row">
 
-                        <!-- PRIX -->
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Prix unitaire</label>
-                            <input type="number" name="prix_unitaire"
-                                class="form-control @error('prix_unitaire') is-invalid @enderror"
-                                value="{{ old('prix_unitaire', $article->prix_unitaire) }}" required>
 
-                            @error('prix_unitaire')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
-                            @enderror
-                        </div>
+                            <label class="form-label">
+                                Catégorie
+                            </label>
 
-                        <!-- CATEGORIE -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Catégorie</label>
-                            <select name="categorie_id" class="form-control @error('categorie_id') is-invalid @enderror">
+                            <span class="text-danger">*</span>
 
-                                @foreach ($categories as $cat)
-                                    <option value="{{ $cat->id }}"
-                                        {{ $cat->id == $article->categorie_id ? 'selected' : '' }}>
-                                        {{ $cat->libelle }}
+                            <select name="categorie_id"
+                                class="form-control select2 @error('categorie_id') is-invalid @enderror" required>
+
+                                @foreach ($categories as $categorie)
+                                    <option value="{{ $categorie->id }}"
+                                        {{ old('categorie_id', $article->categorie_id) == $categorie->id ? 'selected' : '' }}>
+
+                                        {{ $categorie->libelle }}
+
                                     </option>
                                 @endforeach
 
                             </select>
 
                             @error('categorie_id')
-                                <div class="invalid-feedback">
+                                <div class="invalid-feedback d-block">
                                     {{ $message }}
                                 </div>
                             @enderror
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Type d'article
+                            </label>
+
+                            <span class="text-danger">*</span>
+
+                            <select name="type_article_id"
+                                class="form-control select2 @error('type_article_id') is-invalid @enderror" required>
+
+                                @foreach ($typeArticles as $typeArticle)
+                                    <option value="{{ $typeArticle->id }}"
+                                        {{ old('type_article_id', $article->type_article_id) == $typeArticle->id ? 'selected' : '' }}>
+
+                                        {{ $typeArticle->libelle }}
+
+                                    </option>
+                                @endforeach
+
+                            </select>
+
+                            @error('type_article_id')
+                                <div class="invalid-feedback d-block">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+
                         </div>
 
                     </div>
 
-                    <!-- LIGNE 3 -->
-                    <div class="row">
+                    <hr>
 
-                        <!-- STOCK -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Stock disponible</label>
-                            <input type="number" name="stock_disponible" class="form-control"
-                                value="{{ old('stock_disponible', $article->stock_disponible) }}">
-                        </div>
+                    <div class="alert alert-info">
 
-                        <!-- STOCK SECURITE -->
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Stock sécurité</label>
-                            <input type="number" name="stock_securite" class="form-control"
-                                value="{{ old('stock_securite', $article->stock_securite) }}">
-                        </div>
+                        <i class="fas fa-info-circle"></i>
+
+                        Les informations relatives au prix et au stock sont désormais
+                        gérées via le bouton
+                        <strong>Gestion du stock</strong> depuis la liste des articles.
 
                     </div>
 
                     <!-- BOUTONS -->
-                    <div style="display: flex; gap: 10px;">
 
-
+                    <div class="d-flex gap-2">
 
                         <button type="submit" class="btn btn-success">
+
                             Enregistrer
+
                         </button>
 
                         <a href="{{ route('articles.index') }}" class="btn btn-secondary">
+
                             Retour
+
                         </a>
+
                     </div>
 
                 </form>
@@ -145,3 +179,21 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+
+            $('.select2').select2({
+
+                placeholder: 'Sélectionner ...',
+
+                allowClear: true,
+
+                width: '100%'
+
+            });
+
+        });
+    </script>
+@endpush

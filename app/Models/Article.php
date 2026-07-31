@@ -16,12 +16,18 @@ class Article extends Model
         'stock_disponible',
         'stock_securite',
         'archiver',
-        'categorie_id'
+        'categorie_id',
+        'type_article_id',
     ];
 
     public function categorie()
     {
         return $this->belongsTo(Categorie::class);
+    }
+
+    public function typeArticle()
+    {
+        return $this->belongsTo(TypeArticle::class);
     }
 
     // public function commandes()

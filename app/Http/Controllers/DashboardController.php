@@ -36,9 +36,17 @@ class DashboardController extends Controller
         // 🔹 statistiques
         $totalUsers = User::count();
 
-        $totalDemandes = Demande::where('archiver', 0)->count();
+        //$totalDemandes = Demande::where('archiver', 0)->count();
 
-        $totalCommandes = Commande::where('archiver', 0)->count();
+        $totalDemandes = Demande::where('archiver', 0)
+            ->where('statut', 'Livrée - Demande clôturée')
+            ->count();
+
+        $totalCommandes = Commande::where('archiver', 0)
+            ->where('livraison', 1)
+            ->count();
+
+        //$totalCommandes = Commande::where('archiver', 0)->count();
 
         $stockCritique = Article::whereColumn(
             'stock_disponible',
@@ -47,12 +55,16 @@ class DashboardController extends Controller
         )->count();
 
         // 🔹 dernières demandes
-        $dernieresDemandes = Demande::latest()
+        $dernieresDemandes = Demande::where('archiver', 0)
+            ->where('statut', 'Livrée - Demande clôturée')
+            ->latest()
             ->take(5)
             ->get();
 
         // 🔹 dernières commandes
-        $dernieresCommandes = Commande::latest()
+        $dernieresCommandes = Commande::where('archiver', 0)
+            ->where('livraison', 1)
+            ->latest()
             ->take(5)
             ->get();
 

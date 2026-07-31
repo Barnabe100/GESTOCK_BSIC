@@ -15,6 +15,7 @@ use App\Exports\Etats\DemandesParAgenceExport;
 use App\Exports\Etats\DemandesValideesExport;
 use App\Exports\Etats\DemandesParServiceExport;
 use App\Exports\Etats\DemandesParDepartementExport;
+use Carbon\Carbon;
 
 class EtatDemandeController extends Controller
 {
@@ -99,7 +100,7 @@ class EtatDemandeController extends Controller
 
             ),
 
-            'demandes_par_agence.xlsx'
+            'demandes_par_agence_' . Carbon::now()->format('Ymd_His') . '.xlsx'
         );
     }
 
@@ -165,8 +166,28 @@ class EtatDemandeController extends Controller
             ]
         );
 
+        $canvas = $pdf->getDomPDF()->getCanvas();
+
+        $canvas->page_text(
+            25,
+            820,
+            "Généré le : " . now()->format('d/m/Y à H:i:s'),
+            null,
+            9,
+            [0, 0, 0]
+        );
+
+        $canvas->page_text(
+            500,
+            820,
+            "Page {PAGE_NUM}/{PAGE_COUNT}",
+            null,
+            9,
+            [0, 0, 0]
+        );
+
         return $pdf->stream(
-            'demandes_par_agence.pdf'
+            'demandes_par_agence_' . Carbon::now()->format('Ymd_His') . '.pdf'
         );
     }
     /*
@@ -180,7 +201,7 @@ class EtatDemandeController extends Controller
     {
         return Excel::download(
             new DemandesValideesExport,
-            'demandes_validees.xlsx'
+            'demandes_validees_' . Carbon::now()->format('Ymd_His') . '.xlsx'
         );
     }
 
@@ -197,8 +218,28 @@ class EtatDemandeController extends Controller
             compact('demandes')
         );
 
+        $canvas = $pdf->getDomPDF()->getCanvas();
+
+        $canvas->page_text(
+            25,
+            820,
+            "Généré le : " . now()->format('d/m/Y à H:i:s'),
+            null,
+            9,
+            [0, 0, 0]
+        );
+
+        $canvas->page_text(
+            500,
+            820,
+            "Page {PAGE_NUM}/{PAGE_COUNT}",
+            null,
+            9,
+            [0, 0, 0]
+        );
+
         return $pdf->stream(
-            'demandes_validees.pdf'
+            'demandes_validees_' . Carbon::now()->format('Ymd_His') . '.pdf'
         );
     }
 
@@ -207,7 +248,7 @@ class EtatDemandeController extends Controller
     {
         return Excel::download(
             new DemandesParServiceExport,
-            'demandes_par_service.xlsx'
+            'demandes_par_service_' . Carbon::now()->format('Ymd_His') . '.xlsx'
         );
     }
 
@@ -224,8 +265,28 @@ class EtatDemandeController extends Controller
             compact('demandes')
         );
 
+        $canvas = $pdf->getDomPDF()->getCanvas();
+
+        $canvas->page_text(
+            25,
+            820,
+            "Généré le : " . now()->format('d/m/Y à H:i:s'),
+            null,
+            9,
+            [0, 0, 0]
+        );
+
+        $canvas->page_text(
+            500,
+            820,
+            "Page {PAGE_NUM}/{PAGE_COUNT}",
+            null,
+            9,
+            [0, 0, 0]
+        );
+
         return $pdf->stream(
-            'demandes_par_service.pdf'
+            'demandes_par_service_' . Carbon::now()->format('Ymd_His') . '.pdf'
         );
     }
 
@@ -261,7 +322,7 @@ class EtatDemandeController extends Controller
 
             ),
 
-            'demandes_par_departement.xlsx'
+            'demandes_par_departement_' . Carbon::now()->format('Ymd_His') . '.xlsx'
 
         );
     }
@@ -381,9 +442,29 @@ class EtatDemandeController extends Controller
 
         );
 
+        $canvas = $pdf->getDomPDF()->getCanvas();
+
+        $canvas->page_text(
+            25,
+            820,
+            "Généré le : " . now()->format('d/m/Y à H:i:s'),
+            null,
+            9,
+            [0, 0, 0]
+        );
+
+        $canvas->page_text(
+            500,
+            820,
+            "Page {PAGE_NUM}/{PAGE_COUNT}",
+            null,
+            9,
+            [0, 0, 0]
+        );
+
         return $pdf->stream(
 
-            'demandes_par_departement.pdf'
+            'demandes_par_departement_' . Carbon::now()->format('Ymd_His') . '.pdf'
 
         );
     }

@@ -21,6 +21,7 @@ use App\Http\Controllers\Etats\EtatArticleController;
 use App\Http\Controllers\MouvementStockController;
 use App\Http\Controllers\EtatStockController;
 use App\Http\Controllers\Etats\EtatMouvementStockController;
+use App\Http\Controllers\TypeArticleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -178,6 +179,14 @@ Route::middleware([
         ->name(
             'demandes.confirmer.reception'
         );
+    //Soumettre demande
+    Route::put('/demandes/{id}/soumettre', [DemandeController::class, 'soumettre'])
+        ->name('demandes.soumettre');
+    //Demandes collegues
+    Route::get(
+        '/demandes-entite',
+        [DemandeController::class, 'demandesOrganisation']
+    )->name('demandes.organisation');
 
 
     Route::resource('departements', DepartementController::class);
@@ -197,6 +206,18 @@ Route::middleware([
         [UserController::class, 'getServicesParDepartement']
     );
 
+
+    Route::resource('type-articles', TypeArticleController::class);
+
+    Route::get(
+        'type-articles/export/excel',
+        [TypeArticleController::class, 'exportExcel']
+    )->name('type-articles.export.excel');
+
+    Route::get(
+        'type-articles/export/csv',
+        [TypeArticleController::class, 'exportCsv']
+    )->name('type-articles.export.csv');
 
     Route::resource('services', ServiceController::class);
     Route::resource('agences', AgenceController::class);
@@ -262,6 +283,9 @@ Route::middleware([
         ->name('commandes.export.excel');
     Route::get('commandes-export-csv', [CommandeController::class, 'exportCsv'])
         ->name('commandes.export.csv');
+
+    Route::put('/commandes/{id}/soumettre', [CommandeController::class, 'soumettre'])
+        ->name('commandes.soumettre');
     //Export fournisseurs
     Route::get('fournisseurs-export-excel', [FournisseurController::class, 'exportExcel'])
         ->name('fournisseurs.export.excel');

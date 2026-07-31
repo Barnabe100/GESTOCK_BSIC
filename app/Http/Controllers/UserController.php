@@ -191,65 +191,71 @@ class UserController extends Controller
                 $user->removeRole('Superieur');
             }
         }
-        if ($request->filled('password')) {
-            if ($profilPersonnel) {
-
-                $request->validate(
-                    [
-                        'password' => [
-                            'confirmed',
-                            'min:8',
-                            'regex:/[A-Z]/',
-                            'regex:/[a-z]/',
-                            'regex:/[0-9]/',
-                            'regex:/[@$!%*#?&]/'
-                        ]
-                    ],
-                    [
-                        'password.confirmed' =>
-                        'Les mots de passe ne correspondent pas.',
-
-                        'password.min' =>
-                        'Le mot de passe doit contenir au moins 8 caractères.',
-
-                        'password.regex' =>
-                        'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial.'
-                    ]
-                );
-
-                if (
-                    Hash::check(
-                        $request->password,
-                        $user->password
-                    )
-                ) {
-
-                    return back()->withErrors([
-                        'password' =>
-                        'Le nouveau mot de passe doit être différent du mot de passe actuel.'
-                    ]);
-                }
-            } else {
-
-                $request->validate(
-                    [
-                        'password' => [
-                            'confirmed',
-                            'min:8'
-                        ]
-                    ]
-                );
-            }
-
-            $user->update([
-                'password' => Hash::make($request->password),
-                'force_password_change' =>
-                $profilPersonnel
-                    ? false
-                    : true
-
-            ]);
+        if (is_null($request->password) || trim($request->password) === '') {
+            return back()
+                ->withErrors([
+                    'password' => 'Veuillez saisir un nouveau mot de passe.'
+                ])
+                ->withInput();
         }
+        if ($profilPersonnel) {
+
+            $request->validate(
+                [
+                    'password' => [
+                        'confirmed',
+                        'min:8',
+                        'regex:/[A-Z]/',
+                        'regex:/[a-z]/',
+                        'regex:/[0-9]/',
+                        'regex:/[@$!%*#?&]/'
+                    ]
+                ],
+                [
+                    'password.confirmed' =>
+                    'Les mots de passe ne correspondent pas.',
+
+                    'password.min' =>
+                    'Le mot de passe doit contenir au moins 8 caractères.',
+
+                    'password.regex' =>
+                    'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial.'
+                ]
+            );
+
+            if (
+                Hash::check(
+                    $request->password,
+                    $user->password
+                )
+            ) {
+
+                return back()->withErrors([
+                    'password' =>
+                    'Le nouveau mot de passe doit être différent du mot de passe actuel.'
+                ]);
+            }
+        } else {
+
+            $request->validate(
+                [
+                    'password' => [
+                        'confirmed',
+                        'min:8'
+                    ]
+                ]
+            );
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+            'force_password_change' =>
+            $profilPersonnel
+                ? false
+                : true
+
+        ]);
+
 
         if (!$profilPersonnel) {
 

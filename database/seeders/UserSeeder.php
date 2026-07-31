@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use \App\Models\User;
 
 
+
 class UserSeeder extends Seeder
 {
     /**
@@ -41,7 +42,7 @@ class UserSeeder extends Seeder
             'superieur' => 0,
         ])->assignRole('Admin');
 
-        User::firstOrCreate([
+        /*User::firstOrCreate([
             'name' => 'GESTIONNAIRE',
             'prenom' => 'Stock',
             'email' => 'gestionnaire@test.com',
@@ -116,6 +117,6 @@ class UserSeeder extends Seeder
             'departement_id' => 1,
             'service_id' => 1,
             'superieur' => 0,
-        ])->assignRole('ValidateurCommande');
+        ])->assignRole('ValidateurCommande'); */
     }
 }

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->date('date');
             $table->string('libelle')->nullable();
             $table->decimal('montant', 10, 2)->default(0);
-
+            $table->string('statut')->default('En préparation');
             $table->boolean('validation')->default(0);
             $table->boolean('livraison')->default(0);
             $table->date('date_livraison')->nullable();

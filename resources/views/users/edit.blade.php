@@ -254,6 +254,12 @@
 
                     </button>
 
+                    <a href="{{ route('mon.profil') }}" class="btn btn-secondary">
+
+                        Retour
+
+                    </a>
+
                     @if (!$profilPersonnel)
                         <a href="{{ route('users.index') }}" class="btn btn-secondary">
 

@@ -95,12 +95,20 @@
                                 </td>
 
                                 <td>
-                                    @if (
-                                        $demande->user_id == auth()->id() ||
-                                            auth()->user()->hasAnyRole(['SuperAdmin', 'Gestionnaire']))
+                                    {{-- @if ($demande->user_id == auth()->id() ||
+    auth()->user()->hasAnyRole(['SuperAdmin', 'Gestionnaire']))
                                         <a href="{{ route('demandes.show', $demande->id) }}" title="Détail"
                                             class="btn btn-info btn-sm">
                                             <i class="fas fa-eye"></i>
+                                        </a>
+                                    @endif --}}
+
+                                    @if (auth()->user()->peutVoirDemande($demande))
+                                        <a href="{{ route('demandes.show', $demande->id) }}" class="btn btn-info btn-sm"
+                                            title="Détail">
+
+                                            <i class="fas fa-eye"></i>
+
                                         </a>
                                     @endif
                                     @if (
@@ -386,13 +394,23 @@
                                     @endif
 
                                     {{-- confirmation demande recepteur --}}
-                                    @if ($demande->statut == 'En attente réception demandeur' && $demande->user_id == auth()->id())
+                                    {{-- @if ($demande->statut == 'En attente réception demandeur' && $demande->user_id == auth()->id())
                                         <button class="btn btn-success btn-sm" data-bs-toggle="modal"
                                             data-bs-target="#receptionModal{{ $demande->id }}"
                                             title="Confirmer réception">
 
                                             <i class="fas fa-check-circle"></i>
 
+
+                                        </button>
+                                    @endif --}}
+
+                                    @if (auth()->user()->peutConfirmerReception($demande))
+                                        <button class="btn btn-success btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#receptionModal{{ $demande->id }}"
+                                            title="Confirmer réception">
+
+                                            <i class="fas fa-check-circle"></i>
 
                                         </button>
                                     @endif

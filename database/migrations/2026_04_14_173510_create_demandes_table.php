@@ -52,6 +52,12 @@ return new class extends Migration
 
             $table->boolean('confirmation_reception')->default(false);
             $table->text('commentaire_reception')->nullable();
+            $table->foreignId('reception_par')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+
+            $table->timestamp('date_reception')->nullable();
 
             $table->timestamps();
         });

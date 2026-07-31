@@ -11,6 +11,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 
 use App\Exports\Etats\StockParArticleExport;
+use Carbon\Carbon;
 
 class EtatArticleController extends Controller
 {
@@ -25,7 +26,7 @@ class EtatArticleController extends Controller
     {
         return Excel::download(
             new StockParArticleExport,
-            'stock_par_article.xlsx'
+            'stock_par_article_' . Carbon::now()->format('Ymd_His') . '.xlsx'
         );
     }
 
@@ -43,8 +44,28 @@ class EtatArticleController extends Controller
             compact('articles')
         );
 
+        $canvas = $pdf->getDomPDF()->getCanvas();
+
+        $canvas->page_text(
+            25,
+            820,
+            "Généré le : " . now()->format('d/m/Y à H:i:s'),
+            null,
+            9,
+            [0, 0, 0]
+        );
+
+        $canvas->page_text(
+            500,
+            820,
+            "Page {PAGE_NUM}/{PAGE_COUNT}",
+            null,
+            9,
+            [0, 0, 0]
+        );
+
         return $pdf->stream(
-            'stock_par_article.pdf'
+            'stock_par_article_' . Carbon::now()->format('Ymd_His') . '.pdf'
         );
     }
 }

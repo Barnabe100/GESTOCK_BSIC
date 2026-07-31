@@ -8,14 +8,19 @@ use Illuminate\Http\Request;
 use App\Exports\ArticlesExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\MouvementStock;
+use App\Models\TypeArticle;
 
 class ArticleController extends Controller
 {
     public function index()
     {
-        $articles = Article::with('categorie')
+        $articles = Article::with(
+            'categorie',
+            'typeArticle'
+        )
             ->where('archiver', 0)
             ->get();
+
 
         return view('articles.index', compact('articles'));
     }
@@ -23,7 +28,8 @@ class ArticleController extends Controller
     public function create()
     {
         $categories = Categorie::where('archiver', 0)->get();
-        return view('articles.create', compact('categories'));
+        $typeArticles = TypeArticle::where('archiver', 0)->get();
+        return view('articles.create', compact('categories', 'typeArticles'));
     }
 
     public function store(Request $request)
@@ -35,6 +41,7 @@ class ArticleController extends Controller
             'stock_disponible' => 'nullable|integer',
             'stock_securite' => 'nullable|integer',
             'categorie_id' => 'required|exists:categories,id',
+            'type_article_id' => 'required|exists:type_articles,id',
         ]);
 
         Article::create([
@@ -45,6 +52,7 @@ class ArticleController extends Controller
             'stock_disponible' => $request->stock_disponible ?? 0,
             'stock_securite' => $request->stock_securite ?? 0,
             'categorie_id' => $request->categorie_id,
+            'type_article_id' => $request->type_article_id,
         ]);
 
         return redirect()
@@ -57,19 +65,23 @@ class ArticleController extends Controller
 
     public function show($id)
     {
-        $article = Article::with('categorie')->findOrFail($id);
+        $article = Article::with(
+            'categorie',
+            'typeArticle'
+        )->findOrFail($id);
         return view('articles.show', compact('article'));
     }
 
     public function edit($id)
     {
         $article = Article::findOrFail($id);
+        $typeArticles = TypeArticle::where('archiver', 0)->get();
         $categories = Categorie::where('archiver', 0)->get();
 
-        return view('articles.edit', compact('article', 'categories'));
+        return view('articles.edit', compact('article', 'categories', 'typeArticles'));
     }
 
-    public function update(Request $request, $id)
+    /*public function update(Request $request, $id)
     {
         $request->validate([
             'code' => 'required',
@@ -78,6 +90,7 @@ class ArticleController extends Controller
             'stock_disponible' => 'required|integer',
             'stock_securite' => 'required|integer',
             'categorie_id' => 'required|exists:categories,id',
+            'type_article_id' => 'required|exists:type_articles,id',
         ]);
 
         $article = Article::findOrFail($id);
@@ -89,10 +102,67 @@ class ArticleController extends Controller
             'stock_disponible' => $request->stock_disponible,
             'stock_securite' => $request->stock_securite,
             'categorie_id' => $request->categorie_id,
+            'type_article_id' => $request->type_article_id,
         ]);
 
         return redirect()->route('articles.index')
             ->with('success', 'Article modifié avec succès');
+    }*/
+
+
+    public function update(Request $request, $id)
+    {
+        $article = Article::findOrFail($id);
+
+        // Mise à jour depuis le popup Stock
+        if ($request->has('stock_initial')) {
+
+            $article->update([
+
+                'prix_unitaire'    => $request->prix_unitaire,
+
+                'stock_initial'    => $request->stock_initial,
+
+                'stock_disponible' => $request->stock_disponible,
+
+                'stock_securite'   => $request->stock_securite,
+
+            ]);
+
+            return redirect()
+                ->route('articles.index')
+                ->with('success', 'Stock paramétré avec succès.');
+        }
+
+        // Modification classique de l'article
+
+        $request->validate([
+
+            'code' => 'required',
+
+            'libelle' => 'required',
+
+            'categorie_id' => 'required|exists:categories,id',
+
+            'type_article_id' => 'required|exists:type_articles,id',
+
+        ]);
+
+        $article->update([
+
+            'code' => $request->code,
+
+            'libelle' => $request->libelle,
+
+            'categorie_id' => $request->categorie_id,
+
+            'type_article_id' => $request->type_article_id,
+
+        ]);
+
+        return redirect()
+            ->route('articles.index')
+            ->with('success', 'Article modifié avec succès.');
     }
 
     public function destroy($id)

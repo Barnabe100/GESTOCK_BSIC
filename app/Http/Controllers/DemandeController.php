@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\MouvementStock;
+use Carbon\Carbon;
 use HasRoles;
 
 class DemandeController extends Controller
@@ -34,7 +35,7 @@ class DemandeController extends Controller
         }
     }
 
-    public function mesDemandes()
+    /*public function mesDemandes()
     {
         $estMesDemandes = true;
         $user_id = auth()->id();
@@ -46,6 +47,64 @@ class DemandeController extends Controller
 
             return view('demandes.index', compact('demandes', 'estMesDemandes'));
         }
+    }*/
+
+
+    public function mesDemandes()
+    {
+        $demandes = Demande::with([
+            'user',
+            'user.agence',
+            'user.departement'
+        ])
+            ->where('user_id', auth()->id())
+            ->where('archiver', 0)
+            ->latest()
+            ->get();
+
+        return view(
+            'demandes.index',
+            [
+                'demandes' => $demandes,
+                'estMesDemandes' => true
+            ]
+        );
+    }
+
+
+
+
+    //Demandes collegues
+    public function demandesOrganisation()
+    {
+        $user = auth()->user();
+
+        if (!$user->hasRole('Demandeur')) {
+            abort(403);
+        }
+
+        $demandes = Demande::with([
+            'user',
+            'user.agence',
+            'user.departement',
+            'articles.article'
+        ])
+            ->where('archiver', 0)
+            ->where('statut', '!=', 'En préparation')
+            ->whereHas('user', function ($q) use ($user) {
+
+                if ($user->estAuSiege()) {
+                    $q->where('departement_id', $user->departement_id);
+                } else {
+                    $q->where('agence_id', $user->agence_id);
+                }
+            })
+            ->latest()
+            ->get();
+
+
+
+        return view('demandes.indexOrganisation', compact('demandes'));
     }
 
     public function indexGestionnaire()
@@ -178,28 +237,10 @@ class DemandeController extends Controller
             'user.departement'
         ])
             ->whereHas('user', function ($q) use ($superieur) {
-
-                // Supérieur rattaché à un département
-                if (!empty($superieur->departement_id) /*|| $superieur->departement_id != 'Département Réseau'*/) {
-
-                    $q->where(
-                        'agence_id',
-                        $superieur->agence_id
-                    )
-                        ->where(
-                            'departement_id',
-                            $superieur->departement_id
-                        );
+                if ($superieur->estAuSiege()) {
+                    $q->where('departement_id', $superieur->departement_id);
                 } else {
-
-                    // Supérieur d'agence
-                    $q->where(
-                        'agence_id',
-                        $superieur->agence_id
-                    )
-                        ->whereNull(
-                            'departement_id'
-                        );
+                    $q->where('agence_id', $superieur->agence_id);
                 }
             });
 
@@ -296,12 +337,14 @@ class DemandeController extends Controller
         //dd($superieur->id);
 
         $demande = Demande::create([
-            'date' => $request->date,
+            //'date' => $request->date,
+            'date' => Carbon::today(),
             'objet' => $request->objet,
             'description' => $request->description,
             'user_id' => auth()->id(),
             'superieur_id' => $superieur->id,
-            'statut' => 'En attente supérieur',
+            //'statut' => 'En attente supérieur',
+            'statut' => 'En préparation',
         ]);
 
 
@@ -356,7 +399,7 @@ class DemandeController extends Controller
         $demande = Demande::findOrFail($id);
 
         $demande->update([
-            'date' => $request->date,
+            //'date' => $request->date,
             'objet' => $request->objet,
             'description' => $request->description,
             'superieur_id' => $superieur->id,
@@ -384,33 +427,33 @@ class DemandeController extends Controller
 
     public function show($id)
     {
-        $articles = Article::whereNotNull('prix_unitaire')
-            ->whereNotNull(
-                'stock_securite'
-            )
+        $user = auth()->user();
 
-            ->where(
-                'stock_disponible',
-                '>',
-                0
-            )
+        $articles = Article::whereNotNull('prix_unitaire')
+            ->whereNotNull('stock_securite')
+            ->where('stock_disponible', '>', 0)
             ->where('archiver', 0)
             ->orderBy('libelle')
             ->get();
 
-        // ADMIN : accès à toutes les demandes
-        if (auth()->user()->hasRole(['SuperAdmin', 'Gestionnaire', 'Superieur', 'ValidateurDemande'])) {
-            $demande = Demande::with([
-                'articles.article'
-            ])->findOrFail($id);
-        } else {
-            $demande = Demande::with([
-                'articles.article'
-            ])
-                ->where('id', $id)
-                ->where('user_id', auth()->id())->firstOrFail();
-        }
-        return view('demandes.show', compact('demande', 'articles'));
+        $demande = Demande::with([
+            'user',
+            'articles.article'
+        ])->findOrFail($id);
+
+        abort_unless(
+            $user->peutVoirDemande($demande),
+            403,
+            'Vous n\'êtes pas autorisé à consulter cette demande.'
+        );
+
+        return view(
+            'demandes.show',
+            compact(
+                'demande',
+                'articles'
+            )
+        );
     }
 
     public function destroy($id)
@@ -673,26 +716,33 @@ class DemandeController extends Controller
     }
 
     //Confirmation demandeur
-    public function confirmerReception(
-        Request $request,
-        $id
-    ) {
-        $demande =
-            Demande::findOrFail(
-                $id
-            );
+    public function confirmerReception(Request $request, $id)
+    {
+        $request->validate([
+            'commentaire' => 'required|string|max:1000',
+        ]);
+
+        $user = auth()->user();
+
+        $demande = Demande::with('user')->findOrFail($id);
+
+        abort_unless(
+            $user->peutConfirmerReception($demande),
+            403,
+            'Vous n\'êtes pas autorisé à confirmer cette réception.'
+        );
 
         $demande->update([
-
             'confirmation_reception' => 1,
+            'date_reception'         => now(),
+            'reception_par'          => auth()->id(),
             'commentaire_reception' => $request->commentaire,
             'statut' => 'Livrée - Demande clôturée'
-
         ]);
 
         return back()->with(
             'success',
-            'Réception confirmée'
+            'Réception confirmée avec succès.'
         );
     }
 
@@ -822,6 +872,43 @@ class DemandeController extends Controller
                 'success',
                 'Validation finale effectuée'
             );
+    }
+
+    //Soumettre une demande
+    public function soumettre($id)
+    {
+        $demande = Demande::with('articles')->findOrFail($id);
+
+        // Vérifier que l'utilisateur est le propriétaire
+        if ($demande->user_id != auth()->id()) {
+            abort(403);
+        }
+
+        // Vérifier que la demande est encore en préparation
+        if ($demande->statut != 'En préparation') {
+            return redirect()->back()->with(
+                'error',
+                'Cette demande ne peut plus être soumise.'
+            );
+        }
+
+        // Vérifier qu'il existe au moins un article
+        if ($demande->articles->isEmpty()) {
+            return redirect()->back()->with(
+                'error',
+                'Veuillez ajouter au moins un article avant de soumettre la demande.'
+            );
+        }
+
+        // Soumettre la demande
+        $demande->update([
+            'statut' => 'En attente supérieur',
+        ]);
+
+        return redirect()->route('mes.demandes')->with(
+            'success',
+            'La demande a été soumise au supérieur hiérarchique avec succès.'
+        );
     }
 
     //Export Excel

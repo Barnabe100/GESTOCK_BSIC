@@ -61,6 +61,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // AGENCES
             'gerer-agence',
+
+            // TYPE ARTICLE
+            'gerer-type-article',
         ];
 
         foreach ($permissions as $permission) {
@@ -138,6 +141,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'modifier-commande',
             'livrer-commande',
             'lister-commande',
+            'gerer-type-article',
         ]);
 
         // 🔥 DEMANDEUR

@@ -15,6 +15,7 @@ class Commande extends Model
         'date',
         'libelle',
         'montant',
+        'statut',
         'validation',
         'livraison',
         'date_livraison',
@@ -66,5 +67,17 @@ class Commande extends Model
     public function scopeActif($query)
     {
         return $query->where('archiver', 0);
+    }
+
+    public function getMontantUtiliseAttribute()
+    {
+        return $this->articles->sum(function ($ligne) {
+            return $ligne->quantite * $ligne->prix_unitaire;
+        });
+    }
+
+    public function getResteAttribute()
+    {
+        return $this->montant - $this->montant_utilise;
     }
 }

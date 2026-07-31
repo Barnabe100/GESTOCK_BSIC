@@ -17,6 +17,17 @@ class ArticleCommandeController extends Controller
 
     public function store(Request $request)
     {
+
+        $existe = ArticleCommande::where('commande_id', $request->commande_id)
+            ->where('article_id', $request->article_id)
+            ->exists();
+
+        if ($existe) {
+            return back()
+                ->withInput()
+                ->with('error', 'Cet article est déjà présent dans cette commande.');
+        }
+
         $commande = Commande::with('articles')
             ->findOrFail(
                 $request->commande_id

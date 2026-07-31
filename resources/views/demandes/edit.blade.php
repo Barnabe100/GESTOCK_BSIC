@@ -23,7 +23,7 @@
                         <div class="col-md-6 mb-3">
                             <label>Date</label>
                             <input type="date" name="date" class="form-control"
-                                value="{{ old('date', $demande->date) }}">
+                                value="{{ old('date', $demande->date) }}" readonly>
                         </div>
 
                         <div class="col-md-6 mb-3">

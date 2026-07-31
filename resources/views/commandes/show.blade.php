@@ -148,7 +148,7 @@
 
                             <div class="row">
 
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-4 mb-3">
                                     <label>Article</label>
                                     <select name="article_id" id="article_id" class="form-control select2">
                                         <option value=""></option>
@@ -160,20 +160,20 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-2 mb-3">
                                     <label>Prix initial de l'article</label>
                                     <input type="number" id="prix_unitaire" name="prix_unitaire" class="form-control" required>
                                 </div>
 
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-2 mb-3">
                                     <label>Quantité</label>
                                     <input type="number" name="quantite" class="form-control" required>
                                 </div>
 
 
 
-                                <div class="col-md-4 mb-3">
-                                    <label>Prix unitaire de la commande</label>
+                                <div class="col-md-2 mb-3">
+                                    <label>Prix unitaire</label>
                                     <input type="number" name="prix_unitaire" class="form-control" required>
                                 </div>
 
@@ -442,6 +442,37 @@
                     </tbody>
 
                 </table>
+
+                @php
+                    $montantUtilise = $commande->articles->sum(function ($ligne) {
+                        return $ligne->quantite * $ligne->prix_unitaire;
+                    });
+                @endphp
+
+                @if ($commande->statut == 'En préparation' && $commande->articles->isNotEmpty() && $montantUtilise == $commande->montant)
+                    <div class="mt-3">
+
+                        <form action="{{ route('commandes.soumettre', $commande->id) }}" method="POST">
+
+                            @csrf
+                            @method('PUT')
+
+                            <button type="button" class="btn btn-primary"
+                                onclick="confirmAction(
+                        this.form,
+                        'Soumettre cette commande pour validation ?'
+                    )">
+
+                                {{-- <i class="fas fa-paper-plane"></i> --}}
+
+                                Soumettre la commande
+
+                            </button>
+
+                        </form>
+
+                    </div>
+                @endif
 
             </div>
 

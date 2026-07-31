@@ -11,6 +11,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\Etats\EtatEntreeStockExport;
 use App\Exports\Etats\EtatSortieStockExport;
 use App\Exports\Etats\EtatStockFinalExport;
+use Carbon\Carbon;
 
 class EtatMouvementStockController extends Controller
 {
@@ -128,7 +129,7 @@ class EtatMouvementStockController extends Controller
 
             ),
 
-            'etat_entrees_stock.xlsx'
+            'etat_entrees_stock_' . Carbon::now()->format('Ymd_His') . '.xlsx'
 
         );
     }
@@ -177,8 +178,28 @@ class EtatMouvementStockController extends Controller
 
         );
 
+        $canvas = $pdf->getDomPDF()->getCanvas();
+
+        $canvas->page_text(
+            25,
+            820,
+            "Généré le : " . now()->format('d/m/Y à H:i:s'),
+            null,
+            9,
+            [0, 0, 0]
+        );
+
+        $canvas->page_text(
+            500,
+            820,
+            "Page {PAGE_NUM}/{PAGE_COUNT}",
+            null,
+            9,
+            [0, 0, 0]
+        );
+
         return $pdf->stream(
-            'etat_entrees_stock.pdf'
+            'etat_entrees_stock_' . Carbon::now()->format('Ymd_His') . '.pdf'
         );
     }
 
@@ -314,7 +335,7 @@ class EtatMouvementStockController extends Controller
 
             ),
 
-            'etat_sorties_stock.xlsx'
+            'etat_sorties_stock_' . Carbon::now()->format('Ymd_His') . '.xlsx'
 
         );
     }
@@ -364,10 +385,30 @@ class EtatMouvementStockController extends Controller
 
         );
 
+        $canvas = $pdf->getDomPDF()->getCanvas();
+
+        $canvas->page_text(
+            25,
+            820,
+            "Généré le : " . now()->format('d/m/Y à H:i:s'),
+            null,
+            9,
+            [0, 0, 0]
+        );
+
+        $canvas->page_text(
+            500,
+            820,
+            "Page {PAGE_NUM}/{PAGE_COUNT}",
+            null,
+            9,
+            [0, 0, 0]
+        );
+
         //dd($request->all());
 
         return $pdf->stream(
-            'etat_sorties_stock.pdf'
+            'etat_sorties_stock_' . Carbon::now()->format('Ymd_His') . '.pdf'
         );
     }
 
@@ -507,7 +548,7 @@ class EtatMouvementStockController extends Controller
 
             ),
 
-            'etat_stock_final.xlsx'
+            'etat_stock_final_' . Carbon::now()->format('Ymd_His') . '.xlsx'
 
         );
     }
@@ -554,8 +595,28 @@ class EtatMouvementStockController extends Controller
 
         );
 
+        $canvas = $pdf->getDomPDF()->getCanvas();
+
+        $canvas->page_text(
+            25,
+            820,
+            "Généré le : " . now()->format('d/m/Y à H:i:s'),
+            null,
+            9,
+            [0, 0, 0]
+        );
+
+        $canvas->page_text(
+            500,
+            820,
+            "Page {PAGE_NUM}/{PAGE_COUNT}",
+            null,
+            9,
+            [0, 0, 0]
+        );
+
         return $pdf->stream(
-            'etat_stock_final.pdf'
+            'etat_stock_final_' . Carbon::now()->format('Ymd_His') . '.pdf'
         );
     }
 }

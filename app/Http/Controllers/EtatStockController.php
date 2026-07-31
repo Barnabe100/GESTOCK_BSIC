@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Article;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\Etats\EtatStockValoriseExport;
+use Carbon\Carbon;
 
 class EtatStockController extends Controller
 {
@@ -206,7 +207,7 @@ class EtatStockController extends Controller
                 $request->date_fin
             ),
 
-            'etat_stock.xlsx'
+            'etat_stock_' . Carbon::now()->format('Ymd_His') . '.xlsx'
 
         );
     }
@@ -256,9 +257,29 @@ class EtatStockController extends Controller
 
         );
 
+        $canvas = $pdf->getDomPDF()->getCanvas();
+
+        $canvas->page_text(
+            25,
+            820,
+            "Généré le : " . now()->format('d/m/Y à H:i:s'),
+            null,
+            9,
+            [0, 0, 0]
+        );
+
+        $canvas->page_text(
+            500,
+            820,
+            "Page {PAGE_NUM}/{PAGE_COUNT}",
+            null,
+            9,
+            [0, 0, 0]
+        );
+
 
         return $pdf->stream(
-            'etat_stock.pdf'
+            'etat_stock_' . Carbon::now()->format('Ymd_His') . '.pdf'
         );
     }
 
@@ -486,7 +507,7 @@ class EtatStockController extends Controller
 
             ),
 
-            'etat_stock_valorise.xlsx'
+            'etat_stock_valorise_' . Carbon::now()->format('Ymd_His') . '.xlsx'
 
         );
     }
@@ -535,9 +556,31 @@ class EtatStockController extends Controller
 
         );
 
+        $canvas = $pdf->getDomPDF()->getCanvas();
+
+        $canvas->page_text(
+            25,
+            820,
+            "Généré le : " . now()->format('d/m/Y à H:i:s'),
+            null,
+            9,
+            [0, 0, 0]
+        );
+
+        $canvas->page_text(
+            500,
+            820,
+            "Page {PAGE_NUM}/{PAGE_COUNT}",
+            null,
+            9,
+            [0, 0, 0]
+        );
+
+
+
 
         return $pdf->stream(
-            'etat_stock_valorise.pdf'
+            'etat_stock_valorise_' . Carbon::now()->format('Ymd_His') . '.pdf'
         );
     }
 }

@@ -24,6 +24,10 @@ return new class extends Migration
             $table->foreignId('categorie_id')
                 ->constrained('categories')
                 ->cascadeOnDelete();
+            $table->foreignId('type_article_id')
+                ->nullable()
+                ->constrained('type_articles')
+                ->cascadeOnDelete();
             $table->timestamps();
         });
     }

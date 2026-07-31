@@ -75,6 +75,7 @@
 
                 </div>
 
+
             </div>
 
         </div>
@@ -226,7 +227,7 @@
 
 
 
-        @if ($demande->commentaire_reception)
+        {{-- @if ($demande->commentaire_reception)
             <div class="alert alert-info">
 
                 <b>
@@ -237,6 +238,49 @@
 
                 {{ $demande->commentaire_reception }}
 
+            </div>
+        @endif --}}
+
+        @if ($demande->confirmation_reception)
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <strong>Réception de la demande</strong>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">
+                            Confirmée par :
+                        </div>
+
+                        <div class="col-md-8">
+                            {{ optional($demande->receptionPar)->prenom }}
+                            {{ optional($demande->receptionPar)->name }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-4 fw-bold">
+                            Date de réception :
+                        </div>
+
+                        <div class="col-md-8">
+                            {{ $demande->date_reception }}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 fw-bold">
+                            Commentaire :
+                        </div>
+
+                        <div class="col-md-8">
+                            {{ $demande->commentaire_reception }}
+                        </div>
+                    </div>
+
+                </div>
             </div>
         @endif
 
@@ -335,6 +379,8 @@
                         </a>
                     </div>
                 @endif --}}
+
+
             </div>
 
 
@@ -644,7 +690,32 @@
 
                 </table>
 
+                @if ($demande->user_id == auth()->id() && $demande->statut == 'En préparation' && $demande->articles->isNotEmpty())
+                    <div class="mt-3">
+
+                        <form action="{{ route('demandes.soumettre', $demande->id) }}" method="POST" class="d-inline">
+
+                            @csrf
+                            @method('PUT')
+
+                            <button type="button" class="btn btn-primary"
+                                onclick="confirmAction(this.form,'Soumettre cette demande au supérieur ?')">
+
+                                {{-- <i class="fas fa-paper-plane"></i> --}}
+
+                                Soumettre la demande
+
+                            </button>
+
+                        </form>
+
+                    </div>
+                @endif
+
+
             </div>
+
+
 
         </div>
 

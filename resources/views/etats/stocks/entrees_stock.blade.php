@@ -176,10 +176,18 @@
                 </tr>
             @endforeach
 
+
+
         </tbody>
 
     </table>
 
+    <div style="margin-top:20px;font-size:11px;text-align:right;">
+        Généré le : {{ now()->format('d/m/Y à H:i:s') }}
+    </div>
+
 </body>
+
+
 
 </html>

@@ -32,6 +32,8 @@ class Demande extends Model
         'gestionnaire_id',
         'validateur_final_id',
         'date_validation_finale',
+        'reception_par',
+        'date_reception',
 
 
     ];
@@ -88,5 +90,15 @@ class Demande extends Model
             User::class,
             'validateur_final_id'
         );
+    }
+
+    public function articleDemandes()
+    {
+        return $this->hasMany(ArticleDemande::class);
+    }
+
+    public function receptionPar()
+    {
+        return $this->belongsTo(User::class, 'reception_par');
     }
 }

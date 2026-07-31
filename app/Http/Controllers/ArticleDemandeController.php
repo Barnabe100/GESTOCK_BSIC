@@ -18,6 +18,16 @@ class ArticleDemandeController extends Controller
     {
         $article = Article::findOrFail($request->article_id);
 
+        $existe = ArticleDemande::where('demande_id', $request->demande_id)
+            ->where('article_id', $request->article_id)
+            ->exists();
+
+        if ($existe) {
+            return back()
+                ->withInput()
+                ->with('error', 'Cet article est déjà présent dans cette demande.');
+        }
+
         // Vérifier stock
         if ($request->quantite > $article->stock_disponible) {
             return back()->with('error', 'Stock insuffisant');

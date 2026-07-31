@@ -27,11 +27,13 @@
                         CSV
                     </a>
 
-
-                    <a href="{{ route('commandes.create') }}" class="btn btn-light btn-sm">
-                        + Ajouter
-                    </a>
+                    @hasanyrole('Gestionnaire|SuperAdmin')
+                        <a href="{{ route('commandes.create') }}" class="btn btn-light btn-sm">
+                            + Ajouter
+                        </a>
+                    @endhasanyrole
                 </div>
+
             </div>
 
             <!-- BODY -->
@@ -146,7 +148,7 @@
 
                                         <!-- VALIDER -->
                                         @if (auth()->user()->hasAnyRole(['ValidateurCommande', 'SuperAdmin']))
-                                            @if (!$commande->validation)
+                                            @if (!$commande->validation && $commande->statut == 'Prête pour validation')
                                                 <form action="{{ route('commandes.valider', $commande->id) }}"
                                                     method="POST" style="display:inline-block">
                                                     @csrf

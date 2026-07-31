@@ -48,9 +48,11 @@
                                 <th>Code</th>
                                 <th>Libellé</th>
                                 <th>Catégorie</th>
-                                <th>Prix</th>
+                                <th>Type article</th>
+                                <th>Paramétrage</th>
+                                {{-- <th>Prix</th>
                                 <th>Stock disponible</th>
-                                <th>Statut stock</th>
+                                <th>Statut stock</th> --}}
 
                                 <th width="180px">Actions</th>
                             </tr>
@@ -68,8 +70,27 @@
                                     <td>
                                         {{ $article->categorie->libelle ?? '' }}
                                     </td>
-
                                     <td>
+                                        {{ $article->typeArticle->libelle ?? '' }}
+                                    </td>
+
+                                    <td class="text-center">
+
+                                        @if (is_null($article->prix_unitaire) || is_null($article->stock_initial) || is_null($article->stock_securite))
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times-circle"></i>
+                                                Non paramétré
+                                            </span>
+                                        @else
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle"></i>
+                                                Paramétré
+                                            </span>
+                                        @endif
+
+                                    </td>
+
+                                    {{-- <td>
 
                                         @if ($article->prix_unitaire === null)
                                             <span class="badge bg-secondary">
@@ -79,10 +100,10 @@
                                             {{ number_format($article->prix_unitaire, 2, ',', ' ') }}
                                         @endif
 
-                                    </td>
+                                    </td> --}}
 
                                     <!-- STOCK AVEC COULEUR -->
-                                    <td>
+                                    {{-- <td>
 
                                         @if ($article->prix_unitaire === null)
                                             <span class="badge bg-secondary">
@@ -102,9 +123,9 @@
                                             </span>
                                         @endif
 
-                                    </td>
+                                    </td> --}}
 
-                                    <td>
+                                    {{-- <td>
 
                                         @if ($article->prix_unitaire === null)
                                             <span class="badge bg-secondary">
@@ -136,12 +157,31 @@
                                             </span>
                                         @endif
 
-                                    </td>
+                                    </td> --}}
 
 
 
                                     <!-- ACTIONS -->
                                     <td>
+
+
+
+                                        <a href="#" class="btn btn-primary btn-sm btn-stock" data-bs-toggle="modal"
+                                            data-bs-target="#stockModal"
+                                            data-url="{{ route('articles.update', $article->id) }}"
+                                            data-id="{{ $article->id }}" data-code="{{ $article->code }}"
+                                            data-libelle="{{ $article->libelle }}"
+                                            data-categorie="{{ optional($article->categorie)->libelle }}"
+                                            data-type="{{ optional($article->typeArticle)->libelle }}"
+                                            data-prix="{{ $article->prix_unitaire }}"
+                                            data-stockinitial="{{ $article->stock_initial }}"
+                                            data-stock="{{ $article->stock_disponible }}"
+                                            data-securite="{{ $article->stock_securite }}" title="Poursuivre ...">
+
+                                            <i class="fas fa-cog"></i>
+
+
+                                        </a>
 
                                         <!-- VOIR -->
                                         <a href="{{ route('articles.show', $article->id) }}" title="Détail"
@@ -235,25 +275,26 @@
 
 
                                                         </div>
+                                                    </form>
 
 
-                                                        <div class="modal-footer">
+                                                    <div class="modal-footer">
 
-                                                            <button type="button" class="btn btn-secondary"
-                                                                data-bs-dismiss="modal">
+                                                        <button type="button" class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">
 
-                                                                Annuler
+                                                            Annuler
 
-                                                            </button>
+                                                        </button>
 
 
-                                                            <button class="btn btn-danger">
+                                                        <button class="btn btn-danger">
 
-                                                                Valider
+                                                            Valider
 
-                                                            </button>
+                                                        </button>
 
-                                                        </div>
+                                                    </div>
 
                                                     </form>
 
@@ -278,4 +319,282 @@
 
     </div>
 
+
+    <!-- ===================== MODAL GESTION DU STOCK ===================== -->
+
+    <div class="modal fade" id="stockModal" tabindex="-1" aria-labelledby="stockModalLabel" aria-hidden="true">
+
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+
+            <div class="modal-content">
+
+                <!-- HEADER -->
+                <div class="modal-header bg-primary text-white">
+
+                    <h5 class="modal-title" id="stockModalLabel">
+
+                        <i class="fas fa-boxes"></i>
+
+                        Gestion du stock
+
+                    </h5>
+
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal">
+                    </button>
+
+                </div>
+
+                <!-- BODY -->
+                <form id="formStock" method="POST">
+
+                    @csrf
+                    @method('PUT')
+
+                    <div class="modal-body">
+
+                        <input type="hidden" id="articleId">
+                        <input type="hidden" id="modeStock">
+
+                        <!-- ====================================================== -->
+                        <!-- INFORMATIONS ARTICLE -->
+                        <!-- ====================================================== -->
+
+                        <div class="card border-secondary shadow-sm mb-4">
+
+                            <div class="card-header bg-secondary text-white">
+
+                                <i class="fas fa-info-circle"></i>
+
+                                Informations de l'article
+
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="row">
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">
+
+                                            Code
+
+                                        </label>
+
+                                        <input type="text" id="infoCode" class="form-control bg-light" readonly>
+
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">
+
+                                            Libellé
+
+                                        </label>
+
+                                        <input type="text" id="infoLibelle" class="form-control bg-light" readonly>
+
+                                    </div>
+
+                                </div>
+
+                                <div class="row">
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">
+
+                                            Catégorie
+
+                                        </label>
+
+                                        <input type="text" id="infoCategorie" class="form-control bg-light" readonly>
+
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">
+
+                                            Type d'article
+
+                                        </label>
+
+                                        <input type="text" id="infoType" class="form-control bg-light" readonly>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- ====================================================== -->
+                        <!-- INFORMATIONS STOCK -->
+                        <!-- ====================================================== -->
+
+                        <div class="card border-success shadow-sm">
+
+                            <div class="card-header bg-success text-white">
+
+                                <i class="fas fa-warehouse"></i>
+
+                                Informations de stock
+
+                            </div>
+
+                            <div class="card-body">
+
+                                <div class="row">
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">
+
+                                            Prix unitaire
+
+                                        </label>
+
+                                        <input type="number" id="prixUnitaire" name="prix_unitaire"
+                                            class="form-control">
+
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">
+
+                                            Stock initial
+
+                                        </label>
+
+                                        <input type="number" id="stockInitial" name="stock_initial"
+                                            class="form-control">
+
+                                    </div>
+
+                                </div>
+
+                                <div class="row">
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">
+
+                                            Stock disponible
+
+                                        </label>
+
+                                        <input type="number" id="stockDisponible" name="stock_disponible"
+                                            class="form-control bg-light">
+
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+
+                                        <label class="form-label">
+
+                                            Stock de sécurité
+
+                                        </label>
+
+                                        <input type="number" id="stockSecurite" name="stock_securite"
+                                            class="form-control">
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- FOOTER -->
+
+                    <div class="modal-footer">
+
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Fermer
+                        </button>
+
+                        <button type="submit" id="btnStock" class="btn btn-success">
+                            Ajouter
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
 @endsection
+
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+
+            $('.btn-stock').on('click', function() {
+
+                let url = $(this).data('url');
+                let id = $(this).data('id');
+
+                let code = $(this).data('code');
+                let libelle = $(this).data('libelle');
+                let categorie = $(this).data('categorie');
+                let type = $(this).data('type');
+
+                let prix = $(this).data('prix');
+                let stockInitial = $(this).data('stockinitial');
+                let stockDisponible = $(this).data('stock');
+                let stockSecurite = $(this).data('securite');
+
+                // Action du formulaire
+                $('#formStock').attr('action', url);
+
+                // Informations article
+                $('#articleId').val(id);
+                $('#infoCode').val(code);
+                $('#infoLibelle').val(libelle);
+                $('#infoCategorie').val(categorie);
+                $('#infoType').val(type);
+
+                // Informations stock
+                $('#prixUnitaire').val(prix);
+                $('#stockInitial').val(stockInitial);
+                $('#stockDisponible').val(stockDisponible);
+                $('#stockSecurite').val(stockSecurite);
+
+                // Bouton Ajouter / Modifier
+                if (prix == null || prix == '' || prix == 0) {
+
+                    $('#modeStock').val('create');
+
+                    $('#btnStock')
+                        .removeClass('btn-warning')
+                        .addClass('btn-success')
+                        .html('<i class="fas fa-plus-circle"></i> Ajouter');
+
+                } else {
+
+                    $('#modeStock').val('update');
+
+                    $('#btnStock')
+                        .removeClass('btn-success')
+                        .addClass('btn-warning')
+                        .html('<i class="fas fa-edit"></i> Modifier');
+
+                }
+
+            });
+
+        });
+    </script>
+@endpush

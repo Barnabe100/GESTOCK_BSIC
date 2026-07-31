@@ -16,6 +16,34 @@ class CommandeController extends Controller
 {
 
 
+    // public function __construct()
+    // {
+    //     $this->middleware('permission:lister-commande')->only(['index', 'show']);
+
+    //     $this->middleware('permission:creer-commande')->only([
+    //         'create',
+    //         'store',
+    //         'soumettre',
+    //     ]);
+
+    //     $this->middleware('permission:modifier-commande')->only([
+    //         'edit',
+    //         'update',
+    //     ]);
+
+    //     $this->middleware('permission:supprimer-commande')->only([
+    //         'destroy',
+    //     ]);
+
+    //     $this->middleware('permission:valider-commande')->only([
+    //         'valider',
+    //     ]);
+
+    //     $this->middleware('permission:livrer-commande')->only([
+    //         'livrer',
+    //     ]);
+    // }
+
     public function index()
     {
 
@@ -57,6 +85,7 @@ class CommandeController extends Controller
             'fournisseur_id' => $request->fournisseur_id,
             'validation' => 0,
             'livraison' => 0,
+            'statut' => 'En préparation',
             'archiver' => 0
         ]);
 
@@ -331,6 +360,50 @@ class CommandeController extends Controller
             'Réception enregistrée'
 
         );
+    }
+
+    public function soumettre($id)
+    {
+        $commande = Commande::with('articles')->findOrFail($id);
+
+        // La commande doit être en préparation
+        if ($commande->statut != 'En préparation') {
+            return back()->with(
+                'error',
+                'Cette commande ne peut plus être soumise.'
+            );
+        }
+
+        // Au moins un article
+        if ($commande->articles->isEmpty()) {
+            return back()->with(
+                'error',
+                'Veuillez ajouter au moins un article.'
+            );
+        }
+
+        // Vérification du montant utilisé
+        $montantUtilise = $commande->articles->sum(function ($item) {
+            return $item->quantite * $item->prix_unitaire;
+        });
+
+        if ($montantUtilise != $commande->montant) {
+            return back()->with(
+                'error',
+                'Le montant de la commande doit être entièrement réparti avant la soumission.'
+            );
+        }
+
+        $commande->update([
+            'statut' => 'Prête pour validation'
+        ]);
+
+        return redirect()
+            ->route('commandes.index')
+            ->with(
+                'success',
+                'Commande soumise avec succès.'
+            );
     }
 
 

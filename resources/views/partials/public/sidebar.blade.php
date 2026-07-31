@@ -52,12 +52,30 @@
 
         </a>
 
+        {{-- Demandes des collègues --}}
+        {{-- @if (!auth()->user()->hasAnyRole(['Gestionnaire', 'ValidateurDemande', 'ValidateurCommande'])) --}}
+        <a class="list-group-item list-group-item-action p-3 bg-info-subtle"
+            href="{{ route('demandes.organisation') }}">
+
+            {{ auth()->user()->estAuSiege() ? 'Demandes du département' : 'Demandes de l\'agence' }}
+
+        </a>
+        {{-- @endif --}}
+
         @can('gerer-stock')
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('categories.index') }}">
 
                 Categories
 
             </a>
+
+            <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('type-articles.index') }}">
+
+                Types d'articles
+
+            </a>
+
+
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('articles.index') }}">
 
                 Articles

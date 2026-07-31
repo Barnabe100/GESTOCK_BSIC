@@ -26,7 +26,7 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label>Numéro facture</label>
+                            <label>Numéro facture proforma</label>
                             <span class="text-danger">*</span>
                             <input type="text" name="num_facture_proforma" class="form-control" required>
                         </div>
@@ -38,7 +38,7 @@
                         <div class="col-md-6 mb-3">
                             <label>Date</label>
                             <span class="text-danger">*</span>
-                            <input type="date" name="date" class="form-control" required>
+                            <input type="date" name="date" value="{{ date('Y-m-d') }}" class="form-control" required>
                         </div>
 
                         <div class="col-md-6 mb-3">
