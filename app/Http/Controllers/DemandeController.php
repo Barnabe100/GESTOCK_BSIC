@@ -669,7 +669,10 @@ class DemandeController extends Controller
         $demande->update([
             'livraison' => 1,
             'date_livraison' => now(),
-            'statut' => 'En attente réception demandeur'
+            'statut' => 'En attente réception demandeur',
+            'commentaire_superieur' => null,
+            'commentaire_gestionnaire' => null,
+            'commentaire_validation_finale' => null,
         ]);
         return back()->with(
             'success',

@@ -299,63 +299,65 @@
         @endif
 
         <!-- 🔥 AJOUT ARTICLE -->
-        <div class="card mt-4 shadow-sm">
+        @if ($demande->user_id == auth()->id())
+            <div class="card mt-4 shadow-sm">
 
-            <div class="card-header bg-secondary text-white">
-                Ajouter un article
-            </div>
+                <div class="card-header bg-secondary text-white">
+                    Ajouter un article
+                </div>
 
 
-            <div class="card-body">
+                <div class="card-body">
 
-                @if (!$demande->validation_superieur)
+                    @if (!$demande->validation_superieur)
 
-                    <form method="POST" action="{{ route('article_demande.store') }}">
-                        @csrf
+                        <form method="POST" action="{{ route('article_demande.store') }}">
+                            @csrf
 
-                        <input type="hidden" name="demande_id" value="{{ $demande->id }}">
+                            <input type="hidden" name="demande_id" value="{{ $demande->id }}">
 
-                        <div class="row">
+                            <div class="row">
 
-                            <div class="col-md-6 mb-3">
-                                <label>Article</label>
-                                <select name="article_id" class="form-control select2">
+                                <div class="col-md-6 mb-3">
+                                    <label>Article</label>
+                                    <select name="article_id" class="form-control select2">
 
-                                    @foreach ($articles as $article)
-                                        <option value="{{ $article->id }}">
-                                            {{ $article->libelle }}
-                                        </option>
-                                    @endforeach
+                                        @foreach ($articles as $article)
+                                            <option value="{{ $article->id }}">
+                                                {{ $article->libelle }}
+                                            </option>
+                                        @endforeach
 
-                                </select>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label>Quantité</label>
+                                    <input type="number" name="quantite" class="form-control" required>
+                                </div>
+
+                                <div class="col-md-2 mb-3 d-flex align-items-end">
+                                    @if ($demande->user_id == auth()->id())
+                                        <button type="submit" class="btn btn-success w-100">
+                                            Ajouter
+                                        </button>
+                                    @endif
+                                </div>
+
                             </div>
 
-                            <div class="col-md-4 mb-3">
-                                <label>Quantité</label>
-                                <input type="number" name="quantite" class="form-control" required>
-                            </div>
-
-                            <div class="col-md-2 mb-3 d-flex align-items-end">
-                                @if ($demande->user_id == auth()->id())
-                                    <button class="btn btn-success">
-                                        Ajouter
-                                    </button>
-                                @endif
-                            </div>
-
+                        </form>
+                    @else
+                        <div class="alert alert-warning">
+                            ⚠️ Demande déjà validée — modification impossible
                         </div>
 
-                    </form>
-                @else
-                    <div class="alert alert-warning">
-                        ⚠️ Demande déjà validée — modification impossible
-                    </div>
+                    @endif
 
-                @endif
+                </div>
 
             </div>
-
-        </div>
+        @endif
 
         <!-- 🔥 LISTE DES ARTICLES -->
         <div class="card mt-4 shadow-sm">

@@ -173,7 +173,7 @@
 
                                         <td>{{ $demande->date }}</td>
 
-                                        <td>{{ $demande->user->name ?? '' }}</td>
+                                        <td>{{ $demande->user->name ?? '' }} {{ $demande->user->prenom ?? '' }}</td>
 
                                         <td>
                                             @if ($demande->validation_gestionnaire)
@@ -600,7 +600,7 @@
                                         <td>{{ $demande->date }}</td>
 
                                         <td>
-                                            {{ $demande->user->name ?? '' }}
+                                            {{ $demande->user->name ?? '' }} {{ $demande->user->prenom ?? '' }}
                                         </td>
 
                                         <td>
@@ -679,7 +679,7 @@
 
                                         <td>
 
-                                            {{ $demande->user->name ?? '' }}
+                                            {{ $demande->user->name ?? '' }} {{ $demande->user->prenom ?? '' }}
 
                                         </td>
 
@@ -765,7 +765,7 @@
 
                                         <td>
 
-                                            {{ $demande->user->name ?? '' }}
+                                            {{ $demande->user->name ?? '' }} {{ $demande->user->prenom ?? '' }}
 
                                         </td>
 
@@ -844,7 +844,7 @@
 
                                         <td>
 
-                                            {{ $demande->user->name ?? '' }}
+                                            {{ $demande->user->name ?? '' }} {{ $demande->user->prenom ?? '' }}
 
                                         </td>
 
@@ -943,7 +943,7 @@
 
                                         <td>
 
-                                            {{ $demande->user->name ?? '' }}
+                                            {{ $demande->user->name ?? '' }} {{ $demande->user->prenom ?? '' }}
 
                                         </td>
 
