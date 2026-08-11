@@ -8,6 +8,7 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use Carbon\Carbon;
 
 class EtatSortieStockExport implements
     FromArray,
@@ -57,11 +58,11 @@ class EtatSortieStockExport implements
 
             'ETAT DES SORTIES DE STOCK DU '
 
-                . $this->dateDebut
+                . Carbon::parse($this->dateDebut)->format('d/m/Y')
 
                 . ' AU '
 
-                . $this->dateFin
+                . Carbon::parse($this->dateFin)->format('d/m/Y')
 
         );
 

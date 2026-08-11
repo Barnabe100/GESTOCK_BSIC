@@ -79,12 +79,12 @@
                                         @if (is_null($article->prix_unitaire) || is_null($article->stock_initial) || is_null($article->stock_securite))
                                             <span class="badge bg-danger">
                                                 <i class="fas fa-times-circle"></i>
-                                                Non paramétré
+                                                {{-- Non paramétré --}}
                                             </span>
                                         @else
                                             <span class="badge bg-success">
                                                 <i class="fas fa-check-circle"></i>
-                                                Paramétré
+                                                {{-- Paramétré --}}
                                             </span>
                                         @endif
 

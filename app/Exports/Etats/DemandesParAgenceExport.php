@@ -7,8 +7,10 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Carbon\Carbon;
+use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 
-class DemandesParAgenceExport implements FromCollection, WithHeadings, WithStyles
+class DemandesParAgenceExport implements FromCollection, WithHeadings, WithStyles, WithCustomStartCell
 {
     private $dateDebut;
     private $dateFin;
@@ -24,6 +26,11 @@ class DemandesParAgenceExport implements FromCollection, WithHeadings, WithStyle
         $this->dateDebut = $dateDebut;
         $this->dateFin = $dateFin;
         $this->agenceId = $agenceId;
+    }
+
+    public function startCell(): string
+    {
+        return 'A5';
     }
 
     public function collection()
@@ -270,28 +277,94 @@ class DemandesParAgenceExport implements FromCollection, WithHeadings, WithStyle
         ];
     }
 
-    public function styles(
-        Worksheet $sheet
-    ) {
+    public function styles(Worksheet $sheet)
+    {
+        /*
+    =====================================
+    TITRE
+    =====================================
+    */
 
-        $sheet->getStyle('A1:G1')
-            ->getFont()
-            ->setBold(true);
+        $sheet->mergeCells('A3:G3');
+
+        $sheet->setCellValue(
+            'A3',
+            'ETAT DES DEMANDES PAR AGENCE DU '
+                . Carbon::parse($this->dateDebut)->format('d/m/Y')
+                . ' AU '
+                . Carbon::parse($this->dateFin)->format('d/m/Y')
+        );
+
+        $sheet->getStyle('A3:G3')->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 14
+            ],
+            'alignment' => [
+                'horizontal' =>
+                \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER
+            ]
+        ]);
+
+        /*
+    =====================================
+    ENTÊTES
+    =====================================
+    */
+
+        $sheet->getStyle('A5:G5')->applyFromArray([
+            'font' => [
+                'bold' => true
+            ],
+            'alignment' => [
+                'horizontal' =>
+                \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER
+            ]
+        ]);
+
+        /*
+    =====================================
+    BORDURES
+    =====================================
+    */
+
+        $derniereLigne = $sheet->getHighestRow();
+
+        $sheet->getStyle('A5:G' . $derniereLigne)
+            ->applyFromArray([
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' =>
+                        \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+                    ]
+                ]
+            ]);
+
+        /*
+    =====================================
+    FORMAT DES MONTANTS
+    =====================================
+    */
+
+        $sheet->getStyle('F6:G' . $derniereLigne)
+            ->getNumberFormat()
+            ->setFormatCode('#,##0');
+
+        /*
+    =====================================
+    AUCUNE DONNÉE
+    =====================================
+    */
 
         if ($this->aucuneDonnee) {
 
-            $sheet->mergeCells(
-                'A2:G2'
-            );
+            $sheet->mergeCells('A6:G6');
 
-            $sheet->getStyle(
-                'A2:G2'
-            )->applyFromArray([
+            $sheet->getStyle('A6:G6')->applyFromArray([
 
                 'font' => [
 
                     'bold' => true,
-
                     'size' => 12
 
                 ],

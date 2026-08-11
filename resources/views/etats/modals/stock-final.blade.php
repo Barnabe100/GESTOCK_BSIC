@@ -1,4 +1,4 @@
-<div class="modal fade" id="etatStockFinalModal" tabindex="-1">
+<div class="modal fade modal-etat" id="etatStockFinalModal" tabindex="-1">
 
     <div class="modal-dialog">
 
@@ -27,7 +27,7 @@
 
                     </label>
 
-                    <input type="date" id="date_debut_stock_final" class="form-control">
+                    <input type="date" id="date_debut_stock_final" max="{{ date('Y-m-d') }}" class="form-control">
 
                 </div>
 
@@ -39,7 +39,7 @@
 
                     </label>
 
-                    <input type="date" id="date_fin_stock_final" class="form-control">
+                    <input type="date" id="date_fin_stock_final" max="{{ date('Y-m-d') }}" class="form-control">
 
                 </div>
 

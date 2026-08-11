@@ -57,8 +57,9 @@
         <a class="list-group-item list-group-item-action p-3 bg-info-subtle"
             href="{{ route('demandes.organisation') }}">
 
-            {{ auth()->user()->estAuSiege() ? 'Demandes du département' : 'Demandes de l\'agence' }}
+            {{-- {{ auth()->user()->estAuSiege() ? 'Demandes du département' : 'Demandes de l\'agence' }} --}}
 
+            {{ auth()->check() ? (auth()->user()->estAuSiege() ? 'Demandes du département' : 'Demandes de l\'agence') : '' }}
         </a>
         {{-- @endif --}}
 

@@ -53,6 +53,9 @@
                 <!-- LOGO -->
 
             </td>
+            @php
+                use Carbon\Carbon;
+            @endphp
 
             <td width="80%" align="center">
 
@@ -63,15 +66,10 @@
                 </h3>
 
                 <strong>
-
                     DU
-
-                    {{ $dateDebut }}
-
+                    {{ Carbon::parse($dateDebut)->format('d/m/Y') }}
                     AU
-
-                    {{ $dateFin }}
-
+                    {{ Carbon::parse($dateFin)->format('d/m/Y') }}
                 </strong>
 
             </td>

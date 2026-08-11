@@ -12,7 +12,10 @@ class DepartementController extends Controller
 {
     public function index()
     {
-        $departements = Departement::all();
+        //$departements = Departement::all();
+        $departements = Departement::where('archiver', 0)
+            ->latest()
+            ->get();
         return view('departements.index', compact('departements'));
     }
 

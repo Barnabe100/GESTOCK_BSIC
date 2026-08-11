@@ -27,7 +27,9 @@ class DemandeController extends Controller
             $demandes = Demande::where('archiver', 0)->where(
                 'validation_superieur',
                 1
-            )->get();
+            )
+                ->latest()
+                ->get();
             return view('demandes.index', compact('demandes'));
         } else {
             $demandes = Demande::where('archiver', 0)->where('id', $user_id)->get();
@@ -142,6 +144,7 @@ class DemandeController extends Controller
                     'archiver',
                     0
                 )
+                ->latest()
                 ->get();
 
             $rejetees = Demande::with(
@@ -156,6 +159,7 @@ class DemandeController extends Controller
                     'archiver',
                     0
                 )
+                ->latest()
                 ->get();
 
             $enAttenteLivraison = Demande::with(
@@ -174,6 +178,7 @@ class DemandeController extends Controller
                     'statut',
                     'En attente livraison'
                 )
+                ->latest()
                 ->get();
 
             $enAttenteReception = Demande::with(
@@ -192,6 +197,7 @@ class DemandeController extends Controller
                     'statut',
                     'En attente réception demandeur'
                 )
+                ->latest()
                 ->get();
 
             $cloturees = Demande::with(
@@ -210,6 +216,7 @@ class DemandeController extends Controller
                     'statut',
                     'Livrée - Demande clôturée'
                 )
+                ->latest()
                 ->get();
 
             return view(
@@ -236,6 +243,7 @@ class DemandeController extends Controller
             'user.agence',
             'user.departement'
         ])
+            ->latest()
             ->whereHas('user', function ($q) use ($superieur) {
                 if ($superieur->estAuSiege()) {
                     $q->where('departement_id', $superieur->departement_id);
@@ -252,6 +260,7 @@ class DemandeController extends Controller
                 'archiver',
                 0
             )
+            ->latest()
             ->get();
 
         $validees = (clone $baseQuery)
@@ -262,6 +271,7 @@ class DemandeController extends Controller
                 'archiver',
                 0
             )
+            ->latest()
             ->get();
 
         $rejetees = (clone $baseQuery)
@@ -272,6 +282,7 @@ class DemandeController extends Controller
                 'archiver',
                 0
             )
+            ->latest()
             ->get();
 
         return view(

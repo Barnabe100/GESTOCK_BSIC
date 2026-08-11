@@ -56,6 +56,7 @@ class CommandeController extends Controller
             'articles.article'
         ])
             ->where('archiver', 0)
+            ->latest()
             ->get();
 
         return view('commandes.index', compact('commandes'));

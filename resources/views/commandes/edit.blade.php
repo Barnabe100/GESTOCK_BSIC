@@ -40,8 +40,13 @@
 
                         <div class="col-md-6 mb-3">
                             <label>Date</label>
+                            @php
+                                $dateCommande = \Carbon\Carbon::parse($commande->date)->format('Y-m-d');
+                                $dateMax = max(date('Y-m-d'), $dateCommande);
+                            @endphp
+
                             <input type="date" name="date" class="form-control"
-                                value="{{ old('date', $commande->date) }}">
+                                value="{{ old('date', $dateCommande) }}" max="{{ $dateMax }}">
                         </div>
 
                         <div class="col-md-6 mb-3">

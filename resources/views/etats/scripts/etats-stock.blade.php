@@ -282,6 +282,32 @@
     }
 </script>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        document.querySelectorAll('.modal-etat').forEach(function(modal) {
+
+            modal.addEventListener('hidden.bs.modal', function() {
+
+                modal.querySelectorAll('form').forEach(function(form) {
+                    form.reset();
+                });
+
+                modal.querySelectorAll('input').forEach(function(input) {
+                    input.value = '';
+                });
+
+                modal.querySelectorAll('select').forEach(function(select) {
+                    select.selectedIndex = 0;
+                });
+
+            });
+
+        });
+
+    });
+</script>
+
 
 {{-- <script>
     function prepareExcelSortieArticle() {

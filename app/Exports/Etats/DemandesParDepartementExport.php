@@ -9,11 +9,10 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Carbon\Carbon;
+use Maatwebsite\Excel\Concerns\WithCustomStartCell;
 
-class DemandesParDepartementExport implements
-    FromCollection,
-    WithHeadings,
-    WithStyles
+class DemandesParDepartementExport implements FromCollection, WithHeadings, WithStyles, WithCustomStartCell
 {
     private $dateDebut;
     private $dateFin;
@@ -28,6 +27,11 @@ class DemandesParDepartementExport implements
         $this->dateDebut = $dateDebut;
         $this->dateFin = $dateFin;
         $this->departementId = $departementId;
+    }
+
+    public function startCell(): string
+    {
+        return 'A5';
     }
 
     public function collection()
@@ -276,25 +280,108 @@ class DemandesParDepartementExport implements
         ];
     }
 
-    public function styles(
-        Worksheet $sheet
-    ) {
+    public function styles(Worksheet $sheet)
+    {
+        /*
+    =====================================
+    TITRE
+    =====================================
+    */
 
-        $sheet->getStyle(
-            'A1:G1'
-        )->getFont()->setBold(true);
+        $sheet->mergeCells('A3:G3');
 
-        if (
-            $this->aucuneDonnee
-        ) {
+        $sheet->setCellValue(
+            'A3',
+            'ETAT DES DEMANDES PAR DEPARTEMENT DU '
+                . Carbon::parse($this->dateDebut)->format('d/m/Y')
+                . ' AU '
+                . Carbon::parse($this->dateFin)->format('d/m/Y')
+        );
 
-            $sheet->mergeCells(
-                'A2:G2'
-            );
+        $sheet->getStyle('A3:G3')->applyFromArray([
 
-            $sheet->getStyle(
-                'A2:G2'
-            )->applyFromArray([
+            'font' => [
+
+                'bold' => true,
+                'size' => 14
+
+            ],
+
+            'alignment' => [
+
+                'horizontal' => Alignment::HORIZONTAL_CENTER
+
+            ]
+
+        ]);
+
+        /*
+    =====================================
+    ENTÊTES
+    =====================================
+    */
+
+        $sheet->getStyle('A5:G5')->applyFromArray([
+
+            'font' => [
+
+                'bold' => true
+
+            ],
+
+            'alignment' => [
+
+                'horizontal' => Alignment::HORIZONTAL_CENTER
+
+            ]
+
+        ]);
+
+        /*
+    =====================================
+    BORDURES
+    =====================================
+    */
+
+        $derniereLigne = $sheet->getHighestRow();
+
+        $sheet->getStyle('A5:G' . $derniereLigne)
+            ->applyFromArray([
+
+                'borders' => [
+
+                    'allBorders' => [
+
+                        'borderStyle' =>
+                        \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+
+                    ]
+
+                ]
+
+            ]);
+
+        /*
+    =====================================
+    FORMAT DES MONTANTS
+    =====================================
+    */
+
+        $sheet->getStyle('F6:G' . $derniereLigne)
+            ->getNumberFormat()
+            ->setFormatCode('#,##0');
+
+        /*
+    =====================================
+    AUCUNE DONNÉE
+    =====================================
+    */
+
+        if ($this->aucuneDonnee) {
+
+            $sheet->mergeCells('A6:G6');
+
+            $sheet->getStyle('A6:G6')->applyFromArray([
 
                 'font' => [
 
@@ -305,15 +392,13 @@ class DemandesParDepartementExport implements
 
                 'alignment' => [
 
-                    'horizontal' =>
-                    Alignment::HORIZONTAL_CENTER
+                    'horizontal' => Alignment::HORIZONTAL_CENTER
 
                 ],
 
                 'fill' => [
 
-                    'fillType' =>
-                    Fill::FILL_SOLID,
+                    'fillType' => Fill::FILL_SOLID,
 
                     'startColor' => [
 

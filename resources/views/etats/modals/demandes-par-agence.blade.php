@@ -1,4 +1,4 @@
-<div class="modal fade" id="etatDemandesAgenceModal" tabindex="-1">
+<div class="modal fade modal-etat" id="etatDemandesAgenceModal" tabindex="-1">
 
     <div class="modal-dialog">
 
@@ -25,7 +25,7 @@
 
                         <label>Date début</label>
 
-                        <input type="date" name="date_debut" class="form-control" required>
+                        <input type="date" name="date_debut" max="{{ date('Y-m-d') }}" class="form-control" required>
 
                     </div>
 
@@ -33,7 +33,7 @@
 
                         <label>Date fin</label>
 
-                        <input type="date" name="date_fin" class="form-control" required>
+                        <input type="date" name="date_fin" max="{{ date('Y-m-d') }}" class="form-control" required>
 
                     </div>
 

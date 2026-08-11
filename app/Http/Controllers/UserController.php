@@ -17,7 +17,9 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::with(['roles', 'agence', 'departement', 'service'])->get();
+        $users = User::with(['roles', 'agence', 'departement', 'service'])
+            ->latest()
+            ->get();
 
         return view('users.index', compact('users'));
     }
@@ -198,13 +200,19 @@ class UserController extends Controller
                 ])
                 ->withInput();
         }
+
+        // dd(
+        //     $profilPersonnel,
+        //     $request->password,
+        //     strlen($request->password)
+        // );
         if ($profilPersonnel) {
 
             $request->validate(
                 [
                     'password' => [
                         'confirmed',
-                        'min:8',
+                        'min:12',
                         'regex:/[A-Z]/',
                         'regex:/[a-z]/',
                         'regex:/[0-9]/',
@@ -216,7 +224,7 @@ class UserController extends Controller
                     'Les mots de passe ne correspondent pas.',
 
                     'password.min' =>
-                    'Le mot de passe doit contenir au moins 8 caractères.',
+                    'Le mot de passe doit contenir au moins 12 caractères.',
 
                     'password.regex' =>
                     'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial.'

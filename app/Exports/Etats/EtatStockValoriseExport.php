@@ -7,6 +7,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Carbon\Carbon;
 
 class EtatStockValoriseExport implements
     FromArray,
@@ -58,11 +59,11 @@ class EtatStockValoriseExport implements
 
             'ETAT VALORISE DES STOCKS DU '
 
-                . $this->dateDebut
+                . Carbon::parse($this->dateDebut)->format('d/m/Y')
 
                 . ' AU '
 
-                . $this->dateFin
+                . Carbon::parse($this->dateFin)->format('d/m/Y')
 
         );
 

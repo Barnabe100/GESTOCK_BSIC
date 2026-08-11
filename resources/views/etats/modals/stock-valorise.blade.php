@@ -1,6 +1,6 @@
 <!-- 🔥 POPUP ETAT STOCK VALORISÉ -->
 
-<div class="modal fade" id="etatStockValoriseModal" tabindex="-1">
+<div class="modal fade modal-etat" id="etatStockValoriseModal" tabindex="-1">
 
     <div class="modal-dialog">
 
@@ -29,7 +29,7 @@
 
                     </label>
 
-                    <input type="date" id="date_debut_valorise" class="form-control">
+                    <input type="date" id="date_debut_valorise" max="{{ date('Y-m-d') }}" class="form-control">
 
                 </div>
 
@@ -41,7 +41,7 @@
 
                     </label>
 
-                    <input type="date" id="date_fin_valorise" class="form-control">
+                    <input type="date" id="date_fin_valorise" max="{{ date('Y-m-d') }}" class="form-control">
 
                 </div>
 

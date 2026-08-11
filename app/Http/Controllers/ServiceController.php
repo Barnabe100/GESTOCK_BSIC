@@ -12,7 +12,10 @@ class ServiceController extends Controller
 {
     public function index()
     {
-        $services = Service::with('departement')->get();
+        //$services = Service::with('departement')->get();
+        $services = Service::where('archiver', 0)
+            ->latest()
+            ->get();
         return view('services.index', compact('services'));
     }
 

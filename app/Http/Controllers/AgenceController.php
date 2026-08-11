@@ -11,8 +11,10 @@ class AgenceController extends Controller
 {
     public function index()
     {
-        //$agences = Agence::where('archiver', 0)->get();
-        $agences = Agence::all();
+        $agences = Agence::where('archiver', 0)
+            ->latest()
+            ->get();
+        //$agences = Agence::all();
         return view('agences.index', compact('agences'));
     }
 
@@ -57,7 +59,7 @@ class AgenceController extends Controller
             'code' => 'required',
             'nom' => 'nullable',
             'lieu' => 'nullable',
-            
+
         ]);
 
         $agence = Agence::findOrFail($id);
@@ -66,7 +68,7 @@ class AgenceController extends Controller
             'code' => $request->code,
             'nom' => $request->nom,
             'lieu' => $request->lieu,
-           
+
         ]);
 
         return redirect()->route('agences.index')

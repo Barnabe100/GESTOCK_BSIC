@@ -1,6 +1,6 @@
 <!-- 🔥 POPUP ETAT STOCK -->
 
-<div class="modal fade" id="etatStockModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade modal-etat" id="etatStockModal" tabindex="-1" aria-hidden="true">
 
     <div class="modal-dialog">
 
@@ -36,7 +36,7 @@
 
                     </label>
 
-                    <input type="date" id="date_debut" class="form-control" required>
+                    <input type="date" id="date_debut" max="{{ date('Y-m-d') }}" class="form-control" required>
 
                 </div>
 
@@ -50,7 +50,7 @@
 
                     </label>
 
-                    <input type="date" id="date_fin" class="form-control" required>
+                    <input type="date" id="date_fin" max="{{ date('Y-m-d') }}" class="form-control" required>
 
                 </div>
 

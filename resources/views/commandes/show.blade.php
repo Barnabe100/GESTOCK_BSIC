@@ -160,28 +160,50 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-2 mb-3">
+                                {{-- <div class="col-md-2 mb-3">
                                     <label>Prix initial de l'article</label>
                                     <input type="number" id="prix_unitaire" name="prix_unitaire" class="form-control" required>
-                                </div>
-
-                                <div class="col-md-2 mb-3">
-                                    <label>Quantité</label>
-                                    <input type="number" name="quantite" class="form-control" required>
-                                </div>
-
-
+                                </div> --}}
 
                                 <div class="col-md-2 mb-3">
                                     <label>Prix unitaire</label>
-                                    <input type="number" name="prix_unitaire" class="form-control" required>
+                                    <input step="0.01" type="number" step="0.01" id="prix_unitaire" name="prix_unitaire"
+                                        class="form-control" required>
+
                                 </div>
+
+
+                                <div class="col-md-2 mb-3">
+                                    <label>Quantité</label>
+                                    <input type="number" id="quantite" name="quantite" class="form-control" required>
+                                </div>
+
+                                <div class="col-md-2 mb-3">
+                                    <label>Montant</label>
+                                    <input type="text" id="montant" class="form-control bg-light" readonly>
+
+                                    <small id="resteApresAjout" class="fw-bold text-success" style="min-height:20px;"> </small>
+                                </div>
+
+
+
+
+
+
+
+
+                                {{-- <div class="col-md-2 mb-3">
+                                    <label>Prix unitaire</label>
+                                    <input type="number" name="prix_unitaire" class="form-control" required>
+                                </div> --}}
+
+
 
                                 <div class="col-md-2 mb-3 d-flex align-items-end">
                                     @if (
                                         $commande->user_id == auth()->id() ||
                                             auth()->user()->hasAnyRole(['SuperAdmin', 'Gestionnaire']))
-                                        <button class="btn btn-success w-100">
+                                        <button id="btnAjouterArticle" class="btn btn-success w-100">
                                             Ajouter
                                         </button>
                                     @endif
@@ -189,6 +211,8 @@
                                 </div>
 
                             </div>
+
+
 
                         </form>
                     @else
@@ -279,7 +303,8 @@
 
                                 <td>
 
-                                    {{ number_format($ligne->prix_unitaire, 2, ',', ' ') }}
+                                    {{ number_format($ligne->prix_unitaire, 0, ',', ' ') }}
+
 
                                 </td>
 
@@ -289,7 +314,7 @@
 
                                 <td>
 
-                                    {{ number_format($ligne->quantite * $ligne->prix_unitaire, 2, ',', ' ') }}
+                                    {{ number_format($ligne->quantite * $ligne->prix_unitaire, 0, ',', ' ') }}
 
                                 </td>
 
@@ -368,6 +393,9 @@
 
                                                         </h5>
 
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal">
+                                                        </button>
+
                                                     </div>
 
                                                     <form action="{{ route('article-commandes.update', $ligne->id) }}"
@@ -379,29 +407,51 @@
                                                         <div class="modal-body">
 
                                                             <div class="mb-3">
+                                                                <label>Article</label>
+                                                                <input type="text" class="form-control bg-light"
+                                                                    value="{{ $ligne->article->libelle }}" readonly>
+                                                            </div>
 
-                                                                <label>
+                                                            <div class="row">
 
-                                                                    Quantité
+                                                                <div class="col-md-6 mb-3">
+                                                                    <label>Quantité</label>
 
-                                                                </label>
+                                                                    <input type="number" name="quantite"
+                                                                        id="quantiteEdit{{ $ligne->id }}"
+                                                                        class="form-control" value="{{ $ligne->quantite }}"
+                                                                        required>
+                                                                </div>
 
-                                                                <input type="number" name="quantite" class="form-control"
-                                                                    value="{{ $ligne->quantite }}" required>
+                                                                <div class="col-md-6 mb-3">
+                                                                    <label>Prix unitaire</label>
+
+                                                                    <input type="number" name="prix_unitaire"
+                                                                        id="prixEdit{{ $ligne->id }}" class="form-control"
+                                                                        value="{{ $ligne->prix_unitaire }}" required>
+                                                                </div>
 
                                                             </div>
 
-                                                            <div class="mb-3">
+                                                            <div class="row">
 
-                                                                <label>
+                                                                <div class="col-md-6 mb-3">
 
-                                                                    Prix unitaire
+                                                                    <label>Montant</label>
 
-                                                                </label>
+                                                                    <input type="text" id="montantEdit{{ $ligne->id }}"
+                                                                        class="form-control bg-light"
+                                                                        value="{{ number_format($ligne->quantite * $ligne->prix_unitaire, 0, ',', ' ') }}"
+                                                                        readonly>
 
-                                                                <input type="number" step="0.01" name="prix_unitaire"
-                                                                    class="form-control" value="{{ $ligne->prix_unitaire }}"
-                                                                    required>
+                                                                </div>
+
+                                                                <div class="col-md-6 mb-3 d-flex align-items-end">
+
+                                                                    <small id="resteEdit{{ $ligne->id }}" class="fw-bold">
+                                                                    </small>
+
+                                                                </div>
 
                                                             </div>
 
@@ -409,10 +459,14 @@
 
                                                         <div class="modal-footer">
 
-                                                            <button type="submit" class="btn btn-primary">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">
+                                                                Fermer
+                                                            </button>
 
+                                                            <button type="submit" id="btnEdit{{ $ligne->id }}"
+                                                                class="btn btn-primary">
                                                                 Enregistrer
-
                                                             </button>
 
                                                         </div>
@@ -495,7 +549,7 @@
         });
     </script>
 
-    <script>
+    {{-- <script>
         $(document).ready(function() {
 
             $('#article_id').on('change', function() {
@@ -504,12 +558,178 @@
                     .find(':selected')
                     .data('prix');
 
-                $('#prix_unitaire').val(
-                    prix ?? ''
-                );
+                $('#prix_unitaire').val(prix ?? '');
+
+
 
             });
 
         });
+    </script> --}}
+
+    <script>
+        $(document).ready(function() {
+            let montantCommande = {{ $commande->montant }};
+            let montantUtilise = {{ $commande->articles->sum(fn($a) => $a->quantite * $a->prix_unitaire) }};
+
+            function calculerMontant() {
+
+                if (!$('#article_id').val()) {
+
+                    $('#montant').val('');
+                    $('#resteApresAjout').text('');
+                    $('#btnAjouterArticle').prop('disabled', false);
+
+                    return;
+                }
+
+                let quantite = parseFloat($('#quantite').val()) || 0;
+                let prix = parseFloat($('#prix_unitaire').val()) || 0;
+
+                let montant = quantite * prix;
+
+                $('#montant').val(
+                    montant.toLocaleString('fr-FR', {
+                        minimumFractionDigits: 0
+                    })
+                );
+
+                let reste = montantCommande - montantUtilise - montant;
+
+                if (reste >= 0) {
+
+                    $('#btnAjouterArticle')
+                        .prop('disabled', false);
+
+                    $('#resteApresAjout')
+                        .removeClass('text-danger')
+                        .addClass('text-success')
+                        .text(
+                            'Reste montant : ' +
+                            reste.toLocaleString('fr-FR')
+                        );
+
+                } else {
+
+                    $('#btnAjouterArticle').prop('disabled', true);
+
+                    $('#resteApresAjout')
+                        .removeClass('text-success')
+                        .addClass('text-danger')
+                        .text(
+                            '⚠ Dépassement : ' +
+                            Math.abs(reste).toLocaleString('fr-FR')
+                        );
+
+                }
+
+            }
+
+            // Choix de l'article
+            $('#article_id').on('change', function() {
+
+                let prix = $(this)
+                    .find(':selected')
+                    .data('prix');
+
+                if ($(this).val()) {
+
+                    $('#prix_unitaire').val(prix ?? '');
+
+                } else {
+
+                    // Réinitialisation
+                    $('#prix_unitaire').val('');
+                    $('#quantite').val('');
+                    $('#montant').val('');
+                    $('#resteApresAjout').text('');
+
+                }
+
+                calculerMontant();
+
+            });
+
+
+
+            // Modification de la quantité
+            $('#quantite').on('input', calculerMontant);
+
+            // Modification du prix unitaire
+            $('#prix_unitaire').on('input', calculerMontant);
+
+        });
+
+        @foreach ($commande->articles as $ligne)
+
+            (function() {
+
+                let montantCommande = {{ $commande->montant }};
+                let montantUtilise = {{ $commande->articles->sum(fn($a) => $a->quantite * $a->prix_unitaire) }};
+                let ancienMontant = {{ $ligne->quantite * $ligne->prix_unitaire }};
+
+                function calculEdit() {
+
+                    let quantite = parseFloat($('#quantiteEdit{{ $ligne->id }}').val()) || 0;
+                    let prix = parseFloat($('#prixEdit{{ $ligne->id }}').val()) || 0;
+
+                    let nouveauMontant = quantite * prix;
+
+                    $('#montantEdit{{ $ligne->id }}').val(
+                        nouveauMontant.toLocaleString('fr-FR')
+                    );
+
+                    let reste = montantCommande - (montantUtilise - ancienMontant + nouveauMontant);
+
+                    if (reste >= 0) {
+
+                        $('#btnEdit{{ $ligne->id }}').prop('disabled', false);
+
+                        $('#resteEdit{{ $ligne->id }}')
+                            .removeClass('text-danger')
+                            .addClass('text-success')
+                            .text(
+                                'Reste montant : ' +
+                                reste.toLocaleString('fr-FR')
+                            );
+
+                    } else {
+
+                        $('#btnEdit{{ $ligne->id }}').prop('disabled', true);
+
+                        $('#resteEdit{{ $ligne->id }}')
+                            .removeClass('text-success')
+                            .addClass('text-danger')
+                            .text(
+                                '⚠ Dépassement : ' +
+                                Math.abs(reste).toLocaleString('fr-FR')
+                            );
+
+                    }
+
+                }
+
+                $('#quantiteEdit{{ $ligne->id }}').on('input', calculEdit);
+
+                let quantiteInitiale = {{ $ligne->quantite }};
+                let prixInitial = {{ $ligne->prix_unitaire }};
+
+                $('#prixEdit{{ $ligne->id }}').on('input', calculEdit);
+
+                calculEdit();
+
+                $('#editArticleCommande{{ $ligne->id }}').on('hidden.bs.modal', function() {
+
+                    // Remettre les valeurs initiales
+                    $('#quantiteEdit{{ $ligne->id }}').val(quantiteInitiale);
+                    $('#prixEdit{{ $ligne->id }}').val(prixInitial);
+
+                    // Recalculer le montant et le reste
+                    calculEdit();
+
+                });
+
+            })();
+        @endforeach
     </script>
 @endpush

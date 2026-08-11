@@ -11,9 +11,10 @@ class CategorieController extends Controller
 {
     public function index()
     {
-        $categories = Categorie::where('archiver', 0)->get();
+        $categories = Categorie::where('archiver', 0)
+            ->latest()->get();
         return view('categories.index', compact('categories'))
-        ->with('success', 'Catégorie créée avec succès 👍');
+            ->with('success', 'Catégorie créée avec succès 👍');
     }
 
     public function create()

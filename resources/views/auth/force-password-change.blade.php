@@ -35,7 +35,7 @@
 
             <div class="input-group">
 
-                <input type="password" name="password" id="password" class="form-control" required>
+                <input type="password" name="password" id="password" class="form-control" minlength="12" required>
 
                 <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('password', 'eyeIcon1')">
 
@@ -55,7 +55,7 @@
             <div class="input-group">
 
                 <input type="password" name="password_confirmation" id="password_confirmation" class="form-control"
-                    required>
+                    minlength="12" required>
 
                 <button type="button" class="btn btn-outline-secondary"
                     onclick="togglePassword('password_confirmation', 'eyeIcon2')">

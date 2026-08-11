@@ -23,7 +23,7 @@ class ForcePasswordController extends Controller
                 'password' => [
                     'required',
                     'confirmed',
-                    'min:8',
+                    'min:12',
                     'regex:/[A-Z]/',
                     'regex:/[a-z]/',
                     'regex:/[0-9]/',
@@ -38,7 +38,7 @@ class ForcePasswordController extends Controller
                 'Les mots de passe ne correspondent pas.',
 
                 'password.min' =>
-                'Le mot de passe doit contenir au moins 8 caractères.',
+                'Le mot de passe doit contenir au moins 12 caractères.',
 
                 'password.regex' =>
                 'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial.'

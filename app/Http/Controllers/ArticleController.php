@@ -19,6 +19,7 @@ class ArticleController extends Controller
             'typeArticle'
         )
             ->where('archiver', 0)
+            ->latest()
             ->get();
 
 

@@ -74,7 +74,7 @@
 
                             <ul class="mb-0 mt-2">
 
-                                <li>Au moins 8 caractères</li>
+                                <li>Au moins 12 caractères</li>
 
                                 <li>Une majuscule</li>
 
@@ -98,7 +98,8 @@
 
                             <div class="input-group">
 
-                                <input type="password" name="password" id="password" class="form-control">
+                                <input type="password" name="password" id="password" class="form-control"
+                                    minlength="{{ $profilPersonnel ? 12 : 8 }}">
 
                                 <button type="button" class="btn btn-outline-secondary"
                                     onclick="togglePassword('password','eyeIcon1')">
@@ -121,7 +122,7 @@
                             <div class="input-group">
 
                                 <input type="password" name="password_confirmation" id="password_confirmation"
-                                    class="form-control">
+                                    class="form-control" minlength="{{ $profilPersonnel ? 12 : 8 }}">
 
                                 <button type="button" class="btn btn-outline-secondary"
                                     onclick="togglePassword('password_confirmation','eyeIcon2')">

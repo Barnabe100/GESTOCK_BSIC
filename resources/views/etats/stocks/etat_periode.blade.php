@@ -106,6 +106,10 @@
 
             <!-- TITRE -->
 
+            @php
+                use Carbon\Carbon;
+            @endphp
+
             <td width="80%" class="title-zone">
 
 
@@ -119,15 +123,10 @@
                 <br>
 
                 <strong>
-
                     DU
-
-                    {{ $dateDebut }}
-
+                    {{ Carbon::parse($dateDebut)->format('d/m/Y') }}
                     AU
-
-                    {{ $dateFin }}
-
+                    {{ Carbon::parse($dateFin)->format('d/m/Y') }}
                 </strong>
 
             </td>

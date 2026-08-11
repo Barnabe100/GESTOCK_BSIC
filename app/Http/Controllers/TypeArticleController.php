@@ -12,7 +12,9 @@ class TypeArticleController extends Controller
 {
     public function index()
     {
-        $typeArticles = TypeArticle::where('archiver', 0)->get();
+        $typeArticles = TypeArticle::where('archiver', 0)
+            ->latest()
+            ->get();
 
         return view('type_articles.index', compact('typeArticles'))
             ->with('success', 'Type d\'article créé avec succès 👍');

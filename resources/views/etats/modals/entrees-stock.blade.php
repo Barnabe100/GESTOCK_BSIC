@@ -1,5 +1,5 @@
 <!-- 🔥 POPUP ETAT DES ENTREES DE STOCK -->
-<div class="modal fade" id="etatEntreesStockModal" tabindex="-1">
+<div class="modal fade modal-etat" id="etatEntreesStockModal" tabindex="-1">
 
     <div class="modal-dialog">
 
@@ -29,7 +29,7 @@
 
                     </label>
 
-                    <input type="date" id="date_debut_entree" class="form-control">
+                    <input type="date" id="date_debut_entree" max="{{ date('Y-m-d') }}" class="form-control">
 
                 </div>
 
@@ -41,7 +41,7 @@
 
                     </label>
 
-                    <input type="date" id="date_fin_entree" class="form-control">
+                    <input type="date" id="date_fin_entree" max="{{ date('Y-m-d') }}" class="form-control">
 
                 </div>
 

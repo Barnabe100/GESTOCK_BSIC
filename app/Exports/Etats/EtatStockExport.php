@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Carbon\Carbon;
 
 
 
@@ -103,11 +104,11 @@ class EtatStockExport implements
 
             'ETAT DES STOCKS EN QUANTITE DU '
 
-                . $this->dateDebut
+                . Carbon::parse($this->dateDebut)->format('d/m/Y')
 
                 . ' AU '
 
-                . $this->dateFin
+                . Carbon::parse($this->dateFin)->format('d/m/Y')
 
         );
 

@@ -11,7 +11,9 @@ class FournisseurController extends Controller
 {
     public function index()
     {
-        $fournisseurs = Fournisseur::where('archiver', 0)->get();
+        $fournisseurs = Fournisseur::where('archiver', 0)
+            ->latest()
+            ->get();
         return view('fournisseurs.index', compact('fournisseurs'));
     }
 

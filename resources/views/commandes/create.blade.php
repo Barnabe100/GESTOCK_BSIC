@@ -38,7 +38,8 @@
                         <div class="col-md-6 mb-3">
                             <label>Date</label>
                             <span class="text-danger">*</span>
-                            <input type="date" name="date" value="{{ date('Y-m-d') }}" class="form-control" required>
+                            <input type="date" name="date" value="{{ date('Y-m-d') }}" max="{{ date('Y-m-d') }}"
+                                class="form-control" required>
                         </div>
 
                         <div class="col-md-6 mb-3">

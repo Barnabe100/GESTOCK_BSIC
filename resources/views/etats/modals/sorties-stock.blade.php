@@ -1,6 +1,6 @@
 <!-- 🔥 POPUP ETAT DES SORTIES PAR ARTICLE -->
 
-<div class="modal fade" id="etatSortiesStockModal" tabindex="-1">
+<div class="modal fade modal-etat" id="etatSortiesStockModal" tabindex="-1">
 
     <div class="modal-dialog">
 
@@ -30,7 +30,7 @@
 
                     </label>
 
-                    <input type="date" id="date_debut_sortie" class="form-control">
+                    <input type="date" id="date_debut_sortie" max="{{ date('Y-m-d') }}" class="form-control">
 
                 </div>
 
@@ -42,7 +42,7 @@
 
                     </label>
 
-                    <input type="date" id="date_fin_sortie" class="form-control">
+                    <input type="date" id="date_fin_sortie" max="{{ date('Y-m-d') }}" class="form-control">
 
                 </div>
 
