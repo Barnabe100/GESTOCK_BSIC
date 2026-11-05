@@ -74,6 +74,8 @@ class DashboardController extends Controller
             '<=',
             'stock_securite'
         )
+            ->latest()
+            ->take(5)
             ->get();
 
         // 🔹 Montant total commande 

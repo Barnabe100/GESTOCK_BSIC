@@ -123,13 +123,16 @@
 
 
 
-        @can('gerer-stock')
+        {{-- @can('gerer-stock') --}}
+        @if (auth()->check() &&
+                auth()->user()->hasAnyRole(['Gestionnaire', 'ValidateurDemande']))
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('etats.index') }}">
 
                 États
 
             </a>
-        @endcan
+        @endif
+        {{-- @endcan --}}
 
         @role('Superieur')
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('demandes.superieur') }}">

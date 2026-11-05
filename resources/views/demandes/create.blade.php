@@ -22,8 +22,9 @@
                         <div class="col-md-6 mb-3">
                             <label>Date</label>
                             <span class="text-danger">*</span>
-                            <input type="date" name="date" class="form-control" value="{{ date('Y-m-d') }}" readonly>
-                            required>
+                            <input type="date" name="date" class="form-control" value="{{ date('Y-m-d') }}" readonly
+                                required>
+
                         </div>
 
                         <div class="col-md-6 mb-3">

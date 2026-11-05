@@ -167,7 +167,81 @@ class UserController extends Controller
 
         $profilPersonnel = auth()->id() == $user->id;
 
+        /*
+    |--------------------------------------------------------------------------
+    | Validation des données générales
+    |--------------------------------------------------------------------------
+    */
         if (!$profilPersonnel) {
+
+            $request->validate([
+                'name' => 'required',
+                'prenom' => 'required',
+                'email' => 'required|email',
+            ]);
+
+            /*
+        |--------------------------------------------------------------------------
+        | Vérification du supérieur hiérarchique
+        |--------------------------------------------------------------------------
+        */
+
+            if ($request->has('superieur')) {
+
+                // UTILISATEUR DU SIÈGE
+                if ($user->estAuSiege()) {
+
+                    if ($request->departement_id) {
+
+                        $departementExiste = User::where(
+                            'departement_id',
+                            $request->departement_id
+                        )
+                            ->where('superieur', 1)
+                            ->where('id', '!=', $user->id)
+                            ->exists();
+
+                        if ($departementExiste) {
+
+                            return back()
+                                ->withErrors([
+                                    'superieur' =>
+                                    'Ce département possède déjà un directeur.'
+                                ])
+                                ->withInput();
+                        }
+                    }
+                } else {
+
+                    // UTILISATEUR EN AGENCE
+                    if ($request->agence_id) {
+
+                        $agenceExiste = User::where(
+                            'agence_id',
+                            $request->agence_id
+                        )
+                            ->where('superieur', 1)
+                            ->where('id', '!=', $user->id)
+                            ->exists();
+
+                        if ($agenceExiste) {
+
+                            return back()
+                                ->withErrors([
+                                    'superieur' =>
+                                    'Cette agence possède déjà un directeur.'
+                                ])
+                                ->withInput();
+                        }
+                    }
+                }
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | Mise à jour des informations de l'utilisateur
+        |--------------------------------------------------------------------------
+        */
 
             $user->update([
                 'name' => $request->name,
@@ -176,41 +250,50 @@ class UserController extends Controller
                 'agence_id' => $request->agence_id,
                 'departement_id' => $request->departement_id,
                 'service_id' => $request->service_id,
-                'superieur' => $request->has('superieur')
+                'superieur' => $request->has('superieur'),
             ]);
-        }
 
-        if (!$profilPersonnel) {
+            /*
+        |--------------------------------------------------------------------------
+        | Gestion du rôle Supérieur
+        |--------------------------------------------------------------------------
+        */
 
             if ($request->has('superieur')) {
 
                 if (!$user->hasRole('Superieur')) {
-
                     $user->assignRole('Superieur');
                 }
             } else {
 
-                $user->removeRole('Superieur');
+                if ($user->hasRole('Superieur')) {
+                    $user->removeRole('Superieur');
+                }
             }
-        }
-        if (is_null($request->password) || trim($request->password) === '') {
-            return back()
-                ->withErrors([
-                    'password' => 'Veuillez saisir un nouveau mot de passe.'
-                ])
-                ->withInput();
+
+            /*
+        |--------------------------------------------------------------------------
+        | Gestion des rôles
+        |--------------------------------------------------------------------------
+        */
+
+            $user->syncRoles($request->roles ?? []);
         }
 
-        // dd(
-        //     $profilPersonnel,
-        //     $request->password,
-        //     strlen($request->password)
-        // );
+
+        /*
+    |--------------------------------------------------------------------------
+    | Gestion du mot de passe
+    |--------------------------------------------------------------------------
+    */
+
         if ($profilPersonnel) {
 
+            // Son propre mot de passe est obligatoire
             $request->validate(
                 [
                     'password' => [
+                        'required',
                         'confirmed',
                         'min:12',
                         'regex:/[A-Z]/',
@@ -220,6 +303,9 @@ class UserController extends Controller
                     ]
                 ],
                 [
+                    'password.required' =>
+                    'Veuillez saisir un nouveau mot de passe.',
+
                     'password.confirmed' =>
                     'Les mots de passe ne correspondent pas.',
 
@@ -231,48 +317,25 @@ class UserController extends Controller
                 ]
             );
 
-            if (
-                Hash::check(
-                    $request->password,
-                    $user->password
-                )
-            ) {
 
-                return back()->withErrors([
-                    'password' =>
-                    'Le nouveau mot de passe doit être différent du mot de passe actuel.'
-                ]);
+            // Vérifier que le nouveau mot de passe est différent
+            if (Hash::check($request->password, $user->password)) {
+
+                return back()
+                    ->withErrors([
+                        'password' =>
+                        'Le nouveau mot de passe doit être différent du mot de passe actuel.'
+                    ])
+                    ->withInput();
             }
-        } else {
-
-            $request->validate(
-                [
-                    'password' => [
-                        'confirmed',
-                        'min:8'
-                    ]
-                ]
-            );
-        }
-
-        $user->update([
-            'password' => Hash::make($request->password),
-            'force_password_change' =>
-            $profilPersonnel
-                ? false
-                : true
-
-        ]);
 
 
-        if (!$profilPersonnel) {
+            // Modifier le mot de passe
+            $user->update([
+                'password' => Hash::make($request->password),
+                'force_password_change' => false,
+            ]);
 
-            $user->syncRoles(
-                $request->roles ?? []
-            );
-        }
-
-        if ($profilPersonnel) {
 
             return redirect()
                 ->route('mon.profil')
@@ -282,6 +345,39 @@ class UserController extends Controller
                 );
         }
 
+
+        /*
+    |--------------------------------------------------------------------------
+    | Admin : mot de passe facultatif
+    |--------------------------------------------------------------------------
+    */
+
+        if ($request->filled('password')) {
+
+            $request->validate(
+                [
+                    'password' => [
+                        'confirmed',
+                        'min:8'
+                    ]
+                ],
+                [
+                    'password.confirmed' =>
+                    'Les mots de passe ne correspondent pas.',
+
+                    'password.min' =>
+                    'Le mot de passe doit contenir au moins 8 caractères.'
+                ]
+            );
+
+
+            $user->update([
+                'password' => Hash::make($request->password),
+                'force_password_change' => true,
+            ]);
+        }
+
+
         return redirect()
             ->route('users.index')
             ->with(
@@ -289,7 +385,6 @@ class UserController extends Controller
                 'Utilisateur modifié'
             );
     }
-
     public function destroy($id)
     {
         User::findOrFail($id)->delete();
