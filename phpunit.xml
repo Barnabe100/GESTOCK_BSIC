@@ -21,8 +21,15 @@
         <env name="APP_ENV" value="testing"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_DRIVER" value="array"/>
-        <!-- <env name="DB_CONNECTION" value="sqlite"/> -->
-        <!-- <env name="DB_DATABASE" value=":memory:"/> -->
+        <!--
+            Base de test isolée et jetable. Les tests utilisent RefreshDatabase :
+            ils VIDENT la base ciblée. Le nom de base est forcé ici et contrôlé
+            par tests/CreatesApplication.php (suffixe "_test" obligatoire).
+            Ne jamais lancer les tests sur un serveur de production.
+        -->
+        <env name="DB_CONNECTION" value="mysql" force="true"/>
+        <env name="DB_DATABASE" value="gestok_test" force="true"/>
+        <env name="DB_HOST" value="127.0.0.1"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
