@@ -22,7 +22,7 @@ class UsersImport implements ToModel, WithHeadingRow
             'email' => $row['email'],
 
             'password' => Hash::make(
-                'Gesbsic@2026'  //'Gestok@2026'  
+                config('gestok.mot_de_passe_initial')
             ),
 
             'force_password_change' => true,
