@@ -13,7 +13,6 @@ use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\FournisseurController;
 use App\Http\Controllers\DemandeController;
 use App\Http\Controllers\ArticleDemandeController;
-use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\ArticleCommandeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Etats\EtatDemandeController;
@@ -46,8 +45,7 @@ Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
 
-Route::get('/register', [RegisterController::class, 'create'])->name('register');
-Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
+// Inscription publique fermée (lot 1, L1-2).
 
 
 

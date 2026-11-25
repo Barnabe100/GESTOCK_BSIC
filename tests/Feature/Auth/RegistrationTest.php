@@ -2,31 +2,41 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Providers\RouteServiceProvider;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
+/**
+ * L1-2 : l'inscription publique est fermée. Les comptes sont créés par les
+ * administrateurs (UserController) ou par import.
+ *
+ * (Ce fichier remplace les tests Breeze d'origine, qui vérifiaient que
+ * l'auto-inscription fonctionnait.)
+ */
 class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_registration_screen_can_be_rendered(): void
+    public function test_la_page_d_inscription_n_existe_plus(): void
     {
-        $response = $this->get('/register');
-
-        $response->assertStatus(200);
+        $this->get('/register')->assertNotFound();
+        $this->assertFalse(Route::has('register'));
+        $this->assertFalse(Route::has('register.store'));
     }
 
-    public function test_new_users_can_register(): void
+    public function test_aucun_compte_ne_peut_etre_cree_par_inscription_publique(): void
     {
-        $response = $this->post('/register', [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+        $reponse = $this->post('/register', [
+            'name' => 'Test',
+            'prenom' => 'Utilisateur',
+            'email' => 'inscription@example.com',
+            'password' => 'Inscription#2026',
+            'password_confirmation' => 'Inscription#2026',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(RouteServiceProvider::HOME);
+        $this->assertContains($reponse->getStatusCode(), [404, 405]);
+        $this->assertGuest();
+        $this->assertDatabaseMissing('users', ['email' => 'inscription@example.com']);
     }
 }
