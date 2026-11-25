@@ -4,9 +4,13 @@ namespace App\Console\Commands;
 
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use PDOException;
+use Throwable;
 
 /**
  * Lot 1, L1-5 : rotation des mots de passe par défaut exposés.
@@ -19,9 +23,15 @@ use Illuminate\Support\Str;
  *
  * Les valeurs exposées sont saisies de façon masquée et ne sont jamais
  * écrites dans le code, la base ou les journaux.
+ *
+ * L1-5b : rotation atomique (transaction), lignes verrouillées, mot de passe
+ * revérifié juste avant chaque modification, empreinte distincte par compte,
+ * journalisation des succès et des échecs sans aucune donnée sensible.
  */
 class ControlerMotsDePasseExposes extends Command
 {
+    private const JOURNAL = 'gestok:mots-de-passe-exposes : ';
+
     protected $signature = 'gestok:mots-de-passe-exposes
                             {--appliquer : Applique la rotation (par défaut : simulation, aucune modification)}';
 
@@ -82,22 +92,156 @@ class ControlerMotsDePasseExposes extends Command
             return self::SUCCESS;
         }
 
-        $empreinte = Hash::make($nouveauMotDePasse);
         $ids = array_column($comptes, 'id');
 
-        User::whereKey($ids)->each(function (User $user) use ($empreinte) {
-            $user->forceFill([
-                'password' => $empreinte,
-                'force_password_change' => true,
-                'remember_token' => Str::random(60),
-            ])->save();
-        });
+        Log::info(self::JOURNAL.'rotation démarrée', ['candidats' => $ids]);
 
-        Log::warning('gestok:mots-de-passe-exposes : rotation appliquée', ['user_ids' => $ids]);
+        try {
+            $resultat = $this->appliquerRotation($ids, $valeursExposees, $nouveauMotDePasse);
+        } catch (Throwable $e) {
+            // La transaction a été annulée : aucun compte n'est modifié.
+            // Le journal (fichier) est écrit APRÈS l'annulation et reste donc
+            // disponible ; il ne contient ni mot de passe ni empreinte.
+            $detail = self::detailSansSecret($e);
 
-        $this->info('Rotation appliquée à '.count($ids).' compte(s).');
+            Log::error(self::JOURNAL.'rotation annulée, aucune modification', [
+                'candidats' => $ids,
+                'erreur' => get_class($e),
+                'detail' => $detail,
+            ]);
+
+            $this->error('Rotation annulée : une erreur est survenue, aucun compte n\'a été modifié.');
+            $this->line('Détail technique : '.$detail);
+            $this->line('Corrigez la cause puis relancez la commande.');
+
+            return self::FAILURE;
+        }
+
+        Log::warning(self::JOURNAL.'rotation appliquée', [
+            'user_ids' => $resultat['traites'],
+            'ignores' => $resultat['ignores'],
+        ]);
+
+        $this->info('Rotation appliquée à '.count($resultat['traites']).' compte(s).');
+
+        if ($resultat['ignores'] !== []) {
+            $this->warn(count($resultat['ignores']).' compte(s) ignoré(s) : mot de passe modifié (ou compte supprimé) depuis la détection.');
+            $this->table(['id'], array_map(fn ($id) => [$id], $resultat['ignores']));
+        }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Applique la rotation de façon atomique (tout ou rien).
+     *
+     * 1. Les nouvelles empreintes sont calculées AVANT la transaction (une par
+     *    compte, sel distinct) pour réduire la durée des verrous.
+     * 2. Dans une transaction unique, les lignes candidates sont verrouillées
+     *    (SELECT ... FOR UPDATE, ordre des identifiants : pas d'interblocage
+     *    entre deux exécutions) ; une modification concurrente de ces comptes
+     *    attend la fin de la transaction.
+     * 3. Le mot de passe ACTUEL de chaque compte est revérifié sous verrou :
+     *    un compte qui ne correspond plus à une valeur exposée (mot de passe
+     *    changé depuis la détection) ou qui a disparu est ignoré.
+     * 4. Toute erreur annule l'ensemble de la transaction.
+     *
+     * Le paramètre $apresVerrouillage est un point d'observation réservé aux
+     * tests (exécuté une fois les lignes verrouillées) ; il vaut null en
+     * exploitation.
+     *
+     * @param  list<int>  $ids
+     * @param  list<string>  $valeursExposees
+     * @return array{traites: list<int>, ignores: list<int>}
+     */
+    public function appliquerRotation(array $ids, array $valeursExposees, string $nouveauMotDePasse, ?callable $apresVerrouillage = null): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        sort($ids);
+
+        $empreintes = [];
+        foreach ($ids as $id) {
+            $empreintes[$id] = Hash::make($nouveauMotDePasse);
+        }
+
+        return DB::transaction(function () use ($ids, $valeursExposees, $empreintes, $apresVerrouillage) {
+            $verrouilles = User::query()
+                ->whereKey($ids)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            if ($apresVerrouillage !== null) {
+                $apresVerrouillage($verrouilles->keys()->all());
+            }
+
+            $traites = [];
+            $ignores = [];
+
+            foreach ($ids as $id) {
+                $user = $verrouilles->get($id);
+
+                if ($user === null || ! self::correspondAUneValeur($user->password, $valeursExposees)) {
+                    $ignores[] = $id;
+
+                    continue;
+                }
+
+                $user->forceFill([
+                    'password' => $empreintes[$id],
+                    'force_password_change' => true,
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                $traites[] = $id;
+            }
+
+            return ['traites' => $traites, 'ignores' => $ignores];
+        });
+    }
+
+    /**
+     * @param  list<string>  $valeursExposees
+     */
+    private static function correspondAUneValeur(?string $empreinte, array $valeursExposees): bool
+    {
+        if ($empreinte === null || $empreinte === '') {
+            return false;
+        }
+
+        foreach ($valeursExposees as $valeur) {
+            if (Hash::check($valeur, $empreinte)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Description de l'erreur sans aucune donnée sensible.
+     *
+     * Le message d'une QueryException contient la requête SQL ET ses valeurs
+     * (empreinte du nouveau mot de passe, jeton) : il n'est jamais repris.
+     * Seul le message du pilote PDO (code SQLSTATE et texte du serveur, sans
+     * les valeurs liées) est conservé ; toute empreinte bcrypt éventuelle est
+     * masquée par précaution.
+     */
+    private static function detailSansSecret(Throwable $e): string
+    {
+        if ($e instanceof QueryException) {
+            $pdo = $e->getPrevious();
+            $detail = $pdo instanceof PDOException
+                ? $pdo->getMessage()
+                : 'Erreur SQL (code '.$e->getCode().')';
+        } else {
+            $detail = get_class($e);
+        }
+
+        $detail = preg_replace('/\$2[abxy]?\$\d{2}\$[.\/A-Za-z0-9]{53}/', '[empreinte masquée]', $detail);
+
+        return mb_substr($detail, 0, 300);
     }
 
     /**
@@ -133,11 +277,8 @@ class ControlerMotsDePasseExposes extends Command
             ->orderBy('id')
             ->chunkById(200, function ($lot) use ($valeursExposees, &$comptes) {
                 foreach ($lot as $user) {
-                    foreach ($valeursExposees as $valeur) {
-                        if (Hash::check($valeur, $user->password)) {
-                            $comptes[] = ['id' => $user->id, 'email' => $user->email];
-                            break;
-                        }
+                    if (self::correspondAUneValeur($user->password, $valeursExposees)) {
+                        $comptes[] = ['id' => $user->id, 'email' => $user->email];
                     }
                 }
             });
