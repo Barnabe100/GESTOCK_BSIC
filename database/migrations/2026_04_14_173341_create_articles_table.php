@@ -24,10 +24,13 @@ return new class extends Migration
             $table->foreignId('categorie_id')
                 ->constrained('categories')
                 ->cascadeOnDelete();
+            // La contrainte vers `type_articles` est posée par la migration
+            // 2026_07_28_235701_create_type_articles_table, car cette table
+            // n'existe pas encore à ce stade sur une base vierge.
+            // Schéma final identique (même colonne, même nom de contrainte,
+            // même ON DELETE CASCADE). Aucun effet sur les bases déjà migrées.
             $table->foreignId('type_article_id')
-                ->nullable()
-                ->constrained('type_articles')
-                ->cascadeOnDelete();
+                ->nullable();
             $table->timestamps();
         });
     }
