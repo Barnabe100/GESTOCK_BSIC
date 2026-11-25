@@ -37,13 +37,9 @@ use App\Http\Controllers\TypeArticleController;
 //    return view('welcome');
 //});
 
-Route::get('/dashbord', function () {
-    return view('dashboard');
-});
-
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
+// Lot 1, L1-3 : suppression de la route « /dashbord » (accessible sans
+// authentification) et du doublon « /login » (la route de connexion est
+// déclarée dans routes/auth.php et rend la même vue auth.login).
 
 // Inscription publique fermée (lot 1, L1-2).
 
