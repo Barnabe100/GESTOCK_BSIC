@@ -22,15 +22,13 @@ class ForcePasswordChange
 
             ];
 
-            if (
-                !in_array(
-                    $request->route()->getName(),
-                    $routesAutorisees
-                )
-            ) {
+            if (!$request->routeIs($routesAutorisees)) {
 
+                // Redirection vers la page de changement de mot de passe.
+                // (Auparavant vers 'mon.profil', elle-même soumise à ce
+                // middleware : boucle de redirection infinie.)
                 return redirect()
-                    ->route('mon.profil')
+                    ->route('force.password.change')
                     ->with(
                         'warning',
                         'Vous devez modifier votre mot de passe avant de continuer.'
