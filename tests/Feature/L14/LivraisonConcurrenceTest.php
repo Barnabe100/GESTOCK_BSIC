@@ -7,6 +7,7 @@ use App\Models\ArticleDemande;
 use App\Models\Demande;
 use App\Models\MouvementStock;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Process\Process;
@@ -29,7 +30,11 @@ class LivraisonConcurrenceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // Socle des droits : la livraison est réservée aux rôles Gestionnaire
+        // et SuperAdmin ; le livreur de ces tests a donc le rôle Gestionnaire.
+        $this->seed(RolesAndPermissionsSeeder::class);
         $this->gestionnaire = User::factory()->create();
+        $this->gestionnaire->assignRole('Gestionnaire');
     }
 
     protected function tearDown(): void

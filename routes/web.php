@@ -72,14 +72,17 @@ Route::middleware([
     'force.password.change'
 ])->group(function () {
 
-    Route::resource('categories', CategorieController::class);
+    Route::resource('categories', CategorieController::class)
+        ->middleware('can:gerer-stock');
 
-    Route::resource('articles', ArticleController::class);
+    Route::resource('articles', ArticleController::class)
+        ->middleware('can:gerer-stock');
 
     Route::get('/mouvements-stock', [MouvementStockController::class, 'index'])
         ->name(
             'mouvements.index'
-        );
+        )
+        ->middleware('can:voir-mouvements');
 
 
     Route::resource('users', UserController::class);
@@ -112,15 +115,18 @@ Route::middleware([
         [UserController::class, 'import']
     )->name('users.import');
 
-    Route::resource('commandes', CommandeController::class);
+    Route::resource('commandes', CommandeController::class)
+        ->middleware('can:acceder-commandes');
 
     Route::put(
         '/article-commandes/{id}',
         [ArticleCommandeController::class, 'update']
-    )->name('article-commandes.update');
+    )->name('article-commandes.update')
+        ->middleware('can:preparer-commandes');
 
 
-    Route::resource('fournisseurs', FournisseurController::class);
+    Route::resource('fournisseurs', FournisseurController::class)
+        ->middleware('can:gerer-fournisseurs');
     Route::resource('demandes', DemandeController::class);
 
     Route::put(
@@ -134,7 +140,8 @@ Route::middleware([
 
     // DEMANDES SUPERIEUR
     Route::get('/demandes-a-valider/', [DemandeController::class, 'demandesSuperieur'])
-        ->name('demandes.superieur');
+        ->name('demandes.superieur')
+        ->middleware('can:lister-demandes-superieur');
     // VALIDER
     Route::put('/demandes/{id}/valider-superieur', [DemandeController::class, 'validerSuperieur'])
         ->name('demandes.valider.superieur');
@@ -146,7 +153,8 @@ Route::middleware([
         ->name('demandes.rejeter.gestionnaire');
 
     Route::get('/demandes-gestionnaire', [DemandeController::class, 'indexGestionnaire'])
-        ->name('demandes.gestionnaire');
+        ->name('demandes.gestionnaire')
+        ->middleware('can:lister-demandes-gestionnaire');
 
     //Validation demandeur
     Route::put('/demandes/{id}/valider-demandeur', [DemandeController::class, 'validerDemandeur'])
@@ -157,7 +165,8 @@ Route::middleware([
     Route::get('/demandes-validation-finale', [DemandeController::class, 'validationFinaleIndex'])
         ->name(
             'demandes.validation.finale.index'
-        );
+        )
+        ->middleware('can:lister-validation-finale');
 
     Route::put('/demandes/{id}/rejet-finale', [DemandeController::class, 'rejeterFinale'])
         ->name(
@@ -183,7 +192,8 @@ Route::middleware([
     )->name('demandes.organisation');
 
 
-    Route::resource('departements', DepartementController::class);
+    Route::resource('departements', DepartementController::class)
+        ->middleware('can:gerer-departement');
 
     Route::get(
         '/departements/{id}/services',
@@ -201,31 +211,38 @@ Route::middleware([
     );
 
 
-    Route::resource('type-articles', TypeArticleController::class);
+    Route::resource('type-articles', TypeArticleController::class)
+        ->middleware('can:gerer-stock');
 
     Route::get(
         'type-articles/export/excel',
         [TypeArticleController::class, 'exportExcel']
-    )->name('type-articles.export.excel');
+    )->name('type-articles.export.excel')
+        ->middleware('can:gerer-stock');
 
     Route::get(
         'type-articles/export/csv',
         [TypeArticleController::class, 'exportCsv']
-    )->name('type-articles.export.csv');
+    )->name('type-articles.export.csv')
+        ->middleware('can:gerer-stock');
 
-    Route::resource('services', ServiceController::class);
-    Route::resource('agences', AgenceController::class);
+    Route::resource('services', ServiceController::class)
+        ->middleware('can:gerer-service');
+    Route::resource('agences', AgenceController::class)
+        ->middleware('can:gerer-agence');
     Route::resource('users', UserController::class);
 
     Route::get(
         '/users/{id}/bloquer',
         [UserController::class, 'bloquer']
-    )->name('users.bloquer');
+    )->name('users.bloquer')
+        ->middleware('meme.origine');
 
     Route::get(
         '/users/{id}/debloquer',
         [UserController::class, 'debloquer']
-    )->name('users.debloquer');
+    )->name('users.debloquer')
+        ->middleware('meme.origine');
 
     //Artcile demande
     Route::post('article-demande', [ArticleDemandeController::class, 'store'])
@@ -235,66 +252,88 @@ Route::middleware([
         ->name('article_demande.destroy');
 
     Route::post('commandes/{id}/valider', [CommandeController::class, 'valider'])
-        ->name('commandes.valider');
+        ->name('commandes.valider')
+        ->middleware('can:valider-commandes');
 
     Route::put('commandes/{id}/livrer', [CommandeController::class, 'livrer'])
-        ->name('commandes.livrer');
+        ->name('commandes.livrer')
+        ->middleware('can:receptionner-commandes');
 
     Route::post('article-commande', [ArticleCommandeController::class, 'store'])
-        ->name('article_commande.store');
+        ->name('article_commande.store')
+        ->middleware('can:preparer-commandes');
 
     Route::delete('article-commande/{id}', [ArticleCommandeController::class, 'destroy'])
-        ->name('article_commande.destroy');
+        ->name('article_commande.destroy')
+        ->middleware('can:preparer-commandes');
 
     Route::put('/articles/{id}/rebut', [ArticleController::class, 'miseRebut'])
         ->name(
             'articles.rebut'
-        );
+        )
+        ->middleware('can:gerer-stock');
 
 
     //Export Categories
     Route::get('categories-export-excel', [CategorieController::class, 'exportExcel'])
-        ->name('categories.export.excel');
+        ->name('categories.export.excel')
+        ->middleware('can:gerer-stock');
     Route::get('categories-export-csv', [CategorieController::class, 'exportCsv'])
-        ->name('categories.export.csv');
+        ->name('categories.export.csv')
+        ->middleware('can:gerer-stock');
     //Export Agences
     Route::get('agences-export-excel', [AgenceController::class, 'exportExcel'])
-        ->name('agences.export.excel');
+        ->name('agences.export.excel')
+        ->middleware('can:gerer-agence');
     Route::get('agences-export-csv', [AgenceController::class, 'exportCsv'])
-        ->name('agences.export.csv');
+        ->name('agences.export.csv')
+        ->middleware('can:gerer-agence');
     //Export Articles
     Route::get('articles-export-excel', [ArticleController::class, 'exportExcel'])
-        ->name('articles.export.excel');
+        ->name('articles.export.excel')
+        ->middleware('can:gerer-stock');
     Route::get('articles-export-csv', [ArticleController::class, 'exportCsv'])
-        ->name('articles.export.csv');
+        ->name('articles.export.csv')
+        ->middleware('can:gerer-stock');
     //Export demandes
     Route::get('demandes-export-excel', [DemandeController::class, 'exportExcel'])
-        ->name('demandes.export.excel');
+        ->name('demandes.export.excel')
+        ->middleware('can:exporter-demandes');
     Route::get('demandes-export-csv', [DemandeController::class, 'exportCsv'])
-        ->name('demandes.export.csv');
+        ->name('demandes.export.csv')
+        ->middleware('can:exporter-demandes');
     //Export commandes
     Route::get('commandes-export-excel', [CommandeController::class, 'exportExcel'])
-        ->name('commandes.export.excel');
+        ->name('commandes.export.excel')
+        ->middleware('can:acceder-commandes');
     Route::get('commandes-export-csv', [CommandeController::class, 'exportCsv'])
-        ->name('commandes.export.csv');
+        ->name('commandes.export.csv')
+        ->middleware('can:acceder-commandes');
 
     Route::put('/commandes/{id}/soumettre', [CommandeController::class, 'soumettre'])
-        ->name('commandes.soumettre');
+        ->name('commandes.soumettre')
+        ->middleware('can:acceder-commandes');
     //Export fournisseurs
     Route::get('fournisseurs-export-excel', [FournisseurController::class, 'exportExcel'])
-        ->name('fournisseurs.export.excel');
+        ->name('fournisseurs.export.excel')
+        ->middleware('can:gerer-fournisseurs');
     Route::get('fournisseurs-export-csv', [FournisseurController::class, 'exportCsv'])
-        ->name('fournisseurs.export.csv');
+        ->name('fournisseurs.export.csv')
+        ->middleware('can:gerer-fournisseurs');
     //Export departements
     Route::get('departements-export-excel', [DepartementController::class, 'exportExcel'])
-        ->name('departements.export.excel');
+        ->name('departements.export.excel')
+        ->middleware('can:gerer-departement');
     Route::get('departements-export-csv', [DepartementController::class, 'exportCsv'])
-        ->name('departements.export.csv');
+        ->name('departements.export.csv')
+        ->middleware('can:gerer-departement');
     //Export services
     Route::get('services-export-excel', [ServiceController::class, 'exportExcel'])
-        ->name('services.export.excel');
+        ->name('services.export.excel')
+        ->middleware('can:gerer-service');
     Route::get('services-export-csv', [ServiceController::class, 'exportCsv'])
-        ->name('services.export.csv');
+        ->name('services.export.csv')
+        ->middleware('can:gerer-service');
     //Export users
     Route::get('users-export-excel', [UserController::class, 'exportExcel'])
         ->name('users.export.excel');
@@ -303,15 +342,19 @@ Route::middleware([
 
     //Export Articles demandes
     Route::get('articles-demandes-export-excel', [ArticleDemandeController::class, 'exportExcel'])
-        ->name('articles-demandes.export.excel');
+        ->name('articles-demandes.export.excel')
+        ->middleware('can:exporter-demandes');
     Route::get('articles-demandes-export-csv', [ArticleDemandeController::class, 'exportCsv'])
-        ->name('articles-demandes.export.csv');
+        ->name('articles-demandes.export.csv')
+        ->middleware('can:exporter-demandes');
 
     //Export Articles Commandes
     Route::get('articles-commandes-export-excel', [ArticleCommandeController::class, 'exportExcel'])
-        ->name('articles-commandes.export.excel');
+        ->name('articles-commandes.export.excel')
+        ->middleware('can:acceder-commandes');
     Route::get('articles-commandes-export-csv', [ArticleCommandeController::class, 'exportCsv'])
-        ->name('articles-commandes.export.csv');
+        ->name('articles-commandes.export.csv')
+        ->middleware('can:acceder-commandes');
 
     Route::get(
         '/dashboard',
@@ -323,42 +366,49 @@ Route::middleware([
     Route::get(
         '/etats',
         [EtatDemandeController::class, 'index']
-    )->name('etats.index');
+    )->name('etats.index')
+        ->middleware('can:voir-etats');
 
     Route::get(
         'etats/demandes/par-agence/excel',
         [EtatDemandeController::class, 'demandesParAgenceExcel']
-    )->name('etats.demandes.par_agence.excel');
+    )->name('etats.demandes.par_agence.excel')
+        ->middleware('can:voir-etats');
 
     // PAR AGENCE PDF
     Route::get(
         'etats/demandes/par-agence/pdf',
         [EtatDemandeController::class, 'demandesParAgencePdf']
-    )->name('etats.demandes.par_agence.pdf');
+    )->name('etats.demandes.par_agence.pdf')
+        ->middleware('can:voir-etats');
 
     // VALIDÉES EXCEL
     Route::get(
         'etats/demandes/validees/excel',
         [EtatDemandeController::class, 'demandesValideesExcel']
-    )->name('etats.demandes.validees.excel');
+    )->name('etats.demandes.validees.excel')
+        ->middleware('can:voir-etats');
 
     // VALIDÉES PDF
     Route::get(
         'etats/demandes/validees/pdf',
         [EtatDemandeController::class, 'demandesValideesPdf']
-    )->name('etats.demandes.validees.pdf');
+    )->name('etats.demandes.validees.pdf')
+        ->middleware('can:voir-etats');
 
     // EXCEL
     Route::get(
         'etats/demandes/par-service/excel',
         [EtatDemandeController::class, 'demandesParServiceExcel']
-    )->name('etats.demandes.par_service.excel');
+    )->name('etats.demandes.par_service.excel')
+        ->middleware('can:voir-etats');
 
     //  PDF
     Route::get(
         'etats/demandes/par-service/pdf',
         [EtatDemandeController::class, 'demandesParServicePdf']
-    )->name('etats.demandes.par_service.pdf');
+    )->name('etats.demandes.par_service.pdf')
+        ->middleware('can:voir-etats');
 
 
     /*
@@ -371,7 +421,8 @@ Route::middleware([
     Route::get(
         'etats/demandes/par-departement/excel',
         [EtatDemandeController::class, 'demandesParDepartementExcel']
-    )->name('etats.demandes.par_departement.excel');
+    )->name('etats.demandes.par_departement.excel')
+        ->middleware('can:voir-etats');
 
     // 🔥 PDF
     // Route::get(
@@ -383,75 +434,89 @@ Route::middleware([
         ['get', 'post'],
         'etats/demandes/par-departement/pdf',
         [EtatDemandeController::class, 'demandesParDepartementPdf']
-    )->name('etats.demandes.par_departement.pdf');
+    )->name('etats.demandes.par_departement.pdf')
+        ->middleware('can:voir-etats');
 
     // 🔥 EXCEL
     Route::get(
         'etats/articles/stock-par-article/excel',
         [EtatArticleController::class, 'stockParArticleExcel']
-    )->name('etats.articles.stock_par_article.excel');
+    )->name('etats.articles.stock_par_article.excel')
+        ->middleware('can:voir-etats');
 
     // 🔥 PDF
     Route::get(
         'etats/articles/stock-par-article/pdf',
         [EtatArticleController::class, 'stockParArticlePdf']
-    )->name('etats.articles.stock_par_article.pdf');
+    )->name('etats.articles.stock_par_article.pdf')
+        ->middleware('can:voir-etats');
 
 
     //Etats stock Controller
     Route::get('/etats/stocks', [EtatStockController::class, 'index'])
         ->name(
             'etats.stocks.index'
-        );
+        )
+        ->middleware('can:voir-etats');
     Route::post('/etats/stocks/excel', [EtatStockController::class, 'exportExcel'])
         ->name(
             'etats.stocks.excel'
-        );
+        )
+        ->middleware('can:voir-etats');
     Route::get('/etats/stocks/pdf', [EtatStockController::class, 'exportPdf'])
         ->name(
             'etats.stocks.pdf'
-        );
+        )
+        ->middleware('can:voir-etats');
 
     Route::post('/etats/stocks-valorises/excel', [EtatStockController::class, 'exportExcelValorise'])
         ->name(
             'etats.stocks_valorises.excel'
-        );
+        )
+        ->middleware('can:voir-etats');
     Route::get('/etats/stocks-valorises/pdf', [EtatStockController::class, 'exportPdfValorise'])
         ->name(
             'etats.stocks_valorises.pdf'
-        );
+        )
+        ->middleware('can:voir-etats');
 
 
 
     Route::post('/etats/entrees-stock/excel', [EtatMouvementStockController::class, 'exportExcelEntrees'])
         ->name(
             'etats.entrees_stock.excel'
-        );
+        )
+        ->middleware('can:voir-etats');
 
     Route::get('/etats/entrees-stock/pdf', [EtatMouvementStockController::class, 'exportPdfEntrees'])
         ->name(
             'etats.entrees_stock.pdf'
-        );
+        )
+        ->middleware('can:voir-etats');
 
     Route::post('/etats/sorties-stock/excel', [EtatMouvementStockController::class, 'exportExcelSorties'])
         ->name(
             'etats.sorties_stock.excel'
-        );
+        )
+        ->middleware('can:voir-etats');
 
     Route::get('/etats/sorties-stock/pdf', [EtatMouvementStockController::class, 'exportPdfSorties'])
         ->name(
             'etats.sorties_stock.pdf'
-        );
+        )
+        ->middleware('can:voir-etats');
 
     Route::post('/etats/stock-final/excel', [EtatMouvementStockController::class, 'exportExcelStockFinal'])
         ->name(
             'etats.stock_final.excel'
-        );
+        )
+        ->middleware('can:voir-etats');
 
     Route::get('/etats/stock-final/pdf', [EtatMouvementStockController::class, 'exportPdfStockFinal'])
         ->name(
             'etats.stock_final.pdf'
-        );
+        )
+        ->middleware('can:voir-etats');
 });
 
 

@@ -12,11 +12,16 @@ use Illuminate\Support\Facades\Hash;
 use App\Exports\UsersExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\UsersImport;
+use App\Services\DesignationSuperieur;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class UserController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', User::class);
+
         $users = User::with(['roles', 'agence', 'departement', 'service'])
             ->latest()
             ->get();
@@ -26,6 +31,8 @@ class UserController extends Controller
 
     public function create()
     {
+        $this->authorize('create', User::class);
+
         $agences = Agence::all();
         $departements = Departement::all();
         $services = Service::all();
@@ -35,58 +42,12 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', User::class);
 
-        if ($request->has('superieur')) {
-            // Directeur agence
-            if ($request->agence_id) {
-                $agenceExiste = User::where(
-                    'agence_id',
-                    $request->agence_id
-                )
-                    ->where(
-                        'superieur',
-                        1
-                    )
-                    ->exists();
-
-                if ($agenceExiste) {
-                    return back()
-                        ->withErrors([
-
-                            'superieur' =>
-
-                            'Cette agence possède déjà un directeur.'
-
-                        ])
-                        ->withInput();
-                }
-            }
-
-            // Directeur département
-            if ($request->departement_id) {
-                $departementExiste = User::where(
-                    'departement_id',
-                    $request->departement_id
-                )
-                    ->where(
-                        'superieur',
-                        1
-                    )
-                    ->exists();
-
-                if ($departementExiste) {
-                    return back()
-                        ->withErrors([
-
-                            'superieur' =>
-
-                            'Ce département possède déjà un directeur.'
-
-                        ])
-                        ->withInput();
-                }
-            }
-        }
+        // Décision validée : désigner un supérieur dans une entité qui en a
+        // déjà un en fait un remplaçant ; le précédent perd sa fonction, avec
+        // historique (DesignationSuperieur). Le refus « … possède déjà un
+        // directeur » ne s'applique donc plus.
 
         $request->validate(
             [
@@ -125,15 +86,11 @@ class UserController extends Controller
             'agence_id' => $request->agence_id,
             'departement_id' => $request->departement_id,
             'service_id' => $request->service_id,
-            'superieur' => $request->has('superieur'),
+            'superieur' => false,
         ]);
 
-        if (
-            $user->superieur
-        ) {
-            $user->assignRole(
-                'Superieur'
-            );
+        if ($request->has('superieur')) {
+            app(DesignationSuperieur::class)->designer($user, auth()->user());
         }
         // 🔥 rôle par défaut
         $user->assignRole('Demandeur');
@@ -146,12 +103,16 @@ class UserController extends Controller
     {
         $user = User::with(['roles', 'agence', 'departement', 'service'])->findOrFail($id);
 
+        $this->authorize('view', $user);
+
         return view('users.show', compact('user'));
     }
 
     public function edit($id)
     {
         $user = User::findOrFail($id);
+
+        $this->authorize('update', $user);
 
         $roles = Role::all();
         $agences = Agence::all();
@@ -164,6 +125,8 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
+
+        $this->authorize('update', $user);
 
         $profilPersonnel = auth()->id() == $user->id;
 
@@ -178,64 +141,18 @@ class UserController extends Controller
                 'name' => 'required',
                 'prenom' => 'required',
                 'email' => 'required|email',
+                'roles' => 'nullable|array',
+                'roles.*' => 'string|exists:roles,name',
             ]);
 
-            /*
-        |--------------------------------------------------------------------------
-        | Vérification du supérieur hiérarchique
-        |--------------------------------------------------------------------------
-        */
+            // Socle des droits : aucun rôle hors de ce que l'acteur peut
+            // attribuer (SuperAdmin réservé au SuperAdmin, jamais ses propres
+            // rôles, jamais le retrait du dernier SuperAdmin).
+            $rolesDemandes = array_values(array_unique($request->input('roles', [])));
+            Gate::authorize('attribuerRoles', [$user, $rolesDemandes]);
 
-            if ($request->has('superieur')) {
-
-                // UTILISATEUR DU SIÈGE
-                if ($user->estAuSiege()) {
-
-                    if ($request->departement_id) {
-
-                        $departementExiste = User::where(
-                            'departement_id',
-                            $request->departement_id
-                        )
-                            ->where('superieur', 1)
-                            ->where('id', '!=', $user->id)
-                            ->exists();
-
-                        if ($departementExiste) {
-
-                            return back()
-                                ->withErrors([
-                                    'superieur' =>
-                                    'Ce département possède déjà un directeur.'
-                                ])
-                                ->withInput();
-                        }
-                    }
-                } else {
-
-                    // UTILISATEUR EN AGENCE
-                    if ($request->agence_id) {
-
-                        $agenceExiste = User::where(
-                            'agence_id',
-                            $request->agence_id
-                        )
-                            ->where('superieur', 1)
-                            ->where('id', '!=', $user->id)
-                            ->exists();
-
-                        if ($agenceExiste) {
-
-                            return back()
-                                ->withErrors([
-                                    'superieur' =>
-                                    'Cette agence possède déjà un directeur.'
-                                ])
-                                ->withInput();
-                        }
-                    }
-                }
-            }
+            // Vérification du supérieur hiérarchique : remplacée par la
+            // désignation d'un remplaçant (décision validée, voir plus bas).
 
             /*
         |--------------------------------------------------------------------------
@@ -250,34 +167,26 @@ class UserController extends Controller
                 'agence_id' => $request->agence_id,
                 'departement_id' => $request->departement_id,
                 'service_id' => $request->service_id,
-                'superieur' => $request->has('superieur'),
             ]);
 
             /*
         |--------------------------------------------------------------------------
-        | Gestion du rôle Supérieur
+        | Gestion des rôles, puis du rôle Supérieur
         |--------------------------------------------------------------------------
+        | Le rôle Superieur suit toujours la case « supérieur » : il n'est plus
+        | perdu quand aucune autre case n'est cochée (syncRoles ne l'efface
+        | plus après coup).
         */
 
-            if ($request->has('superieur')) {
+            DB::transaction(function () use ($user, $request, $rolesDemandes) {
+                $user->syncRoles(array_values(array_diff($rolesDemandes, ['Superieur'])));
 
-                if (!$user->hasRole('Superieur')) {
-                    $user->assignRole('Superieur');
+                if ($request->has('superieur')) {
+                    app(DesignationSuperieur::class)->designer($user->fresh(), auth()->user());
+                } elseif ($user->superieur || $user->hasRole('Superieur')) {
+                    app(DesignationSuperieur::class)->retirer($user->fresh(), auth()->user());
                 }
-            } else {
-
-                if ($user->hasRole('Superieur')) {
-                    $user->removeRole('Superieur');
-                }
-            }
-
-            /*
-        |--------------------------------------------------------------------------
-        | Gestion des rôles
-        |--------------------------------------------------------------------------
-        */
-
-            $user->syncRoles($request->roles ?? []);
+            });
         }
 
 
@@ -387,7 +296,13 @@ class UserController extends Controller
     }
     public function destroy($id)
     {
-        User::findOrFail($id)->delete();
+        $user = User::findOrFail($id);
+
+        // Jamais soi-même, jamais un compte portant un historique métier
+        // (aucune règle de conservation validée : Q9), SuperAdmin réservé.
+        $this->authorize('delete', $user);
+
+        $user->delete();
 
         return redirect()->route('users.index');
     }
@@ -395,6 +310,8 @@ class UserController extends Controller
     //Export Excel
     public function exportExcel()
     {
+        $this->authorize('viewAny', User::class);
+
         return Excel::download(
             new UsersExport,
             'users.xlsx'
@@ -404,6 +321,8 @@ class UserController extends Controller
     //Export CSV
     public function exportCsv()
     {
+        $this->authorize('viewAny', User::class);
+
         return Excel::download(
             new UsersExport,
             'users.csv'
@@ -414,6 +333,8 @@ class UserController extends Controller
     public function bloquer($id)
     {
         $user = User::findOrFail($id);
+
+        $this->authorize('bloquer', $user);
 
         $user->update([
 
@@ -433,6 +354,8 @@ class UserController extends Controller
     public function debloquer($id)
     {
         $user = User::findOrFail($id);
+
+        $this->authorize('bloquer', $user);
 
         $user->update([
 
@@ -476,6 +399,8 @@ class UserController extends Controller
 
     public function importForm()
     {
+        $this->authorize('create', User::class);
+
         return view(
             'users.import'
         );
@@ -486,8 +411,10 @@ class UserController extends Controller
     ) {
 
         // dd('Import appelé');
+        $this->authorize('create', User::class);
+
         $request->validate([
-            'file' => 'required|file'
+            'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:10240'
         ]);
 
         // Lot 1, L1-5 : le mot de passe initial des comptes importés est lu
@@ -500,13 +427,14 @@ class UserController extends Controller
             );
         }
 
-        Excel::import(
-
-            new UsersImport,
-
-            $request->file('file')
-
-        );
+        // Socle des droits : import tout ou rien ; les rôles du fichier sont
+        // contrôlés ligne par ligne (UsersImport).
+        DB::transaction(function () use ($request) {
+            Excel::import(
+                new UsersImport(auth()->user()),
+                $request->file('file')
+            );
+        });
 
 
 

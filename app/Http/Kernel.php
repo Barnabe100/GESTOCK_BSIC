@@ -36,6 +36,8 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            // Socle des droits : révocation effective d'un compte bloqué.
+            \App\Http\Middleware\CompteBloque::class,
         ],
 
         'api' => [
@@ -65,5 +67,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
+        // Socle des droits : actions par lien GET protégées contre les requêtes intersites.
+        'meme.origine' => \App\Http\Middleware\MemeOrigine::class,
     ];
 }

@@ -44,6 +44,17 @@ class CommandeController extends Controller
     //     ]);
     // }
 
+    /**
+     * Socle des droits : la route du module exige « acceder-commandes » ;
+     * la préparation (création, modification) est réservée aux rôles de
+     * l'interface (Gestionnaire, SuperAdmin) et l'archivage au SuperAdmin.
+     */
+    public function __construct()
+    {
+        $this->middleware('can:preparer-commandes')->only(['create', 'store', 'edit', 'update']);
+        $this->middleware('can:supprimer-commandes')->only(['destroy']);
+    }
+
     public function index()
     {
 
@@ -177,6 +188,10 @@ class CommandeController extends Controller
         if ($commande->validation) {
             return back()->with('error', 'Déjà validée');
         }
+
+        // Socle des droits : validation d'une commande soumise uniquement
+        // (condition de l'interface : statut « Prête pour validation »).
+        abort_unless($commande->statut === 'Prête pour validation', 403);
 
         $commande->update([
             'validation' => 1

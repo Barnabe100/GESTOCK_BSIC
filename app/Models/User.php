@@ -117,12 +117,50 @@ class User extends Authenticatable
         return $demande->user->agence_id == $this->agence_id;
     }
 
+    /**
+     * Décision validée (novembre 2026) : la confirmation de réception est
+     * autorisée aux utilisateurs appartenant à la même agence OU au même
+     * département que le demandeur (le demandeur lui-même compris), tant que
+     * la demande attend sa réception.
+     */
     public function peutConfirmerReception(Demande $demande): bool
     {
         if ($demande->statut !== 'En attente réception demandeur') {
             return false;
         }
 
-        return $this->peutVoirDemande($demande);
+        $demandeur = $demande->user;
+
+        if (! $demandeur) {
+            return false;
+        }
+
+        if ((int) $demandeur->id === (int) $this->id) {
+            return true;
+        }
+
+        return ($this->agence_id !== null && (int) $this->agence_id === (int) $demandeur->agence_id)
+            || ($this->departement_id !== null && (int) $this->departement_id === (int) $demandeur->departement_id);
+    }
+
+    /**
+     * Supérieur hiérarchique d'un demandeur : rôle Superieur et même entité,
+     * selon la règle déjà appliquée par la liste « Demandes à valider »
+     * (DemandeController::demandesSuperieur) : au siège, même département ;
+     * en agence, même agence.
+     */
+    public function estSuperieurHierarchiqueDe(User $demandeur): bool
+    {
+        if (! $this->hasRole('Superieur')) {
+            return false;
+        }
+
+        if ($this->estAuSiege()) {
+            return $this->departement_id !== null
+                && (int) $this->departement_id === (int) $demandeur->departement_id;
+        }
+
+        return $this->agence_id !== null
+            && (int) $this->agence_id === (int) $demandeur->agence_id;
     }
 }

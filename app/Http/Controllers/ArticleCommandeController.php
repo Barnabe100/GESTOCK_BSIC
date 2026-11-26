@@ -33,6 +33,12 @@ class ArticleCommandeController extends Controller
                 $request->commande_id
             );
 
+        // Socle des droits : aucune ligne ajoutée à une commande validée
+        // (condition de l'interface), message existant.
+        if ($commande->validation) {
+            return back()->with('error', 'Commande déjà validée');
+        }
+
         $montantUtilise =
             $commande->articles->sum(
                 function ($item) {
@@ -187,6 +193,12 @@ class ArticleCommandeController extends Controller
     public function destroy($id)
     {
         $ligne = ArticleCommande::findOrFail($id);
+
+        // Socle des droits : aucune ligne supprimée d'une commande validée
+        // (condition de l'interface), message existant.
+        if ($ligne->commande && $ligne->commande->validation) {
+            return back()->with('error', 'Commande déjà validée');
+        }
 
         $ligne->delete();
 

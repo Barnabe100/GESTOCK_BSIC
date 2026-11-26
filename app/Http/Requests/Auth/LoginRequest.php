@@ -57,36 +57,27 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        $user = \App\Models\User::where(
-            'email',
-            $this->email
-        )->first();
-
-        // 🔥 UTILISATEUR BLOQUÉ
-        //dd($user);
-        if ($user && $user->bloque) {
-            throw ValidationException::withMessages([
-
-                'email' => 'Votre compte est bloqué, veuillez contacter votre administrateur.'
-
-            ]);
-        }
-
         // 🔥 LOGIN
+        // Socle des droits : le blocage est vérifié APRÈS la vérification du
+        // mot de passe. Un mauvais mot de passe reçoit toujours le message
+        // générique, ce qui ne révèle plus l'existence d'un compte bloqué.
         if (! Auth::attempt(
             $this->only('email', 'password'),
             $this->boolean('remember')
         )) {
-
             RateLimiter::hit($this->throttleKey());
-
             throw ValidationException::withMessages([
-
                 'email' => 'Email ou mot de passe incorrect.'
-
             ]);
         }
 
+        // 🔥 UTILISATEUR BLOQUÉ
+        if (Auth::user()->bloque) {
+            Auth::guard('web')->logout();
+            throw ValidationException::withMessages([
+                'email' => 'Votre compte est bloqué, veuillez contacter votre administrateur.'
+            ]);
+        }
         RateLimiter::clear($this->throttleKey());
     }
 

@@ -33,7 +33,9 @@ class DemandeController extends Controller
                 ->get();
             return view('demandes.index', compact('demandes'));
         } else {
-            $demandes = Demande::where('archiver', 0)->where('id', $user_id)->get();
+            // Socle des droits (N-04) : les demandes de l'utilisateur (user_id), et
+            // non la demande dont l'identifiant est égal au sien.
+            $demandes = Demande::where('archiver', 0)->where('user_id', $user_id)->get();
             return view('demandes.index', compact('demandes', 'estMesDemandes'));
         }
     }
@@ -369,19 +371,11 @@ class DemandeController extends Controller
 
     public function edit($id)
     {
-        if (auth()->user()->hasRole('SuperAdmin')) {
-            $demande = Demande::findOrFail($id);
-        } else {
-            $demande = Demande::where(
-                'id',
-                $id
-            )
-                ->where(
-                    'user_id',
-                    auth()->id()
-                )
-                ->firstOrFail();
-        }
+        $demande = Demande::findOrFail($id);
+
+        // Socle des droits : propriétaire ou SuperAdmin (règle de l'interface),
+        // tant que le supérieur n'a pas validé.
+        $this->authorize('update', $demande);
 
         return view(
             'demandes.edit',
@@ -391,6 +385,10 @@ class DemandeController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Socle des droits (P0-04) : propriétaire ou SuperAdmin, avant
+        // validation du supérieur.
+        $this->authorize('update', Demande::findOrFail($id));
+
 
         $superieur = User::where(
             'departement_id',
@@ -470,7 +468,13 @@ class DemandeController extends Controller
 
     public function destroy($id)
     {
-        Demande::findOrFail($id)->update([
+        $demande = Demande::findOrFail($id);
+
+        // Socle des droits (P0-04) : archivage réservé au SuperAdmin
+        // (règle de l'interface).
+        $this->authorize('delete', $demande);
+
+        $demande->update([
             'archiver' => 1
         ]);
 
@@ -489,29 +493,30 @@ class DemandeController extends Controller
         Request $request,
         $id
     ) {
-        $demande =
-            Demande::findOrFail(
-                $id
+        return DB::transaction(function () use ($request, $id) {
+            $demande = Demande::whereKey($id)->lockForUpdate()->firstOrFail();
+
+            // Socle des droits : gestionnaire (ou SuperAdmin), jamais sur sa
+            // propre demande ; seulement en attente du gestionnaire (interface).
+            $this->authorize('deciderGestionnaire', $demande);
+            abort_unless($demande->statut === 'En attente gestionnaire', 403);
+
+            // Décision validée : une demande rejetée retourne « En préparation »
+            // pour correction et nouvelle soumission.
+            $demande->update([
+                'commentaire_gestionnaire' =>
+                $request->commentaire,
+                'statut' => 'En préparation',
+                'validation_superieur' => 0,
+                'validation_gestionnaire' => 0,
+                'validation_finale' => 0,
+            ]);
+
+            return back()->with(
+                'success',
+                'Demande rejetée.'
             );
-
-        $demande->update([
-
-            'validation' => 0,
-
-            'commentaire_gestionnaire' =>
-            $request->commentaire,
-
-            'statut' =>
-            'Rejetée gestionnaire'
-
-
-
-        ]);
-
-        return back()->with(
-            'success',
-            'Demande rejetée.'
-        );
+        });
     }
 
 
@@ -534,86 +539,108 @@ class DemandeController extends Controller
     //Validation gestionnaire
     public function valider(Request $request, $id)
     {
-        $demande = Demande::findOrFail($id);
+        return DB::transaction(function () use ($request, $id) {
+            $demande = Demande::whereKey($id)->lockForUpdate()->firstOrFail();
 
-        /*
-        Interdire uniquement si
-        validation finale déjà faite
-        */
+            // Socle des droits : gestionnaire (ou SuperAdmin), jamais sur sa
+            // propre demande.
+            $this->authorize('deciderGestionnaire', $demande);
 
-        if ($demande->validation_finale) {
+            // La demande doit avoir été validée par le supérieur.
+            if (! $demande->validation_superieur) {
+                return back()->with(
+                    'error',
+                    'La demande n’a pas encore été validée complètement.'
+                );
+            }
 
-            return back()->with(
-                'error',
-                'La demande est déjà validée définitivement'
-            );
-        }
+            // D-4 : plus aucune modification des quantités après la livraison.
+            if ($demande->livraison) {
+                return back()->with(
+                    'error',
+                    'La demande est déjà validée définitivement'
+                );
+            }
 
-        foreach (
-            $request->quantite_accordee
-            as $articleId => $quantite
-        ) {
+            /*
+            Interdire uniquement si
+            validation finale déjà faite
+            */
 
-            DB::table('article_demande')
+            if ($demande->validation_finale) {
 
-                ->where(
-                    'demande_id',
-                    $demande->id
-                )
+                return back()->with(
+                    'error',
+                    'La demande est déjà validée définitivement'
+                );
+            }
 
-                ->where(
-                    'article_id',
-                    $articleId
-                )
+            foreach (
+                $request->quantite_accordee
+                as $articleId => $quantite
+            ) {
 
-                ->update([
+                DB::table('article_demande')
 
-                    'quantite_accordee' => $quantite
+                    ->where(
+                        'demande_id',
+                        $demande->id
+                    )
+
+                    ->where(
+                        'article_id',
+                        $articleId
+                    )
+
+                    ->update([
+
+                        'quantite_accordee' => $quantite
+
+                    ]);
+
+                $demande->update([
+
+                    'statut' => 'En attente validation finale',
+                    'commentaire_validation_finale' => null,
+                    'validation_finale' => false,
 
                 ]);
+            }
 
-            $demande->update([
+            /*
+            Première validation seulement
+            */
 
-                'statut' => 'En attente validation finale',
-                'commentaire_validation_finale' => null,
-                'validation_finale' => false,
+            if (
+                !$demande->validation_gestionnaire
+            ) {
 
-            ]);
-        }
+                $demande->update([
 
-        /*
-        Première validation seulement
-        */
+                    'validation_gestionnaire' => 1,
 
-        if (
-            !$demande->validation_gestionnaire
-        ) {
+                    'gestionnaire_id' => auth()->id(),
 
-            $demande->update([
+                    'date_validation_gestionnaire' => now(),
 
-                'validation_gestionnaire' => 1,
+                    'statut' => 'En attente validation finale',
 
-                'gestionnaire_id' => auth()->id(),
+                    'commentaire_validation_finale' => null,
+                    'validation_finale' => false,
 
-                'date_validation_gestionnaire' => now(),
+                ]);
+            }
 
-                'statut' => 'En attente validation finale',
+            return back()->with(
 
-                'commentaire_validation_finale' => null,
-                'validation_finale' => false,
+                'success',
 
-            ]);
-        }
+                $demande->validation_gestionnaire
+                    ? 'Quantités accordées modifiées'
+                    : 'Quantités accordées enregistrées'
 
-        return back()->with(
-
-            'success',
-
-            $demande->validation_gestionnaire
-                ? 'Quantités accordées modifiées'
-                : 'Quantités accordées enregistrées'
-
-        );
+            );
+        });
     }
 
     //Livraison
@@ -637,6 +664,10 @@ class DemandeController extends Controller
             $demande = Demande::whereKey($id)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            // Socle des droits : livraison réservée aux rôles de l'interface
+            // (Gestionnaire, SuperAdmin).
+            $this->authorize('livrer', $demande);
 
             // validation complète obligatoire
 
@@ -790,39 +821,57 @@ class DemandeController extends Controller
     //Validation du superieur
     public function validerSuperieur($id)
     {
-        $demande = Demande::findOrFail($id);
-        $demande->update([
-            'validation_superieur' => 1,
+        return DB::transaction(function () use ($id) {
+            $demande = Demande::with('user')->whereKey($id)->lockForUpdate()->firstOrFail();
 
-            'superieur_id' => auth()->id(),
+            // Socle des droits : supérieur hiérarchique du demandeur (rôle
+            // Superieur, même entité), jamais sur sa propre demande.
+            $this->authorize('deciderSuperieur', $demande);
 
-            'date_validation_superieur' => now(),
-            'statut' => 'En attente gestionnaire'
-        ]);
+            if ($demande->validation_superieur) {
+                return back()->with(
+                    'error',
+                    'Demande déjà validée'
+                );
+            }
 
-        return back()->with(
-            'success',
-            'Demande validée.'
-        );
+            abort_unless($demande->statut === 'En attente supérieur', 403);
+
+            $demande->update([
+                'validation_superieur' => 1,
+                'superieur_id' => auth()->id(),
+                'date_validation_superieur' => now(),
+                'statut' => 'En attente gestionnaire'
+            ]);
+
+            return back()->with(
+                'success',
+                'Demande validée.'
+            );
+        });
     }
 
     //Rejet du superieur
     public function rejeterSuperieur(Request $request, $id)
     {
-        $demande = Demande::findOrFail($id);
+        return DB::transaction(function () use ($request, $id) {
+            $demande = Demande::with('user')->whereKey($id)->lockForUpdate()->firstOrFail();
 
-        $demande->update([
+            $this->authorize('deciderSuperieur', $demande);
+            abort_unless($demande->statut === 'En attente supérieur', 403);
 
-            'validation_superieur' => 0,
-            'commentaire_superieur' => $request->commentaire,
-            'statut' => 'Rejetée'
+            // Décision validée : retour « En préparation » après un rejet.
+            $demande->update([
+                'validation_superieur' => 0,
+                'commentaire_superieur' => $request->commentaire,
+                'statut' => 'En préparation'
+            ]);
 
-        ]);
-
-        return back()->with(
-            'success',
-            'Demande rejetée.'
-        );
+            return back()->with(
+                'success',
+                'Demande rejetée.'
+            );
+        });
     }
 
     //Confirmation demandeur
@@ -926,62 +975,76 @@ class DemandeController extends Controller
         Request $request,
         $id
     ) {
-        $demande =
-            Demande::findOrFail(
-                $id
+        return DB::transaction(function () use ($request, $id) {
+            $demande = Demande::whereKey($id)->lockForUpdate()->firstOrFail();
+
+            // Socle des droits : valideur final, jamais sur sa propre demande ;
+            // seulement en attente de validation finale, jamais après livraison.
+            $this->authorize('deciderFinale', $demande);
+            abort_unless(
+                $demande->statut === 'En attente validation finale'
+                && ! $demande->validation_finale
+                && ! $demande->livraison,
+                403
             );
 
-        $demande->update([
+            // Décision validée : retour « En préparation » après un rejet.
+            $demande->update([
+                'validation_finale' => 0,
+                'validation_gestionnaire' => 0,
+                'validation_superieur' => 0,
+                'commentaire_validation_finale' =>
+                $request->motif_rejet,
+                'statut' => 'En préparation'
+            ]);
 
-            'validation_finale' => 0,
-
-            'commentaire_validation_finale' =>
-            $request->motif_rejet,
-
-            'statut' =>
-            'Rejetée validation finale'
-
-        ]);
-
-        return back()->with(
-
-            'success',
-
-            'Demande rejetée.'
-
-        );
+            return back()->with(
+                'success',
+                'Demande rejetée.'
+            );
+        });
     }
 
     //Validation finale
     public function validationFinale($id)
     {
-        $demande = Demande::findOrFail($id);
+        return DB::transaction(function () use ($id) {
+            $demande = Demande::whereKey($id)->lockForUpdate()->firstOrFail();
 
-        if ($demande->validation_finale) {
+            // Socle des droits : valideur final, jamais sur sa propre demande.
+            $this->authorize('deciderFinale', $demande);
+
+            if ($demande->validation_finale || $demande->livraison) {
+                return back()
+                    ->with(
+                        'error',
+                        'Demande déjà validée'
+                    );
+            }
+
+            // La validation du gestionnaire doit précéder la validation finale.
+            if (! $demande->validation_gestionnaire) {
+                return back()->with(
+                    'error',
+                    'La demande n’a pas encore été validée complètement.'
+                );
+            }
+
+            abort_unless($demande->statut === 'En attente validation finale', 403);
+
+            $demande->update([
+                'validation_finale' => 1,
+                'validateur_final_id' => auth()->id(),
+                'date_validation_finale' => now(),
+                'statut' => 'En attente livraison'
+            ]);
+
             return back()
                 ->with(
-                    'error',
-                    'Demande déjà validée'
+                    'success',
+                    'Validation finale effectuée'
                 );
-        }
-
-        $demande->update([
-
-            'validation_finale' => 1,
-
-            'validateur_final_id' => auth()->id(),
-
-            'date_validation_finale' => now(),
-
-            'statut' => 'En attente livraison'
-
-        ]);
-
-        return back()
-            ->with(
-                'success',
-                'Validation finale effectuée'
-            );
+        });
     }
 
     //Soumettre une demande
