@@ -11,6 +11,7 @@ use App\Models\ArticleDemande;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use App\Models\MouvementStock;
 use Carbon\Carbon;
 use HasRoles;
@@ -616,79 +617,174 @@ class DemandeController extends Controller
     }
 
     //Livraison
+    /**
+     * L1-4b : livraison atomique, intégrale, unique et sûre en concurrence.
+     *
+     * Le système exécute exactement les quantités accordées par le gestionnaire
+     * (à défaut, la quantité demandée, règle existante) ; il ne les modifie
+     * jamais. Tout est contrôlé, sous verrou, avant la première écriture, et
+     * toute erreur annule l'ensemble (une seule transaction).
+     *
+     * Ordre des verrous : demande, puis lignes, puis articles par identifiant
+     * croissant (même ordre que la gestion des lignes, L1-4a).
+     */
     public function livrer($id)
     {
-        $demande = Demande::with(
-            'articles.article'
-        )->findOrFail($id);
+        return DB::transaction(function () use ($id) {
 
-        // validation complète obligatoire
+            // Demande relue sous verrou exclusif : une seconde livraison
+            // simultanée attend ici, puis relit l'état réel.
+            $demande = Demande::whereKey($id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        if (
-            !$demande->validation_gestionnaire
-            ||
-            !$demande->validation_finale
-        ) {
-            return back()->with(
-                'error',
-                'La demande n’a pas encore été validée complètement.'
-            );
-        }
-        // déjà livrée
+            // validation complète obligatoire
 
-        if ($demande->livraison) {
-            return back()->with(
-                'error',
-                'Demande déjà livrée'
-            );
-        }
-
-
-        foreach (
-            $demande->articles as $ligne
-        ) {
             if (
-                !$ligne->article
+                !$demande->validation_gestionnaire
+                ||
+                !$demande->validation_finale
             ) {
-                continue;
+                return back()->with(
+                    'error',
+                    'La demande n’a pas encore été validée complètement.'
+                );
             }
-            $quantiteLivree = $ligne->quantite_accordee ?? $ligne->quantite;
+            // déjà livrée
+
+            if ($demande->livraison) {
+                return back()->with(
+                    'error',
+                    'Demande déjà livrée'
+                );
+            }
+
+            // Rejeu : une sortie de cette demande existe déjà (indicateur
+            // « livraison » remis à zéro, ou livraison partielle de l'ancien
+            // code). Motif exact, tel qu'écrit plus bas depuis le 31/05/2026.
+            $motif = 'Livraison demande N° ' . $demande->id;
+
             if (
-                $ligne->article->stock_disponible >= $quantiteLivree
+                MouvementStock::where('type', 'SORTIE')
+                    ->where('motif', $motif)
+                    ->exists()
             ) {
-                // Décrémentation stock
-                $ligne->article->decrement('stock_disponible', $quantiteLivree);
+                return back()->with(
+                    'error',
+                    'Demande déjà livrée'
+                );
+            }
+
+            // Lignes relues sous le verrou, dans leur ordre historique
+            $lignes = ArticleDemande::where('demande_id', $demande->id)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            if ($lignes->isEmpty()) {
+                return back()->with(
+                    'error',
+                    'Cette demande ne contient aucun article.'
+                );
+            }
+
+            // Quantité à livrer : la quantité accordée, à défaut la quantité
+            // demandée. Négative : refus de toute la livraison, sans message.
+            // Nulle : ligne ignorée, aucune sortie. Si toutes les lignes sont
+            // nulles, la demande est livrée sans aucun mouvement de stock.
+            $aLivrer = [];
+
+            foreach ($lignes as $ligne) {
+                $quantiteLivree = (int) ($ligne->quantite_accordee ?? $ligne->quantite);
+
+                if ($quantiteLivree < 0) {
+                    return back();
+                }
+
+                if ($quantiteLivree > 0) {
+                    $aLivrer[] = [$ligne, $quantiteLivree];
+                }
+            }
+
+            // Besoin total par article (plusieurs lignes du même article)
+            $besoins = [];
+
+            foreach ($aLivrer as [$ligne, $quantiteLivree]) {
+                $besoins[$ligne->article_id] =
+                    ($besoins[$ligne->article_id] ?? 0) + $quantiteLivree;
+            }
+
+            // Articles relus sous verrou, par identifiant croissant
+            $articles = Article::whereIn('id', array_keys($besoins))
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            // Contrôle de TOUS les besoins avant la moindre écriture
+            foreach ($aLivrer as [$ligne, $quantiteLivree]) {
+                $article = $articles->get($ligne->article_id);
+
+                if (
+                    $article
+                    &&
+                    $article->stock_disponible < $besoins[$ligne->article_id]
+                ) {
+                    return back()->with(
+                        'error',
+                        'Stock insuffisant pour ' . $article->libelle
+                    );
+                }
+            }
+
+            // Écritures : une sortie par ligne, au format historique
+            foreach ($aLivrer as [$ligne, $quantiteLivree]) {
+                $article = $articles->get($ligne->article_id);
+
+                if (!$article) {
+                    continue;
+                }
+
+                // Décrément conditionnel (défense) : jamais de stock négatif
+                $decremente = Article::whereKey($article->id)
+                    ->where('stock_disponible', '>=', $quantiteLivree)
+                    ->decrement('stock_disponible', $quantiteLivree);
+
+                if ($decremente !== 1) {
+                    // Annule toute la transaction, puis affiche le message existant
+                    throw new HttpResponseException(
+                        back()->with(
+                            'error',
+                            'Stock insuffisant pour ' . $article->libelle
+                        )
+                    );
+                }
 
                 // Historique mouvement
                 MouvementStock::create([
-                    'article_id' => $ligne->article->id,
+                    'article_id' => $article->id,
                     'user_id' => auth()->id(),
                     'type' => 'SORTIE',
                     'quantite' => $quantiteLivree,
-                    'motif' => 'Livraison demande N° ' . $demande->id,
+                    'motif' => $motif,
                     'date_mouvement' => now()
                 ]);
-            } else {
-                return back()->with(
-                    'error',
-                    'Stock insuffisant pour ' . $ligne->article->libelle
-                );
             }
-        }
 
 
-        $demande->update([
-            'livraison' => 1,
-            'date_livraison' => now(),
-            'statut' => 'En attente réception demandeur',
-            'commentaire_superieur' => null,
-            'commentaire_gestionnaire' => null,
-            'commentaire_validation_finale' => null,
-        ]);
-        return back()->with(
-            'success',
-            'Demande livrée'
-        );
+            $demande->update([
+                'livraison' => 1,
+                'date_livraison' => now(),
+                'statut' => 'En attente réception demandeur',
+                'commentaire_superieur' => null,
+                'commentaire_gestionnaire' => null,
+                'commentaire_validation_finale' => null,
+            ]);
+            return back()->with(
+                'success',
+                'Demande livrée'
+            );
+        }, 3);
     }
 
     //Validation du superieur
