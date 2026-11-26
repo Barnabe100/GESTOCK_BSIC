@@ -148,7 +148,8 @@
 
                                         <!-- VALIDER -->
                                         @if (auth()->user()->hasAnyRole(['ValidateurCommande', 'SuperAdmin']))
-                                            @if (!$commande->validation && $commande->statut == 'Prête pour validation')
+                                            {{-- Décision 3.6 : jamais la validation de sa propre soumission --}}
+                                            @if (!$commande->validation && $commande->statut == 'Prête pour validation' && $commande->soumise_par != auth()->id())
                                                 <form action="{{ route('commandes.valider', $commande->id) }}"
                                                     method="POST" style="display:inline-block">
                                                     @csrf
@@ -204,6 +205,10 @@
                                                                 @csrf
 
                                                                 @method('PUT')
+
+                                                                {{-- Jeton unique : une réception rejouée n'est jamais enregistrée deux fois --}}
+                                                                <input type="hidden" name="jeton_reception"
+                                                                    value="{{ \Illuminate\Support\Str::uuid() }}">
 
                                                                 <div class="modal-body">
 

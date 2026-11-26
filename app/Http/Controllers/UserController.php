@@ -12,7 +12,12 @@ use Illuminate\Support\Facades\Hash;
 use App\Exports\UsersExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\UsersImport;
+use App\Imports\ImportInvalide;
 use App\Services\DesignationSuperieur;
+use App\Autorisation\CycleDeVieComptes;
+use App\Autorisation\JournalRoles;
+use App\Organisation\RefusOrganisation;
+use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -36,8 +41,9 @@ class UserController extends Controller
         $agences = Agence::all();
         $departements = Departement::all();
         $services = Service::all();
+        $superieursRemplacables = $this->superieursEnFonction();
 
-        return view('users.create', compact('agences', 'departements', 'services'));
+        return view('users.create', compact('agences', 'departements', 'services', 'superieursRemplacables'));
     }
 
     public function store(Request $request)
@@ -77,23 +83,30 @@ class UserController extends Controller
         );
 
 
-        $user = User::create([
-            'name' => $request->name,
-            'prenom' => $request->prenom,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'force_password_change' => true,
-            'agence_id' => $request->agence_id,
-            'departement_id' => $request->departement_id,
-            'service_id' => $request->service_id,
-            'superieur' => false,
-        ]);
+        try {
+            DB::transaction(function () use ($request) {
+                $user = User::create([
+                    'name' => $request->name,
+                    'prenom' => $request->prenom,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'force_password_change' => true,
+                    'agence_id' => $request->agence_id,
+                    'departement_id' => $request->departement_id,
+                    'service_id' => $request->service_id,
+                    'superieur' => false,
+                ]);
 
-        if ($request->has('superieur')) {
-            app(DesignationSuperieur::class)->designer($user, auth()->user());
+                // Rôle par défaut, tracé dans l'historique des rôles.
+                app(JournalRoles::class)->attribuer($user, 'Demandeur', auth()->user(), 'creation');
+
+                if ($request->has('superieur')) {
+                    app(DesignationSuperieur::class)->designer($user, auth()->user(), $this->superieurRemplace($request));
+                }
+            });
+        } catch (RefusOrganisation $e) {
+            return back()->withInput()->with('error', $e->getMessage());
         }
-        // 🔥 rôle par défaut
-        $user->assignRole('Demandeur');
 
         return redirect()->route('users.index')
             ->with('success', 'Utilisateur créé avec rôle Demandeur');
@@ -118,8 +131,12 @@ class UserController extends Controller
         $agences = Agence::all();
         $departements = Departement::all();
         $services = Service::all();
+        $entite = $user->entiteDeValidation();
+        $superieursRemplacables = $entite
+            ? DesignationSuperieur::titulaires($entite, $user->id)
+            : collect();
 
-        return view('users.edit', compact('user', 'roles', 'agences', 'departements', 'services'));
+        return view('users.edit', compact('user', 'roles', 'agences', 'departements', 'services', 'superieursRemplacables'));
     }
 
     public function update(Request $request, $id)
@@ -156,37 +173,34 @@ class UserController extends Controller
 
             /*
         |--------------------------------------------------------------------------
-        | Mise à jour des informations de l'utilisateur
+        | Informations, rôles, puis fonction de supérieur, en une transaction
         |--------------------------------------------------------------------------
+        | Le rôle Superieur suit la case « supérieur » (DesignationSuperieur) :
+        | il n'est ni attribué ni retiré par les cases de rôles. Chaque
+        | changement de rôle est enregistré (JournalRoles).
         */
+            try {
+                DB::transaction(function () use ($user, $request, $rolesDemandes) {
+                    $user->update([
+                        'name' => $request->name,
+                        'prenom' => $request->prenom,
+                        'email' => $request->email,
+                        'agence_id' => $request->agence_id,
+                        'departement_id' => $request->departement_id,
+                        'service_id' => $request->service_id,
+                    ]);
 
-            $user->update([
-                'name' => $request->name,
-                'prenom' => $request->prenom,
-                'email' => $request->email,
-                'agence_id' => $request->agence_id,
-                'departement_id' => $request->departement_id,
-                'service_id' => $request->service_id,
-            ]);
+                    app(JournalRoles::class)->synchroniser($user, $rolesDemandes, auth()->user(), 'formulaire', ['Superieur']);
 
-            /*
-        |--------------------------------------------------------------------------
-        | Gestion des rôles, puis du rôle Supérieur
-        |--------------------------------------------------------------------------
-        | Le rôle Superieur suit toujours la case « supérieur » : il n'est plus
-        | perdu quand aucune autre case n'est cochée (syncRoles ne l'efface
-        | plus après coup).
-        */
-
-            DB::transaction(function () use ($user, $request, $rolesDemandes) {
-                $user->syncRoles(array_values(array_diff($rolesDemandes, ['Superieur'])));
-
-                if ($request->has('superieur')) {
-                    app(DesignationSuperieur::class)->designer($user->fresh(), auth()->user());
-                } elseif ($user->superieur || $user->hasRole('Superieur')) {
-                    app(DesignationSuperieur::class)->retirer($user->fresh(), auth()->user());
-                }
-            });
+                    if ($request->has('superieur')) {
+                        app(DesignationSuperieur::class)->designer($user->fresh(), auth()->user(), $this->superieurRemplace($request));
+                    } elseif ($user->superieur || $user->hasRole('Superieur')) {
+                        app(DesignationSuperieur::class)->retirer($user->fresh(), auth()->user());
+                    }
+                });
+            } catch (RefusOrganisation $e) {
+                return back()->withInput()->with('error', $e->getMessage());
+            }
         }
 
 
@@ -298,8 +312,20 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        // Jamais soi-même, jamais un compte portant un historique métier
-        // (aucune règle de conservation validée : Q9), SuperAdmin réservé.
+        // Q9 (décision validée) : un compte qui porte un historique métier
+        // n'est jamais supprimé physiquement ; il est désactivé et conservé.
+        if (UserPolicy::porteUnHistorique($user)) {
+            $this->authorize('desactiver', $user);
+            app(CycleDeVieComptes::class)->desactiver($user, auth()->user());
+
+            return redirect()->route('users.index')->with(
+                'success',
+                'Ce compte possède un historique : il a été désactivé et conservé, pas supprimé.'
+            );
+        }
+
+        // Sans historique : suppression physique (jamais soi-même, SuperAdmin
+        // réservé au SuperAdmin, jamais le dernier SuperAdmin).
         $this->authorize('delete', $user);
 
         $user->delete();
@@ -336,11 +362,7 @@ class UserController extends Controller
 
         $this->authorize('bloquer', $user);
 
-        $user->update([
-
-            'bloque' => true
-
-        ]);
+        app(CycleDeVieComptes::class)->bloquer($user);
 
         return back()->with(
 
@@ -357,11 +379,7 @@ class UserController extends Controller
 
         $this->authorize('bloquer', $user);
 
-        $user->update([
-
-            'bloque' => false
-
-        ]);
+        app(CycleDeVieComptes::class)->debloquer($user);
 
         return back()->with(
 
@@ -370,6 +388,35 @@ class UserController extends Controller
             'Utilisateur débloqué'
 
         );
+    }
+
+    // Q9 : réactivation d'un compte désactivé (utilisateurs habilités seulement)
+    public function reactiver($id)
+    {
+        $user = User::findOrFail($id);
+
+        $this->authorize('desactiver', $user);
+
+        app(CycleDeVieComptes::class)->reactiver($user);
+
+        return back()->with('success', 'Compte réactivé');
+    }
+
+    /** Supérieurs en fonction (pour le choix du supérieur remplacé). */
+    private function superieursEnFonction()
+    {
+        return User::with(['agence', 'departement'])
+            ->where('superieur', 1)
+            ->whereNull('desactive_le')
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function superieurRemplace(Request $request): ?User
+    {
+        $id = $request->input('superieur_remplace_id');
+
+        return $id ? User::find($id) : null;
     }
 
     public function getDepartementsParAgence(
@@ -429,12 +476,18 @@ class UserController extends Controller
 
         // Socle des droits : import tout ou rien ; les rôles du fichier sont
         // contrôlés ligne par ligne (UsersImport).
-        DB::transaction(function () use ($request) {
-            Excel::import(
-                new UsersImport(auth()->user()),
-                $request->file('file')
-            );
-        });
+        try {
+            DB::transaction(function () use ($request) {
+                Excel::import(
+                    new UsersImport(auth()->user()),
+                    $request->file('file')
+                );
+            });
+        } catch (ImportInvalide $e) {
+            // Aucune création conservée ; erreurs affichées ligne par ligne
+            // par la vue d'import (bloc d'erreurs existant).
+            return back()->withErrors(['import' => $e->erreurs]);
+        }
 
 
 

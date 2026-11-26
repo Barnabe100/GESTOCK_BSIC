@@ -3,7 +3,9 @@
 namespace App\Policies;
 
 use App\Autorisation\Capacites;
+use App\Models\Commande;
 use App\Models\Demande;
+use App\Models\ReceptionCommande;
 use App\Models\MouvementStock;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
@@ -17,8 +19,12 @@ use Spatie\Permission\Models\Role;
  *   se supprime pas lui-même ; il garde la modification de son mot de passe.
  * - Seul un SuperAdmin peut attribuer ou retirer le rôle SuperAdmin, ou agir
  *   sur un compte SuperAdmin. Le dernier SuperAdmin ne peut pas perdre ce rôle.
- * - Un compte qui porte un historique métier n'est jamais supprimé (aucune
- *   règle de conservation n'a été validée : question Q9).
+ * - Un compte qui porte un historique métier n'est jamais supprimé
+ *   physiquement : il est désactivé (décision Q9). Désactivation et
+ *   réactivation suivent les mêmes protections que le blocage ; le dernier
+ *   SuperAdmin actif ne peut être ni désactivé ni supprimé.
+ * - Un Admin peut attribuer le rôle Admin à un autre compte (décision
+ *   validée) ; le rôle SuperAdmin reste réservé au SuperAdmin.
  */
 class UserPolicy
 {
@@ -74,9 +80,9 @@ class UserPolicy
             return false;
         }
 
-        // Le dernier SuperAdmin ne peut pas perdre ce rôle.
+        // Le dernier SuperAdmin actif ne peut pas perdre ce rôle.
         if ($cible->hasRole('SuperAdmin') && ! in_array('SuperAdmin', $roles, true)) {
-            return User::role('SuperAdmin')->where('id', '!=', $cible->id)->exists();
+            return self::autreSuperAdminActif($cible);
         }
 
         return true;
@@ -93,7 +99,16 @@ class UserPolicy
     {
         return $this->gere($acteur)
             && (int) $acteur->id !== (int) $cible->id
-            && $this->peutAgirSur($acteur, $cible);
+            && $this->peutAgirSur($acteur, $cible)
+            && (! $cible->hasRole('SuperAdmin') || $cible->bloque || self::autreSuperAdminActif($cible));
+    }
+
+    public function desactiver(User $acteur, User $cible): bool
+    {
+        return $this->gere($acteur)
+            && (int) $acteur->id !== (int) $cible->id
+            && $this->peutAgirSur($acteur, $cible)
+            && (! $cible->hasRole('SuperAdmin') || self::autreSuperAdminActif($cible));
     }
 
     public function delete(User $acteur, User $cible): bool
@@ -102,10 +117,20 @@ class UserPolicy
             && (int) $acteur->id !== (int) $cible->id
             && $this->peutAgirSur($acteur, $cible)
             && ! self::porteUnHistorique($cible)
-            && (! $cible->hasRole('SuperAdmin') || User::role('SuperAdmin')->where('id', '!=', $cible->id)->exists());
+            && (! $cible->hasRole('SuperAdmin') || self::autreSuperAdminActif($cible));
     }
 
-    /** Compte référencé par une demande ou un mouvement de stock. */
+    /** Existe-t-il un autre SuperAdmin actif (ni bloqué ni désactivé) ? */
+    public static function autreSuperAdminActif(User $cible): bool
+    {
+        return User::role('SuperAdmin')
+            ->where('id', '!=', $cible->id)
+            ->where('bloque', false)
+            ->whereNull('desactive_le')
+            ->exists();
+    }
+
+    /** Compte référencé par une demande, un mouvement de stock, une commande ou une réception. */
     public static function porteUnHistorique(User $cible): bool
     {
         $id = $cible->id;
@@ -116,7 +141,9 @@ class UserPolicy
             ->orWhere('validateur_final_id', $id)
             ->orWhere('reception_par', $id)
             ->exists()
-            || MouvementStock::where('user_id', $id)->exists();
+            || MouvementStock::where('user_id', $id)->exists()
+            || Commande::where('soumise_par', $id)->orWhere('validee_par', $id)->exists()
+            || ReceptionCommande::where('user_id', $id)->exists();
     }
 
     /** Noms de rôles existants (contrôle des valeurs reçues). */

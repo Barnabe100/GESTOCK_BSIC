@@ -9,6 +9,7 @@ use App\Exports\DemandesExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\ArticleDemande;
 use App\Models\User;
+use App\Services\DesignationSuperieur;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -96,14 +97,8 @@ class DemandeController extends Controller
         ])
             ->where('archiver', 0)
             ->where('statut', '!=', 'En préparation')
-            ->whereHas('user', function ($q) use ($user) {
-
-                if ($user->estAuSiege()) {
-                    $q->where('departement_id', $user->departement_id);
-                } else {
-                    $q->where('agence_id', $user->agence_id);
-                }
-            })
+            // N03 : même entité de validation (type explicite de l'entité).
+            ->whereHas('user', fn ($q) => User::filtrerMemeEntite($q, $user))
             ->latest()
             ->get();
 
@@ -247,14 +242,11 @@ class DemandeController extends Controller
             'user.departement'
         ])
             ->latest()
-            ->whereHas('user', function ($q) use ($superieur) {
-                if ($superieur->estAuSiege()) {
-                    $q->where('departement_id', $superieur->departement_id);
-                } else {
-                    $q->where('agence_id', $superieur->agence_id);
-                }
-            });
+            // N03 : même entité de validation (type explicite de l'entité).
+            ->whereHas('user', fn ($q) => User::filtrerMemeEntite($q, $superieur));
 
+        // Q3 : la demande d'un supérieur est à valider par un AUTRE supérieur
+        // habilité ; elle n'apparaît pas dans sa propre liste « à valider ».
         $enAttente = (clone $baseQuery)
             ->where(
                 'statut',
@@ -263,6 +255,7 @@ class DemandeController extends Controller
                 'archiver',
                 0
             )
+            ->where('user_id', '!=', $superieur->id)
             ->latest()
             ->get();
 
@@ -298,6 +291,18 @@ class DemandeController extends Controller
         );
     }
 
+    /** Premier supérieur désigné et actif de l'entité du demandeur, hors lui-même. */
+    private function superieurPour(?User $demandeur): ?User
+    {
+        $entite = $demandeur?->entiteDeValidation();
+
+        if ($entite === null) {
+            return null;
+        }
+
+        return DesignationSuperieur::titulaires($entite, $demandeur->id)->first();
+    }
+
     public function create()
     {
         $articles = Article::where('archiver', 0)->get();
@@ -308,38 +313,10 @@ class DemandeController extends Controller
     {
         $user = auth()->user();
 
-        $superieur = null;
-
-        if (
-            // $user->departement->nom != 'Département Réseau'
-            // &&
-            $user->agence->nom != 'AGENCE PRINCIPALE SIEGE'
-        ) {
-            // supérieur agence
-
-            $superieur = User::where(
-                'agence_id',
-                $user->agence_id
-            )
-                ->where(
-                    'superieur',
-                    1
-                )
-                ->first();
-        } else {
-            // supérieur département
-
-            $superieur = User::where(
-                'departement_id',
-                $user->departement_id
-            )
-                ->where(
-                    'superieur',
-                    1
-                )
-                ->first();
-        }
-
+        // N03 + Q3 : supérieur désigné de la même entité de validation (type
+        // explicite de l'entité, plus aucune comparaison de nom), jamais le
+        // demandeur lui-même.
+        $superieur = $this->superieurPour($user);
 
         if (!$superieur) {
             return back()->with(
@@ -390,15 +367,9 @@ class DemandeController extends Controller
         $this->authorize('update', Demande::findOrFail($id));
 
 
-        $superieur = User::where(
-            'departement_id',
-            auth()->user()->departement_id
-        )
-            ->where(
-                'superieur',
-                1
-            )
-            ->first();
+        // N03 : même règle qu'à la création, appliquée au DEMANDEUR (et non à
+        // l'utilisateur qui modifie, qui peut être un SuperAdmin).
+        $superieur = $this->superieurPour(Demande::findOrFail($id)->user);
 
         if (!$superieur) {
             return back()->with(
@@ -575,8 +546,38 @@ class DemandeController extends Controller
                 );
             }
 
+            // C1 : demande vide refusée (message métier maîtrisé, plus d'erreur
+            // 500), quantités accordées contrôlées AVANT toute écriture.
+            $lignes = ArticleDemande::where('demande_id', $demande->id)->lockForUpdate()->get();
+
+            if ($lignes->isEmpty()) {
+                return back()->with('error', 'Cette demande ne contient aucun article.');
+            }
+
+            $quantitesAccordees = $request->input('quantite_accordee');
+
+            if (! is_array($quantitesAccordees) || $quantitesAccordees === []) {
+                return back()->with('error', 'Veuillez saisir les quantités accordées.');
+            }
+
+            foreach ($quantitesAccordees as $articleId => $quantite) {
+                // Seules les lignes de CETTE demande peuvent être modifiées.
+                if (! $lignes->contains('article_id', (int) $articleId)) {
+                    abort(403);
+                }
+
+                // Quantité négative ou non entière refusée ; 0 reste permis
+                // (décision D-2 : aucun mouvement pour cette ligne).
+                if (filter_var($quantite, FILTER_VALIDATE_INT) === false || (int) $quantite < 0) {
+                    return back()->with('error', 'La quantité accordée doit être un nombre entier positif ou nul.');
+                }
+            }
+
+            // S-13 : le message distingue la première saisie d'une modification.
+            $premiereSaisie = ! $demande->validation_gestionnaire;
+
             foreach (
-                $request->quantite_accordee
+                $quantitesAccordees
                 as $articleId => $quantite
             ) {
 
@@ -594,7 +595,7 @@ class DemandeController extends Controller
 
                     ->update([
 
-                        'quantite_accordee' => $quantite
+                        'quantite_accordee' => (int) $quantite
 
                     ]);
 
@@ -635,9 +636,9 @@ class DemandeController extends Controller
 
                 'success',
 
-                $demande->validation_gestionnaire
-                    ? 'Quantités accordées modifiées'
-                    : 'Quantités accordées enregistrées'
+                $premiereSaisie
+                    ? 'Quantités accordées enregistrées'
+                    : 'Quantités accordées modifiées'
 
             );
         });
@@ -1044,6 +1045,41 @@ class DemandeController extends Controller
                     'success',
                     'Validation finale effectuée'
                 );
+        });
+    }
+
+    /**
+     * Q8 : étape « valider-demandeur » (bouton « Accepter » des vues « Mes
+     * demandes », déjà présent, pour le statut « En attente accord
+     * demandeur »). Le demandeur accepte les quantités accordées par le
+     * gestionnaire ; la demande reprend le circuit à l'étape qui suit la
+     * décision du gestionnaire : la validation finale.
+     *
+     * Ce qui fait ENTRER une demande dans ce statut n'est pas encore décidé
+     * (arbitrage demandé) : aucune transition existante n'y conduit. La
+     * méthode est néanmoins complète et sûre : demandeur seulement, état
+     * exigé, transaction et verrou ; elle ne renvoie plus d'erreur 500.
+     */
+    public function validerDemandeur($id)
+    {
+        return DB::transaction(function () use ($id) {
+            $demande = Demande::whereKey($id)->lockForUpdate()->firstOrFail();
+
+            $this->authorize('accepterQuantites', $demande);
+
+            abort_unless(
+                $demande->statut === 'En attente accord demandeur'
+                    && $demande->validation_gestionnaire
+                    && ! $demande->validation_finale
+                    && ! $demande->livraison,
+                403
+            );
+
+            $demande->update([
+                'statut' => 'En attente validation finale',
+            ]);
+
+            return back()->with('success', 'Quantités accordées acceptées.');
         });
     }
 

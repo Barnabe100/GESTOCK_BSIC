@@ -503,7 +503,8 @@
                     });
                 @endphp
 
-                @if ($commande->statut == 'En préparation' && $commande->articles->isNotEmpty() && $montantUtilise == $commande->montant)
+                {{-- Décision 3.6 : soumission réservée au Gestionnaire --}}
+                @if (auth()->user()->hasRole('Gestionnaire') && $commande->statut == 'En préparation' && $commande->articles->isNotEmpty() && $montantUtilise == $commande->montant)
                     <div class="mt-3">
 
                         <form action="{{ route('commandes.soumettre', $commande->id) }}" method="POST">

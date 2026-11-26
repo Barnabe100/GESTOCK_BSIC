@@ -45,6 +45,7 @@
                                 <th>Code</th>
                                 <th>Nom</th>
                                 <th>Lieu</th>
+                                <th>Type</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -56,6 +57,15 @@
                                     <td>{{ $a->code }}</td>
                                     <td>{{ $a->nom }}</td>
                                     <td>{{ $a->lieu }}</td>
+                                    <td>
+                                        @if ($a->estSiege())
+                                            <span class="badge bg-primary">Siège</span>
+                                        @elseif ($a->estAgence())
+                                            <span class="badge bg-info">Agence</span>
+                                        @else
+                                            <span class="badge bg-warning">Non qualifiée</span>
+                                        @endif
+                                    </td>
 
                                     <td>
                                         <a href="{{ route('agences.show', $a->id) }}" class="btn btn-info btn-sm"
@@ -67,6 +77,18 @@
                                             title="Editer">
                                             <i class="fas fa-edit"></i>
                                         </a>
+
+                                        @if (!$a->estSiege())
+                                            <form action="{{ route('agences.designer.siege', $a->id) }}" method="POST"
+                                                style="display:inline-block">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="button" title="Désigner comme siège" class="btn btn-primary btn-sm"
+                                                    onclick="confirmAction(this.form, 'Désigner cette entité comme siège ? Le siège actuel deviendra une agence.')">
+                                                    <i class="fas fa-building"></i>
+                                                </button>
+                                            </form>
+                                        @endif
 
                                         <form action="{{ route('agences.destroy', $a->id) }}" method="POST"
                                             style="display:inline-block">

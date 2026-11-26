@@ -230,19 +230,28 @@ Route::middleware([
         ->middleware('can:gerer-service');
     Route::resource('agences', AgenceController::class)
         ->middleware('can:gerer-agence');
+    // N03 : changement de siège (transaction unique, historique)
+    Route::patch('/agences/{id}/designer-siege', [AgenceController::class, 'designerSiege'])
+        ->name('agences.designer.siege')
+        ->middleware('can:gerer-agence');
     Route::resource('users', UserController::class);
 
-    Route::get(
+    // Blocage, déblocage, réactivation : formulaires PATCH protégés par le
+    // jeton CSRF (les anciens liens GET n'existent plus).
+    Route::patch(
         '/users/{id}/bloquer',
         [UserController::class, 'bloquer']
-    )->name('users.bloquer')
-        ->middleware('meme.origine');
+    )->name('users.bloquer');
 
-    Route::get(
+    Route::patch(
         '/users/{id}/debloquer',
         [UserController::class, 'debloquer']
-    )->name('users.debloquer')
-        ->middleware('meme.origine');
+    )->name('users.debloquer');
+
+    Route::patch(
+        '/users/{id}/reactiver',
+        [UserController::class, 'reactiver']
+    )->name('users.reactiver');
 
     //Artcile demande
     Route::post('article-demande', [ArticleDemandeController::class, 'store'])
@@ -310,9 +319,10 @@ Route::middleware([
         ->name('commandes.export.csv')
         ->middleware('can:acceder-commandes');
 
+    // Décision 3.6 : soumission réservée au Gestionnaire.
     Route::put('/commandes/{id}/soumettre', [CommandeController::class, 'soumettre'])
         ->name('commandes.soumettre')
-        ->middleware('can:acceder-commandes');
+        ->middleware('can:soumettre-commandes');
     //Export fournisseurs
     Route::get('fournisseurs-export-excel', [FournisseurController::class, 'exportExcel'])
         ->name('fournisseurs.export.excel')

@@ -17,6 +17,13 @@ class ArticleCommandeController extends Controller
 
     public function store(Request $request)
     {
+        // Quantité et prix contrôlés côté serveur (plus de ligne à −5).
+        $request->validate([
+            'commande_id' => 'required|integer|exists:commandes,id',
+            'article_id' => 'required|integer|exists:articles,id',
+            'quantite' => 'required|integer|min:1',
+            'prix_unitaire' => 'required|numeric|min:0',
+        ]);
 
         $existe = ArticleCommande::where('commande_id', $request->commande_id)
             ->where('article_id', $request->article_id)
@@ -116,9 +123,15 @@ class ArticleCommandeController extends Controller
 
         $commande = $ligne->commande;
 
+        // Aucune modification de quantité ou de prix après la validation
+        // (message existant).
+        if ($commande->validation) {
+            return back()->with('error', 'Commande déjà validée');
+        }
+
         $request->validate([
 
-            'quantite' => 'required|numeric|min:1',
+            'quantite' => 'required|integer|min:1',
 
             'prix_unitaire' => 'required|numeric|min:0',
 

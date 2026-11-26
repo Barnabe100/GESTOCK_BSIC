@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Agence;
+use App\Organisation\RefusOrganisation;
+use App\Organisation\StructureOrganisationnelle;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use App\Exports\AgencesExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -29,13 +32,16 @@ class AgenceController extends Controller
             'code' => 'required',
             'nom' => 'required',
             'lieu' => 'nullable',
+            'type' => ['required', Rule::in(Agence::TYPES)],
         ]);
 
-        Agence::create([
-            'code' => $request->code,
-            'nom' => $request->nom,
-            'lieu' => $request->lieu,
-        ]);
+        // N03 : le type est explicite ; un seul siège actif (garanti par la
+        // base, message clair en cas de refus).
+        try {
+            app(StructureOrganisationnelle::class)->creer($request->only('code', 'nom', 'lieu', 'type'), auth()->user());
+        } catch (RefusOrganisation $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('agences.index')
             ->with('success', 'Agence créée avec succès');
@@ -59,29 +65,44 @@ class AgenceController extends Controller
             'code' => 'required',
             'nom' => 'nullable',
             'lieu' => 'nullable',
-
+            'type' => ['nullable', Rule::in(Agence::TYPES)],
         ]);
 
         $agence = Agence::findOrFail($id);
 
-        $agence->update([
-            'code' => $request->code,
-            'nom' => $request->nom,
-            'lieu' => $request->lieu,
-
-        ]);
+        // N03 : un renommage ne change jamais le type ; un changement de type
+        // vers « Siège » est refusé si un siège actif existe déjà.
+        try {
+            app(StructureOrganisationnelle::class)->modifier($agence, $request->only('code', 'nom', 'lieu', 'type'), auth()->user());
+        } catch (RefusOrganisation $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
 
         return redirect()->route('agences.index')
             ->with('success', 'Agence modifiée avec succès');
+    }
+
+    // N03 : changement de siège (l'ancien siège devient une agence)
+    public function designerSiege($id)
+    {
+        $agence = Agence::findOrFail($id);
+
+        try {
+            app(StructureOrganisationnelle::class)->designerSiege($agence, auth()->user());
+        } catch (RefusOrganisation $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('agences.index')
+            ->with('success', 'Siège désigné avec succès');
     }
 
     public function destroy($id)
     {
         $agence = Agence::findOrFail($id);
 
-        $agence->update([
-            'archiver' => 1
-        ]);
+        // Archivage (désactivation) : type et rattachements conservés.
+        app(StructureOrganisationnelle::class)->archiver($agence, auth()->user());
 
         return redirect()->route('agences.index')
             ->with('success', 'Agence archivée avec succès');

@@ -90,6 +90,11 @@
                                                 {{ $role->name }}
                                             </span>
                                         @endforeach
+                                        @if ($user->estDesactive())
+                                            <span class="badge bg-secondary">
+                                                Désactivé
+                                            </span>
+                                        @endif
                                     </td>
 
                                     <td class="text-nowrap">
@@ -117,16 +122,34 @@
 
                                         </form>
 
-                                        @if (!$user->bloque)
-                                            <a href="{{ route('users.bloquer', $user->id) }}" title="Bloquer"
-                                                class="btn btn-success btn-sm">
-                                                <i class="fas fa-lock-open"></i>
-                                            </a>
+                                        @if ($user->estDesactive())
+                                            <form action="{{ route('users.reactiver', $user->id) }}" method="POST"
+                                                style="display:inline-block">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="button" title="Réactiver" class="btn btn-secondary btn-sm"
+                                                    onclick="confirmAction(this.form, 'Réactiver ce compte ?')">
+                                                    <i class="fas fa-user-check"></i>
+                                                </button>
+                                            </form>
+                                        @elseif (!$user->bloque)
+                                            <form action="{{ route('users.bloquer', $user->id) }}" method="POST"
+                                                style="display:inline-block">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" title="Bloquer" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-lock-open"></i>
+                                                </button>
+                                            </form>
                                         @else
-                                            <a href="{{ route('users.debloquer', $user->id) }}" title="Débloquer"
-                                                class="btn btn-danger btn-sm">
-                                                <i class="fas fa-lock"></i>
-                                            </a>
+                                            <form action="{{ route('users.debloquer', $user->id) }}" method="POST"
+                                                style="display:inline-block">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" title="Débloquer" class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-lock"></i>
+                                                </button>
+                                            </form>
                                         @endif
 
                                     </td>

@@ -119,6 +119,22 @@
 
                     </div>
 
+                    @if ($superieursRemplacables->isNotEmpty())
+                        <div class="mb-3 mt-2">
+                            <label>Supérieur remplacé (si deux supérieurs sont déjà désignés pour l'entité)</label>
+                            <select name="superieur_remplace_id" class="form-control">
+                                <option value="">Aucun</option>
+                                @foreach ($superieursRemplacables as $titulaire)
+                                    <option value="{{ $titulaire->id }}"
+                                        {{ old('superieur_remplace_id') == $titulaire->id ? 'selected' : '' }}>
+                                        {{ $titulaire->name }} {{ $titulaire->prenom }}
+                                        — {{ $titulaire->agence->nom ?? '' }}{{ $titulaire->departement ? ' / ' . $titulaire->departement->nom : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+
                     <button class="btn btn-success">Enregistrer</button>
                     <a href="{{ route('users.index') }}" class="btn btn-secondary">Retour</a>
 

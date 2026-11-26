@@ -44,6 +44,13 @@
                         </div>
                     </div>
 
+                    <div class="col-md-6 mb-3">
+                        <label>Type</label>
+                        <div class="form-control bg-light">
+                            {{ $agence->libelleType() }}
+                        </div>
+                    </div>
+
                 </div>
 
                 <div class="d-flex justify-content-between">

@@ -47,10 +47,13 @@ final class Capacites
         'preparer-commandes' => ['permissions' => [], 'roles' => ['Gestionnaire', 'SuperAdmin']],
         // Suppression (archivage) : @role('SuperAdmin') (commandes/index)
         'supprimer-commandes' => ['permissions' => [], 'roles' => ['SuperAdmin']],
-        // Validation : hasAnyRole(['ValidateurCommande', 'SuperAdmin']). La permission
-        // valider-commande n'est PAS utilisée : le seeder l'attribue par erreur au rôle
-        // Superieur (variable écrasée, anomalie N-13).
-        'valider-commandes' => ['permissions' => [], 'roles' => ['ValidateurCommande', 'SuperAdmin']],
+        // Soumission : réservée au Gestionnaire (décision validée 3.6).
+        'soumettre-commandes' => ['permissions' => [], 'roles' => ['Gestionnaire']],
+        // Validation : rôle ValidateurCommande ou SuperAdmin ET permission
+        // valider-commande (décision validée 3.6 ; seeder corrigé, N-13).
+        // La règle « jamais la commande qu'on a soi-même soumise » est
+        // appliquée par CommandeController::valider.
+        'valider-commandes' => ['permissions' => ['valider-commande'], 'roles' => ['ValidateurCommande', 'SuperAdmin'], 'exige' => 'role_et_permission'],
         // Réception : interface hasAnyRole(['ValidateurCommande', 'SuperAdmin']) ;
         // seeder : permission livrer-commande (Gestionnaire). Union provisoire.
         'receptionner-commandes' => ['permissions' => ['livrer-commande'], 'roles' => ['ValidateurCommande', 'SuperAdmin']],
@@ -89,6 +92,14 @@ final class Capacites
         }
 
         $definition = self::DEFINITIONS[$capacite];
+
+        // Capacité qui exige à la fois l'un des rôles ET l'une des permissions.
+        if (($definition['exige'] ?? null) === 'role_et_permission') {
+            return $utilisateur->hasAnyRole($definition['roles'])
+                && collect($definition['permissions'])->contains(
+                    fn ($p) => $utilisateur->getAllPermissions()->contains('name', $p)
+                );
+        }
 
         if ($definition['roles'] !== [] && $utilisateur->hasAnyRole($definition['roles'])) {
             return true;

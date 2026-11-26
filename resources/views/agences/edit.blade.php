@@ -41,6 +41,17 @@
                                 value="{{ old('lieu', $agence->lieu) }}">
                         </div>
 
+                        <div class="col-md-6 mb-3">
+                            <label>Type</label>
+                            <select name="type" class="form-control">
+                                @if (!$agence->estQualifiee())
+                                    <option value="" selected>Non qualifiée</option>
+                                @endif
+                                <option value="AGENCE" {{ old('type', $agence->type) === 'AGENCE' ? 'selected' : '' }}>Agence</option>
+                                <option value="SIEGE" {{ old('type', $agence->type) === 'SIEGE' ? 'selected' : '' }}>Siège</option>
+                            </select>
+                        </div>
+
                     </div>
 
                     <div style="display: flex; gap: 10px;">

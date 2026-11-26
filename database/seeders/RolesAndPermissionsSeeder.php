@@ -102,7 +102,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'name' => 'ValidateurCommande'
         ]);
 
-        $validateurC = Role::firstOrCreate([
+        // N-13 : variable distincte (l'ancienne réutilisation de $validateurC
+        // donnait valider-commande au Superieur au lieu du ValidateurCommande).
+        $superieur = Role::firstOrCreate([
             'name' => 'Superieur'
         ]);
 
@@ -159,9 +161,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'valider-demande',
         ]);
 
-        // 🔥 ACHETEUR
+        // 🔥 ACHETEUR : validation des commandes (rôle ET permission exigés)
         $validateurC->givePermissionTo([
             'valider-commande',
         ]);
+        // Superieur : aucune permission de module (validation des demandes par
+        // désignation, DesignationSuperieur).
     }
 }

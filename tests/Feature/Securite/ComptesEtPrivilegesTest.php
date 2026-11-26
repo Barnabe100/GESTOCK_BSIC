@@ -162,7 +162,7 @@ class ComptesEtPrivilegesTest extends TestCase
         $remplacant = $this->compte('Demandeur', ['agence_id' => $agence->id]);
 
         $this->actingAs($admin)->put(route('users.update', $remplacant->id), ['name' => 'R', 'prenom' => 'P', 'email' => $remplacant->email,
-            'agence_id' => $agence->id, 'superieur' => 1, 'roles' => ['Demandeur']])->assertRedirect(route('users.index'));
+            'agence_id' => $agence->id, 'superieur' => 1, 'superieur_remplace_id' => $ancien->id, 'roles' => ['Demandeur']])->assertRedirect(route('users.index'));
 
         $this->assertFalse((bool) $ancien->fresh()->superieur);
         $this->assertFalse($ancien->fresh()->hasRole('Superieur'));
@@ -178,23 +178,30 @@ class ComptesEtPrivilegesTest extends TestCase
         $this->assertSame(1, HistoriqueSuperieur::where('ancien_superieur_id', $remplacant->id)->whereNull('nouveau_superieur_id')->count());
     }
 
-    public function test_creer_un_superieur_dans_une_entite_pourvue_le_designe_remplacant(): void
+    public function test_creer_un_superieur_dans_une_entite_complete_exige_le_superieur_remplace(): void
     {
         $admin = $this->compte('Admin');
         $agence = Agence::factory()->create();
-        $ancien = $this->compte(['Demandeur', 'Superieur'], ['agence_id' => $agence->id, 'superieur' => 1]);
+        $premier = $this->compte(['Demandeur', 'Superieur'], ['agence_id' => $agence->id, 'superieur' => 1]);
+        $second = $this->compte(['Demandeur', 'Superieur'], ['agence_id' => $agence->id, 'superieur' => 1]);
+        $formulaire = ['name' => 'N', 'prenom' => 'P', 'email' => 'remplacant@ex.test',
+            'password' => 'Provisoire1', 'password_confirmation' => 'Provisoire1', 'agence_id' => $agence->id, 'superieur' => 1];
 
-        $this->actingAs($admin)->post(route('users.store'), ['name' => 'N', 'prenom' => 'P', 'email' => 'remplacant@ex.test',
-            'password' => 'Provisoire1', 'password_confirmation' => 'Provisoire1', 'agence_id' => $agence->id, 'superieur' => 1])
+        // Deux supérieurs en fonction : sans remplacé désigné, refus et aucun compte créé.
+        $this->actingAs($admin)->from(route('users.create'))->post(route('users.store'), $formulaire)
+            ->assertRedirect(route('users.create'))
+            ->assertSessionHas('error', 'Deux supérieurs sont déjà désignés pour cette entité. Indiquez le supérieur remplacé.');
+        $this->assertNull(User::where('email', 'remplacant@ex.test')->first());
+
+        $this->actingAs($admin)->post(route('users.store'), $formulaire + ['superieur_remplace_id' => $premier->id])
             ->assertRedirect(route('users.index'));
 
         $nouveau = User::where('email', 'remplacant@ex.test')->firstOrFail();
         $this->assertTrue($nouveau->hasRole('Superieur'));
-        $this->assertFalse($ancien->fresh()->hasRole('Superieur'));
-        $this->assertDatabaseHas('historique_superieurs', ['ancien_superieur_id' => $ancien->id, 'nouveau_superieur_id' => $nouveau->id]);
+        $this->assertFalse($premier->fresh()->hasRole('Superieur'));
+        $this->assertTrue($second->fresh()->hasRole('Superieur'));
+        $this->assertDatabaseHas('historique_superieurs', ['ancien_superieur_id' => $premier->id, 'nouveau_superieur_id' => $nouveau->id]);
     }
-
-    // ---------------- Blocage ----------------
 
     public function test_blocage_reserve_a_l_administration_et_jamais_sur_soi_ou_un_superadmin(): void
     {
@@ -203,28 +210,53 @@ class ComptesEtPrivilegesTest extends TestCase
         $superAdmin = $this->compte('SuperAdmin');
         $cible = $this->compte('Gestionnaire');
 
-        $this->actingAs($dem)->get(route('users.bloquer', $cible->id))->assertForbidden();
-        $this->actingAs($admin)->get(route('users.bloquer', $admin->id))->assertForbidden();
-        $this->actingAs($admin)->get(route('users.bloquer', $superAdmin->id))->assertForbidden();
+        $this->actingAs($dem)->patch(route('users.bloquer', $cible->id))->assertForbidden();
+        $this->actingAs($admin)->patch(route('users.bloquer', $admin->id))->assertForbidden();
+        $this->actingAs($admin)->patch(route('users.bloquer', $superAdmin->id))->assertForbidden();
         $this->assertFalse((bool) $cible->fresh()->bloque);
 
-        $this->actingAs($admin)->from('/users')->get(route('users.bloquer', $cible->id))->assertRedirect('/users');
+        $this->actingAs($admin)->from('/users')->patch(route('users.bloquer', $cible->id))->assertRedirect('/users');
         $this->assertTrue((bool) $cible->fresh()->bloque);
-        $this->actingAs($admin)->from('/users')->get(route('users.debloquer', $cible->id));
+        $this->actingAs($admin)->from('/users')->patch(route('users.debloquer', $cible->id));
         $this->assertFalse((bool) $cible->fresh()->bloque);
     }
 
-    public function test_blocage_par_requete_intersite_refuse(): void
+    public function test_blocage_uniquement_par_patch_protege_par_le_jeton_csrf(): void
     {
         $admin = $this->compte('Admin');
         $cible = $this->compte('Gestionnaire');
 
-        $this->actingAs($admin)->withHeaders(['Sec-Fetch-Site' => 'cross-site'])->get(route('users.bloquer', $cible->id))->assertForbidden();
-        $this->actingAs($admin)->withHeaders(['Referer' => 'https://site-tiers.example/page'])->get(route('users.bloquer', $cible->id))->assertForbidden();
+        // Les anciens liens GET n'existent plus : aucune action par GET.
+        $this->actingAs($admin)->get('/users/'.$cible->id.'/bloquer')->assertStatus(405);
+        $this->actingAs($admin)->get('/users/'.$cible->id.'/debloquer')->assertStatus(405);
         $this->assertFalse((bool) $cible->fresh()->bloque);
 
-        $this->actingAs($admin)->withHeaders(['Sec-Fetch-Site' => 'same-origin'])->get(route('users.bloquer', $cible->id));
-        $this->assertTrue((bool) $cible->fresh()->bloque);
+        // Les routes PATCH sont dans le groupe « web », qui vérifie le jeton CSRF.
+        foreach (['users.bloquer', 'users.debloquer', 'users.reactiver'] as $nom) {
+            $route = app('router')->getRoutes()->getByName($nom);
+            $this->assertSame(['PATCH'], $route->methods());
+            $this->assertContains('web', $route->gatherMiddleware());
+        }
+        $this->assertContains(\App\Http\Middleware\VerifyCsrfToken::class, app('router')->getMiddlewareGroups()['web']);
+    }
+
+    public function test_dernier_superadmin_actif_ni_bloque_ni_desactive(): void
+    {
+        $seul = $this->compte('SuperAdmin');
+        $autre = $this->compte('SuperAdmin');
+        Demande::factory()->create(['user_id' => $seul->id]);
+
+        // Un SuperAdmin peut bloquer un autre SuperAdmin s'il en reste un actif.
+        $this->actingAs($autre)->patch(route('users.bloquer', $seul->id));
+        $this->assertTrue((bool) $seul->fresh()->bloque);
+        $this->actingAs($autre)->patch(route('users.debloquer', $seul->id));
+
+        // Si $autre est bloqué, $seul est le dernier SuperAdmin actif.
+        $autre->forceFill(['bloque' => true])->save();
+        $tiers = $this->compte('SuperAdmin', ['bloque' => true]);
+        $this->assertFalse(\Illuminate\Support\Facades\Gate::forUser($tiers)->allows('bloquer', $seul->fresh()));
+        $this->assertFalse(\Illuminate\Support\Facades\Gate::forUser($tiers)->allows('desactiver', $seul->fresh()));
+        $this->assertFalse(\Illuminate\Support\Facades\Gate::forUser($tiers)->allows('attribuerRoles', [$seul->fresh(), ['Admin']]));
     }
 
     public function test_un_compte_bloque_perd_sa_session_et_ne_peut_plus_se_connecter(): void
@@ -253,25 +285,58 @@ class ComptesEtPrivilegesTest extends TestCase
 
     // ---------------- Suppression ----------------
 
-    public function test_suppression_jamais_de_soi_ni_d_un_compte_avec_historique(): void
+    public function test_un_compte_avec_historique_est_desactive_et_jamais_supprime(): void
     {
         $admin = $this->compte('Admin');
-        $avecHistorique = $this->compte('Demandeur');
+        $avecHistorique = $this->compte('Demandeur', ['password' => Hash::make('Motdp#Desactive1')]);
         Demande::factory()->create(['user_id' => $avecHistorique->id]);
         $sansHistorique = $this->compte('Demandeur');
 
         $this->actingAs($admin)->delete(route('users.destroy', $admin->id))->assertForbidden();
-        $this->actingAs($admin)->delete(route('users.destroy', $avecHistorique->id))->assertForbidden();
+        $this->actingAs($this->compte('Demandeur'))->delete(route('users.destroy', $avecHistorique->id))->assertForbidden();
+
+        // Avec historique : désactivation, données conservées.
+        $this->actingAs($admin)->delete(route('users.destroy', $avecHistorique->id))
+            ->assertRedirect(route('users.index'))
+            ->assertSessionHas('success', 'Ce compte possède un historique : il a été désactivé et conservé, pas supprimé.');
         $this->assertNotNull($avecHistorique->fresh());
+        $this->assertNotNull($avecHistorique->fresh()->desactive_le);
+        $this->assertSame($admin->id, (int) $avecHistorique->fresh()->desactive_par);
         $this->assertSame(1, Demande::where('user_id', $avecHistorique->id)->count());
 
+        // Sans historique : suppression physique autorisée.
         $this->actingAs($admin)->delete(route('users.destroy', $sansHistorique->id))->assertRedirect(route('users.index'));
         $this->assertNull($sansHistorique->fresh());
-
-        $this->actingAs($this->compte('Demandeur'))->delete(route('users.destroy', $admin->id))->assertForbidden();
     }
 
-    // ---------------- Annuaire, exports, import ----------------
+    public function test_compte_desactive_sans_connexion_sessions_revoquees_et_reactivation_habilitee(): void
+    {
+        $admin = $this->compte('Admin');
+        $cible = $this->compte('Demandeur', ['password' => Hash::make('Motdp#Desactive1')]);
+        Demande::factory()->create(['user_id' => $cible->id]);
+
+        // Session ouverte du compte, puis désactivation par l'administrateur.
+        $this->actingAs($cible)->get('/dashboard')->assertOk();
+        $this->actingAs($admin)->delete(route('users.destroy', $cible->id));
+        $this->actingAs($cible->fresh())->get('/dashboard')->assertRedirect(route('login'))
+            ->assertSessionHasErrors(['email' => 'Votre compte est désactivé, veuillez contacter votre administrateur.']);
+        $this->assertGuest();
+
+        // Connexion refusée ; mauvais mot de passe : message générique.
+        $this->post('/login', ['email' => $cible->email, 'password' => 'Mauvais#Motdp1'])
+            ->assertSessionHasErrors(['email' => 'Email ou mot de passe incorrect.']);
+        $this->post('/login', ['email' => $cible->email, 'password' => 'Motdp#Desactive1'])
+            ->assertSessionHasErrors(['email' => 'Votre compte est désactivé, veuillez contacter votre administrateur.']);
+        $this->assertGuest();
+
+        // Réactivation : refusée à un non-habilité, permise à l'administrateur.
+        $this->actingAs($this->compte('Gestionnaire'))->patch(route('users.reactiver', $cible->id))->assertForbidden();
+        $this->actingAs($admin)->from('/users')->patch(route('users.reactiver', $cible->id))->assertRedirect('/users');
+        $this->assertNull($cible->fresh()->desactive_le);
+        auth()->logout();
+        $this->post('/login', ['email' => $cible->email, 'password' => 'Motdp#Desactive1']);
+        $this->assertAuthenticatedAs($cible->fresh());
+    }
 
     public function test_annuaire_exports_et_import_reserves_a_l_administration(): void
     {
@@ -295,8 +360,10 @@ class ComptesEtPrivilegesTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => 'a@ex.test']);
         $this->assertDatabaseMissing('users', ['email' => 'b@ex.test']);
 
-        $this->actingAs($admin)->post(route('users.import'), ['file' => $this->fichierCsv($entete."C,C,c@ex.test,,,,0,RoleInconnu\n")])
-            ->assertForbidden();
+        // Rôle inconnu : erreur de données présentée de façon maîtrisée.
+        $this->actingAs($admin)->from('/users-import')->post(route('users.import'), ['file' => $this->fichierCsv($entete."C,C,c@ex.test,,,,0,RoleInconnu\n")])
+            ->assertRedirect('/users-import')
+            ->assertSessionHasErrors(['import' => 'Ligne 2 : le rôle « RoleInconnu » n\'existe pas.']);
         $this->assertDatabaseMissing('users', ['email' => 'c@ex.test']);
 
         $this->actingAs($admin)->post(route('users.import'), ['file' => $this->fichierCsv($entete."D,D,d@ex.test,,,,0,Gestionnaire;Demandeur\n")])

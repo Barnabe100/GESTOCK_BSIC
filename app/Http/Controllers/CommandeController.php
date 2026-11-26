@@ -11,6 +11,8 @@ use App\Models\Article;
 use App\Exports\CommandesExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\MouvementStock;
+use App\Models\ArticleCommande;
+use App\Models\ReceptionCommande;
 
 class CommandeController extends Controller
 {
@@ -183,199 +185,157 @@ class CommandeController extends Controller
     // 🔥 VALIDATION
     public function valider($id)
     {
-        $commande = Commande::findOrFail($id);
+        return DB::transaction(function () use ($id) {
+            $commande = Commande::whereKey($id)->lockForUpdate()->firstOrFail();
 
-        if ($commande->validation) {
-            return back()->with('error', 'Déjà validée');
-        }
+            if ($commande->validation) {
+                return back()->with('error', 'Déjà validée');
+            }
 
-        // Socle des droits : validation d'une commande soumise uniquement
-        // (condition de l'interface : statut « Prête pour validation »).
-        abort_unless($commande->statut === 'Prête pour validation', 403);
+            // Validation d'une commande soumise uniquement (statut « Prête pour
+            // validation »).
+            abort_unless($commande->statut === 'Prête pour validation', 403);
 
-        $commande->update([
-            'validation' => 1
-        ]);
+            // Décision 3.6 : la soumission et la validation d'une même commande
+            // sont faites par deux personnes différentes.
+            if ((int) $commande->soumise_par === (int) auth()->id()) {
+                abort(403);
+            }
 
-        return back()->with('success', 'Commande validée');
+            $commande->update([
+                'validation' => 1,
+                'validee_par' => auth()->id(),
+                'validee_le' => now(),
+            ]);
+
+            return back()->with('success', 'Commande validée');
+        });
     }
 
-    // 🔥 LIVRAISON
+    /**
+     * Réception (totale ou partielle) d'une commande validée.
+     *
+     * Atomique : tout est contrôlé AVANT la moindre écriture (commande
+     * validée, date, quantités entières positives ou nulles, au moins une
+     * quantité reçue, aucune quantité au-delà du reste à livrer), puis tout est
+     * écrit dans une seule transaction, sous verrou de la commande, de ses
+     * lignes et des articles. Le jeton du formulaire est enregistré avec une
+     * contrainte d'unicité : une réception rejouée n'est jamais comptée ni
+     * mouvementée deux fois.
+     */
     public function livrer(
         Request $request,
         $id
     ) {
+        $request->validate([
+            'date_livraison' => 'required|date',
+            'quantites' => 'nullable|array',
+            'quantites.*' => 'nullable|integer|min:0',
+            'jeton_reception' => 'required|string|max:64',
+        ], [
+            'date_livraison.required' => 'La date de réception est obligatoire.',
+            'date_livraison.date' => 'La date de réception est invalide.',
+            'quantites.*.integer' => 'Les quantités reçues doivent être des nombres entiers.',
+            'quantites.*.min' => 'Les quantités reçues ne peuvent pas être négatives.',
+        ]);
 
-        $commande = Commande::with(
-            'articles.article'
-        )->findOrFail($id);
+        $jeton = (string) $request->input('jeton_reception');
 
-        if (
-            !$commande->validation
-        ) {
+        return DB::transaction(function () use ($request, $id, $jeton) {
+            $commande = Commande::whereKey($id)->lockForUpdate()->firstOrFail();
 
-            return back()->with(
-                'error',
-                'Validez d’abord la commande'
-            );
-        }
-
-        $dateReception =
-            $request->date_livraison;
-
-        foreach (
-            $commande->articles
-            as
-            $ligne
-        ) {
-
-            $quantiteRecue =
-
-                intval(
-
-                    $request
-                        ->quantites[$ligne->id]
-                        ?? 0
-
-                );
-
-            /*
-        Rien reçu
-        */
-
-            if (
-                $quantiteRecue <= 0
-            ) {
-
-                continue;
+            if (! $commande->validation) {
+                return back()->with('error', 'Validez d’abord la commande');
             }
 
-            /*
-        Sécurité
-        */
-
-            if (
-                $quantiteRecue
-                >
-                $ligne->quantite_restante
-            ) {
-
-                return back()->with(
-
-                    'error',
-
-                    'Quantité reçue supérieure à la quantité restante pour '
-                        .
-                        $ligne->article->libelle
-
-                );
+            if (ReceptionCommande::where('jeton', $jeton)->exists()) {
+                return back()->with('error', 'Cette réception a déjà été enregistrée.');
             }
 
-            /*
-        Mise à jour ligne commande
-        */
+            $lignes = ArticleCommande::with('article')
+                ->where('commande_id', $commande->id)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
 
-            $ligne->update([
+            $quantites = (array) $request->input('quantites', []);
+            $aRecevoir = [];
 
-                'quantite_livree' =>
-
-                $ligne->quantite_livree
-                    +
-                    $quantiteRecue,
-
-                'quantite_restante' =>
-
-                $ligne->quantite_restante
-                    -
-                    $quantiteRecue
-
-            ]);
-
-            /*
-        Première entrée stock
-        */
-
-            if (
-                $ligne->article->stock_initial
-                == 0
-            ) {
-
-                $ligne->article->increment(
-
-                    'stock_initial',
-
-                    $quantiteRecue
-
-                );
+            // 1. Contrôles complets, sans aucune écriture.
+            foreach ($quantites as $ligneId => $valeur) {
+                if (! $lignes->contains('id', (int) $ligneId)) {
+                    abort(403);
+                }
             }
 
-            /*
-        Stock disponible
-        */
+            foreach ($lignes as $ligne) {
+                $quantiteRecue = (int) ($quantites[$ligne->id] ?? 0);
 
-            $ligne->article->increment(
+                if ($quantiteRecue <= 0) {
+                    continue;
+                }
 
-                'stock_disponible',
+                if ($quantiteRecue > $ligne->quantite_restante) {
+                    return back()->with(
+                        'error',
+                        'Quantité reçue supérieure à la quantité restante pour '.$ligne->article->libelle
+                    );
+                }
 
-                $quantiteRecue
+                $aRecevoir[] = [$ligne, $quantiteRecue];
+            }
 
-            );
+            if ($aRecevoir === []) {
+                return back()->with('error', 'Aucune quantité reçue n’a été saisie.');
+            }
 
-            /*
-        Historique mouvement
-        */
+            $dateReception = $request->date_livraison;
 
-            MouvementStock::create([
-
-                'article_id' => $ligne->article->id,
+            ReceptionCommande::create([
+                'commande_id' => $commande->id,
+                'jeton' => $jeton,
+                'date_reception' => $dateReception,
+                'quantite_totale' => array_sum(array_column($aRecevoir, 1)),
                 'user_id' => auth()->id(),
-                'type' => 'ENTREE',
-                'quantite' => $quantiteRecue,
-                'prix_unitaire' => $ligne->prix_unitaire,
-                'motif' => 'Réception commande N° ' . $commande->numero_bon_commande,
-                'date_mouvement' => $dateReception
-
             ]);
-        }
 
-        /*
-    Recharger la commande
-    */
+            // 2. Écritures (règles de stock existantes inchangées).
+            foreach ($aRecevoir as [$ligne, $quantiteRecue]) {
+                $article = Article::whereKey($ligne->article_id)->lockForUpdate()->firstOrFail();
 
-        $commande->refresh();
+                $ligne->update([
+                    'quantite_livree' => $ligne->quantite_livree + $quantiteRecue,
+                    'quantite_restante' => $ligne->quantite_restante - $quantiteRecue,
+                ]);
 
-        /*
-    Commande totalement reçue ?
-    */
+                // Première entrée stock (règle existante, voir P1-04).
+                if ($article->stock_initial == 0) {
+                    $article->increment('stock_initial', $quantiteRecue);
+                }
 
-        if (
-            $commande
-            ->articles
-            ->sum(
-                'quantite_restante'
-            )
-            ==
-            0
-        ) {
+                $article->increment('stock_disponible', $quantiteRecue);
 
-            $commande->update([
+                MouvementStock::create([
+                    'article_id' => $article->id,
+                    'user_id' => auth()->id(),
+                    'type' => 'ENTREE',
+                    'quantite' => $quantiteRecue,
+                    'prix_unitaire' => $ligne->prix_unitaire,
+                    'motif' => 'Réception commande N° '.$commande->numero_bon_commande,
+                    'date_mouvement' => $dateReception,
+                ]);
+            }
 
-                'livraison' => 1,
+            // Commande totalement reçue ?
+            if (ArticleCommande::where('commande_id', $commande->id)->sum('quantite_restante') == 0) {
+                $commande->update([
+                    'livraison' => 1,
+                    'date_livraison' => $dateReception,
+                ]);
+            }
 
-                'date_livraison' =>
-
-                $dateReception
-
-            ]);
-        }
-
-        return back()->with(
-
-            'success',
-
-            'Réception enregistrée'
-
-        );
+            return back()->with('success', 'Réception enregistrée');
+        });
     }
 
     public function soumettre($id)
@@ -411,7 +371,9 @@ class CommandeController extends Controller
         }
 
         $commande->update([
-            'statut' => 'Prête pour validation'
+            'statut' => 'Prête pour validation',
+            'soumise_par' => auth()->id(),
+            'soumise_le' => now(),
         ]);
 
         return redirect()

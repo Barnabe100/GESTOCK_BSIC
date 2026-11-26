@@ -41,6 +41,19 @@
 
                     </div>
 
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <label>Type</label>
+                            <span class="text-danger">*</span>
+                            <select name="type" class="form-control" required>
+                                <option value="AGENCE" {{ old('type', 'AGENCE') === 'AGENCE' ? 'selected' : '' }}>Agence</option>
+                                <option value="SIEGE" {{ old('type') === 'SIEGE' ? 'selected' : '' }}>Siège</option>
+                            </select>
+                        </div>
+
+                    </div>
+
                     <button class="btn btn-success">Enregistrer</button>
                     <a href="{{ route('agences.index') }}" class="btn btn-secondary">Retour</a>
 

@@ -154,8 +154,9 @@ class CircuitDemandesTest extends TestCase
         $remplacant = $this->compte('Demandeur');
         $d = $this->demande('attente_sup');
 
+        // Remplacement explicite (supérieur absent) : l'ancien perd la fonction.
         $this->actingAs($admin)->put(route('users.update', $remplacant->id), ['name' => 'R', 'prenom' => 'P', 'email' => $remplacant->email,
-            'agence_id' => $this->agence->id, 'superieur' => 1, 'roles' => ['Demandeur']]);
+            'agence_id' => $this->agence->id, 'superieur' => 1, 'superieur_remplace_id' => $this->superieur->id, 'roles' => ['Demandeur']]);
 
         $this->actingAs($this->superieur->fresh())->put(route('demandes.valider.superieur', $d->id))->assertForbidden();
         $this->actingAs($remplacant->fresh())->from('/demandes-a-valider')->put(route('demandes.valider.superieur', $d->id))
@@ -164,8 +165,6 @@ class CircuitDemandesTest extends TestCase
         $this->assertSame($remplacant->id, (int) $d->fresh()->superieur_id);
     }
 
-    // ---------------- Parcours légitime complet ----------------
-
     public function test_parcours_complet_par_quatre_acteurs_distincts(): void
     {
         $d = $this->demande('attente_sup');
@@ -173,9 +172,8 @@ class CircuitDemandesTest extends TestCase
         $this->actingAs($this->superieur)->from('/demandes-a-valider')->put(route('demandes.valider.superieur', $d->id))
             ->assertSessionHas('success', 'Demande validée.');
         $this->actingAs($this->gestionnaire)->from('/demandes-gestionnaire')->put(route('demandes.valider', $d->id), $this->quantites($d))
-            // Message existant inchangé : il est choisi après l'enregistrement,
-            // donc « modifiées » dès la première saisie (anomalie S-13, hors lot).
-            ->assertSessionHas('success', 'Quantités accordées modifiées');
+            // S-13 corrigé : première saisie = « enregistrées ».
+            ->assertSessionHas('success', 'Quantités accordées enregistrées');
         $this->actingAs($this->validateur)->from('/demandes-validation-finale')->put(route('demandes.validation.finale', $d->id))
             ->assertSessionHas('success', 'Validation finale effectuée');
         $this->actingAs($this->gestionnaire)->from('/demandes-gestionnaire')->post(route('demandes.livrer', $d->id))

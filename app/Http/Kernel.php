@@ -68,6 +68,5 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,
         // Socle des droits : actions par lien GET protégées contre les requêtes intersites.
-        'meme.origine' => \App\Http\Middleware\MemeOrigine::class,
     ];
 }

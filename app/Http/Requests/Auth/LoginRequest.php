@@ -71,11 +71,12 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        // 🔥 UTILISATEUR BLOQUÉ
-        if (Auth::user()->bloque) {
+        // 🔥 UTILISATEUR BLOQUÉ OU DÉSACTIVÉ (Q9), signalé seulement après un
+        // mot de passe correct.
+        if (($refus = \App\Http\Middleware\CompteBloque::refus(Auth::user())) !== null) {
             Auth::guard('web')->logout();
             throw ValidationException::withMessages([
-                'email' => 'Votre compte est bloqué, veuillez contacter votre administrateur.'
+                'email' => $refus
             ]);
         }
         RateLimiter::clear($this->throttleKey());

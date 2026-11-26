@@ -20,7 +20,11 @@ class Commande extends Model
         'livraison',
         'date_livraison',
         'archiver',
-        'fournisseur_id'
+        'fournisseur_id',
+        'soumise_par',
+        'soumise_le',
+        'validee_par',
+        'validee_le',
     ];
 
     protected $casts = [

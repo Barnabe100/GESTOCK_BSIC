@@ -85,4 +85,15 @@ class DemandePolicy
     {
         return $user->peutConfirmerReception($demande);
     }
+
+    /**
+     * Q8 : accord du demandeur sur les quantités accordées (étape
+     * « En attente accord demandeur »). Seul le demandeur peut donner son
+     * accord sur SA demande ; ce n'est pas une validation hiérarchique et cela
+     * ne lui donne aucun droit de validation ni de rejet.
+     */
+    public function accepterQuantites(User $user, Demande $demande): bool
+    {
+        return (int) $demande->user_id === (int) $user->id;
+    }
 }

@@ -2,68 +2,104 @@
 
 namespace App\Services;
 
+use App\Autorisation\JournalRoles;
+use App\Models\Agence;
+use App\Models\Departement;
 use App\Models\HistoriqueSuperieur;
 use App\Models\User;
+use App\Organisation\RefusOrganisation;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Désignation du supérieur hiérarchique d'une entité (décision validée).
+ * Désignation des supérieurs hiérarchiques (décisions validées Q3 et
+ * remplacement par l'administrateur).
  *
- * L'entité d'un supérieur suit la règle déjà appliquée par la modification
- * d'un utilisateur et par la liste « Demandes à valider » : au siège, son
- * département ; en agence, son agence (User::estAuSiege).
- *
- * Désigner un nouveau supérieur retire la fonction (indicateur et rôle
- * Superieur) au supérieur précédent de la même entité ; chaque changement est
- * enregistré dans historique_superieurs. Les demandes déjà traitées gardent
- * la trace de leur valideur (superieur_id) : rien n'est réécrit.
+ * - Une entité de validation (au siège : le département ; en agence :
+ *   l'agence, selon le type explicite N03) compte au plus DEUX supérieurs
+ *   désignés. Ils sont des valideurs alternatifs de l'étape « supérieur ».
+ * - Désigner un supérieur alors que deux sont déjà en fonction exige
+ *   d'indiquer celui qui est remplacé ; le remplacé perd la fonction
+ *   (indicateur et rôle Superieur).
+ * - Chaque changement est enregistré dans historique_superieurs, et chaque
+ *   changement du rôle Superieur dans historique_roles. Les demandes déjà
+ *   traitées gardent leur valideur : rien n'est réécrit.
+ * - Concurrence : la ligne de l'entité (département ou agence) est verrouillée
+ *   pendant la désignation, ce qui sérialise deux désignations simultanées
+ *   dans la même entité.
  */
 class DesignationSuperieur
 {
+    public const MAX_TITULAIRES = 2;
+
+    public const MESSAGE_COMPLET = 'Deux supérieurs sont déjà désignés pour cette entité. Indiquez le supérieur remplacé.';
+
+    public const MESSAGE_RATTACHEMENT = 'Le rattachement de cet utilisateur (entité non qualifiée ou département manquant) ne permet pas de le désigner supérieur.';
+
+    public function __construct(private JournalRoles $journal)
+    {
+    }
+
     /** @return array{0: string, 1: int}|null */
     public static function entite(User $user): ?array
     {
-        if ($user->estAuSiege()) {
-            return $user->departement_id ? ['departement', (int) $user->departement_id] : null;
-        }
-
-        return $user->agence_id ? ['agence', (int) $user->agence_id] : null;
+        return $user->entiteDeValidation();
     }
 
-    public function designer(User $nouveau, User $par): void
+    /** Supérieurs désignés et actifs d'une entité de validation. */
+    public static function titulaires(array $entite, ?int $saufId = null): Collection
     {
-        DB::transaction(function () use ($nouveau, $par) {
-            $entite = self::entite($nouveau);
-            $anciens = collect();
+        [$type, $id] = $entite;
+        $colonne = $type === 'agence' ? 'agence_id' : 'departement_id';
 
-            if ($entite) {
-                [$type, $id] = $entite;
-                $colonne = $type === 'agence' ? 'agence_id' : 'departement_id';
-                $anciens = User::where($colonne, $id)
-                    ->where('superieur', 1)
-                    ->where('id', '!=', $nouveau->id)
-                    ->lockForUpdate()
-                    ->get()
-                    ->filter(fn (User $u) => self::entite($u) === $entite);
+        return User::with('agence')
+            ->where($colonne, $id)
+            ->where('superieur', 1)
+            ->whereNull('desactive_le')
+            ->when($saufId, fn ($q) => $q->where('id', '!=', $saufId))
+            ->orderBy('id')
+            ->get()
+            ->filter(fn (User $u) => $u->entiteDeValidation() === $entite)
+            ->values();
+    }
+
+    public function designer(User $nouveau, User $par, ?User $remplace = null): void
+    {
+        DB::transaction(function () use ($nouveau, $par, $remplace) {
+            $nouveau = User::whereKey($nouveau->id)->lockForUpdate()->firstOrFail();
+            $entite = self::entite($nouveau);
+
+            if ($entite === null) {
+                throw new RefusOrganisation(self::MESSAGE_RATTACHEMENT);
             }
 
-            $dejaSuperieur = (bool) $nouveau->superieur && $nouveau->hasRole('Superieur');
+            $this->verrouillerEntite($entite);
+            $titulaires = self::titulaires($entite, $nouveau->id);
+            $dejaTitulaire = (bool) $nouveau->superieur && $nouveau->hasRole('Superieur');
+            $dejaTrace = false;
 
-            foreach ($anciens as $ancien) {
-                $ancien->update(['superieur' => false]);
-                $ancien->removeRole('Superieur');
-                $this->tracer($entite, $ancien->id, $nouveau->id, $par->id);
+            if ($remplace !== null && (int) $remplace->id !== (int) $nouveau->id) {
+                $remplace = $titulaires->firstWhere('id', $remplace->id);
+
+                if ($remplace === null) {
+                    throw new RefusOrganisation('Le supérieur remplacé doit être un supérieur en fonction de la même entité.');
+                }
+
+                $this->retirerFonction($remplace, $par);
+                $this->tracer($entite, $remplace->id, $nouveau->id, $par->id);
+                $titulaires = $titulaires->reject(fn (User $u) => $u->id === $remplace->id);
+                $dejaTrace = true;
+            } elseif ($titulaires->count() >= self::MAX_TITULAIRES) {
+                throw new RefusOrganisation(self::MESSAGE_COMPLET);
             }
 
             if (! $nouveau->superieur) {
                 $nouveau->update(['superieur' => true]);
             }
 
-            if (! $nouveau->hasRole('Superieur')) {
-                $nouveau->assignRole('Superieur');
-            }
+            $this->journal->attribuer($nouveau, 'Superieur', $par, 'designation');
 
-            if (! $dejaSuperieur && $anciens->isEmpty() && $entite) {
+            if (! $dejaTitulaire && ! $dejaTrace) {
                 $this->tracer($entite, null, $nouveau->id, $par->id);
             }
         });
@@ -73,15 +109,7 @@ class DesignationSuperieur
     {
         DB::transaction(function () use ($ancien, $par) {
             $etaitSuperieur = (bool) $ancien->superieur || $ancien->hasRole('Superieur');
-
-            if ($ancien->superieur) {
-                $ancien->update(['superieur' => false]);
-            }
-
-            if ($ancien->hasRole('Superieur')) {
-                $ancien->removeRole('Superieur');
-            }
-
+            $this->retirerFonction($ancien, $par);
             $entite = self::entite($ancien);
 
             if ($etaitSuperieur && $entite) {
@@ -90,12 +118,23 @@ class DesignationSuperieur
         });
     }
 
-    private function tracer(?array $entite, ?int $ancienId, ?int $nouveauId, int $parId): void
+    private function retirerFonction(User $user, User $par): void
     {
-        if (! $entite) {
-            return;
+        if ($user->superieur) {
+            $user->update(['superieur' => false]);
         }
 
+        $this->journal->retirer($user, 'Superieur', $par, 'designation');
+    }
+
+    private function verrouillerEntite(array $entite): void
+    {
+        [$type, $id] = $entite;
+        ($type === 'agence' ? Agence::query() : Departement::query())->whereKey($id)->lockForUpdate()->first();
+    }
+
+    private function tracer(array $entite, ?int $ancienId, ?int $nouveauId, int $parId): void
+    {
         HistoriqueSuperieur::create([
             'entite_type' => $entite[0],
             'entite_id' => $entite[1],
