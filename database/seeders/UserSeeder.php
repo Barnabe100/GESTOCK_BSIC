@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use \App\Models\User;
+use RuntimeException;
 
 
 
@@ -16,26 +17,39 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        // Lot 1, L1-5 : le mot de passe des comptes d'installation est lu dans
+        // la configuration du serveur (.env : GESTOK_SEED_MOT_DE_PASSE),
+        // jamais dans le code. Changement obligatoire à la première connexion.
+        $motDePasse = config('gestok.seed_mot_de_passe');
+
+        if (blank($motDePasse)) {
+            throw new RuntimeException(
+                'UserSeeder : GESTOK_SEED_MOT_DE_PASSE n\'est pas configuré dans le fichier .env.'
+            );
+        }
+
         // Assigner rôles
         // $admin->assignRole('Admin');
         // $user->assignRole('Demandeur');
 
-        User::firstOrCreate([
+        // Recherche sur l'e-mail uniquement : le seeder peut être relancé
+        // sans créer de doublon ni modifier un compte existant.
+        User::firstOrCreate(['email' => 'superadmin@test.com'], [
             'name' => 'TEBDA',
             'prenom' => 'Barnabé',
-            'email' => 'superadmin@test.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($motDePasse),
+            'force_password_change' => true,
             'agence_id' => 1,
             'departement_id' => 1,
             'service_id' => 1,
             'superieur' => 0,
         ])->assignRole('SuperAdmin');
 
-        User::firstOrCreate([
+        User::firstOrCreate(['email' => 'admin@test.com'], [
             'name' => 'ADMIN',
             'prenom' => 'Système',
-            'email' => 'admin@test.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($motDePasse),
+            'force_password_change' => true,
             'agence_id' => 1,
             'departement_id' => 1,
             'service_id' => 1,
@@ -46,7 +60,7 @@ class UserSeeder extends Seeder
             'name' => 'GESTIONNAIRE',
             'prenom' => 'Stock',
             'email' => 'gestionnaire@test.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($motDePasse),
             'agence_id' => 1,
             'departement_id' => 1,
             'service_id' => 1,
@@ -57,7 +71,7 @@ class UserSeeder extends Seeder
             'name' => 'Departement',
             'prenom' => 'Superieur',
             'email' => 'supdep@test.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($motDePasse),
             'agence_id' => 1,
             'departement_id' => 1,
             'service_id' => 1,
@@ -68,7 +82,7 @@ class UserSeeder extends Seeder
             'name' => 'Agence',
             'prenom' => 'Superieur',
             'email' => 'supag@test.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($motDePasse),
             'agence_id' => 1,
             'departement_id' => 1,
             'service_id' => 1,
@@ -79,7 +93,7 @@ class UserSeeder extends Seeder
             'name' => 'Agence',
             'prenom' => 'Demandeur',
             'email' => 'demag@test.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($motDePasse),
             'agence_id' => 1,
             'departement_id' => 1,
             'service_id' => 1,
@@ -90,7 +104,7 @@ class UserSeeder extends Seeder
             'name' => 'Departement',
             'prenom' => 'Demandeur',
             'email' => 'demdep@test.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($motDePasse),
             'agence_id' => 1,
             'departement_id' => 1,
             'service_id' => 1,
@@ -101,7 +115,7 @@ class UserSeeder extends Seeder
             'name' => 'Finale',
             'prenom' => 'Validateur',
             'email' => 'valfinal@test.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($motDePasse),
             'agence_id' => 1,
             'departement_id' => 1,
             'service_id' => 1,
@@ -112,7 +126,7 @@ class UserSeeder extends Seeder
             'name' => 'Commande',
             'prenom' => 'Validateur',
             'email' => 'valcom@test.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($motDePasse),
             'agence_id' => 1,
             'departement_id' => 1,
             'service_id' => 1,

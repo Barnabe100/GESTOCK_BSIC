@@ -490,7 +490,15 @@ class UserController extends Controller
             'file' => 'required|file'
         ]);
 
-
+        // Lot 1, L1-5 : le mot de passe initial des comptes importés est lu
+        // dans la configuration du serveur (.env), jamais dans le code.
+        // Sans valeur configurée, l'import est annulé avant toute création.
+        if (blank(config('gestok.mot_de_passe_initial'))) {
+            return back()->with(
+                'error',
+                "Import annulé : le mot de passe initial n'est pas configuré sur le serveur (GESTOK_MOT_DE_PASSE_INITIAL)."
+            );
+        }
 
         Excel::import(
 

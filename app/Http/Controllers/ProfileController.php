@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
@@ -38,7 +37,13 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
+     * Suppression de son propre compte : refusée (lot 1, L1-3).
+     *
+     * Supprimer un utilisateur supprime en cascade ses demandes et leurs
+     * lignes (clé étrangère demandes.user_id), donc l'historique des sorties
+     * de stock. Les comptes sont gérés par les administrateurs.
+     * Le contrôle du mot de passe est conservé à l'identique ; l'erreur est
+     * renvoyée dans le sac « userDeletion » déjà prévu par la vue.
      */
     public function destroy(Request $request): RedirectResponse
     {
@@ -46,15 +51,9 @@ class ProfileController extends Controller
             'password' => ['required', 'current_password'],
         ]);
 
-        $user = $request->user();
-
-        Auth::logout();
-
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
+        return Redirect::back()->withErrors(
+            ['password' => "La suppression de compte n'est pas autorisée. Contactez l'administrateur."],
+            'userDeletion'
+        );
     }
 }

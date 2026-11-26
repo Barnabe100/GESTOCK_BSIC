@@ -61,22 +61,30 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->refresh()->email_verified_at);
     }
 
-    public function test_user_can_delete_their_account(): void
+    /**
+     * L1-3 : un utilisateur ne peut plus supprimer son propre compte, même
+     * avec le bon mot de passe (remplace le test Breeze d'origine, qui
+     * vérifiait que la suppression fonctionnait).
+     */
+    public function test_user_cannot_delete_their_own_account(): void
     {
         $user = User::factory()->create();
 
         $response = $this
             ->actingAs($user)
+            ->from('/profile')
             ->delete('/profile', [
                 'password' => 'password',
             ]);
 
         $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/');
+            ->assertSessionHasErrorsIn('userDeletion', [
+                'password' => "La suppression de compte n'est pas autorisée. Contactez l'administrateur.",
+            ])
+            ->assertRedirect('/profile');
 
-        $this->assertGuest();
-        $this->assertNull($user->fresh());
+        $this->assertAuthenticatedAs($user);
+        $this->assertNotNull($user->fresh());
     }
 
     public function test_correct_password_must_be_provided_to_delete_account(): void
