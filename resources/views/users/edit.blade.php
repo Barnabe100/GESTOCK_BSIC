@@ -57,7 +57,13 @@
                             <div class="col-md-12 mb-3">
                                 <label>Email</label>
 
-                                <input type="email" name="email" class="form-control" value="{{ $user->email }}">
+                                <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}">
+
+                                @error('email')
+                                    <div class="alert alert-danger mt-2">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
                             </div>
 
                         </div>

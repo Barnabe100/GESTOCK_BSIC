@@ -23,6 +23,13 @@ use Illuminate\Support\Facades\Gate;
 
 class UserController extends Controller
 {
+    /** Messages de validation de l'adresse e-mail (création et modification). */
+    public const MESSAGES_EMAIL = [
+        'email.required' => 'L\'adresse e-mail est obligatoire.',
+        'email.email' => 'L\'adresse e-mail est invalide.',
+        'email.unique' => 'Cette adresse e-mail est déjà utilisée par un autre compte.',
+    ];
+
     public function index()
     {
         $this->authorize('viewAny', User::class);
@@ -31,7 +38,10 @@ class UserController extends Controller
             ->latest()
             ->get();
 
-        return view('users.index', compact('users'));
+        // Q3 §4.3 : signaler les entités qui n'ont qu'un validateur supérieur.
+        $entitesUnSeulValidateur = \App\Services\GestionInterims::entitesAvecUnSeulValidateur();
+
+        return view('users.index', compact('users', 'entitesUnSeulValidateur'));
     }
 
     public function create()
@@ -59,7 +69,9 @@ class UserController extends Controller
             [
                 'name' => 'required',
                 'prenom' => 'required',
-                'email' => 'required',
+                // Unicité contrôlée avant l'écriture ; la contrainte unique de
+                // la base reste la garantie finale (créations simultanées).
+                'email' => 'required|email|unique:users,email',
 
                 'password' => [
                     'required',
@@ -78,8 +90,9 @@ class UserController extends Controller
                 'Les mots de passe ne correspondent pas.',
 
                 'password.min' =>
-                'Le mot de passe doit contenir au moins 8 caractères.'
-            ]
+                'Le mot de passe doit contenir au moins 8 caractères.',
+
+            ] + self::MESSAGES_EMAIL
         );
 
 
@@ -106,6 +119,9 @@ class UserController extends Controller
             });
         } catch (RefusOrganisation $e) {
             return back()->withInput()->with('error', $e->getMessage());
+        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            // Création simultanée du même e-mail : la base a refusé le doublon.
+            return back()->withInput()->withErrors(['email' => self::MESSAGES_EMAIL['email.unique']]);
         }
 
         return redirect()->route('users.index')
@@ -157,10 +173,10 @@ class UserController extends Controller
             $request->validate([
                 'name' => 'required',
                 'prenom' => 'required',
-                'email' => 'required|email',
+                'email' => 'required|email|unique:users,email,'.$user->id,
                 'roles' => 'nullable|array',
                 'roles.*' => 'string|exists:roles,name',
-            ]);
+            ], self::MESSAGES_EMAIL);
 
             // Socle des droits : aucun rôle hors de ce que l'acteur peut
             // attribuer (SuperAdmin réservé au SuperAdmin, jamais ses propres
@@ -200,6 +216,8 @@ class UserController extends Controller
                 });
             } catch (RefusOrganisation $e) {
                 return back()->withInput()->with('error', $e->getMessage());
+            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                return back()->withInput()->withErrors(['email' => self::MESSAGES_EMAIL['email.unique']]);
             }
         }
 

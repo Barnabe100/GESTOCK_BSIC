@@ -308,10 +308,11 @@ class CommandeController extends Controller
                     'quantite_restante' => $ligne->quantite_restante - $quantiteRecue,
                 ]);
 
-                // Première entrée stock (règle existante, voir P1-04).
-                if ($article->stock_initial == 0) {
-                    $article->increment('stock_initial', $quantiteRecue);
-                }
+                // P1-04 : la réception ne modifie plus stock_initial. Les états
+                // calculent « stock_initial + entrées − sorties » : augmenter
+                // stock_initial ET créer le mouvement ENTREE comptait deux fois
+                // la première réception. La quantité reçue est prise en compte
+                // une seule fois, par le mouvement ENTREE ci-dessous.
 
                 $article->increment('stock_disponible', $quantiteRecue);
 

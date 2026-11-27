@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Models\ArticleDemande;
 use App\Models\User;
 use App\Services\DesignationSuperieur;
+use App\Services\GestionInterims;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -242,8 +243,9 @@ class DemandeController extends Controller
             'user.departement'
         ])
             ->latest()
-            // N03 : même entité de validation (type explicite de l'entité).
-            ->whereHas('user', fn ($q) => User::filtrerMemeEntite($q, $superieur));
+            // N03 + Q3 : son entité de validation, plus les entités dont il
+            // assure l'intérim.
+            ->whereHas('user', fn ($q) => User::filtrerEntitesDeValidation($q, $superieur));
 
         // Q3 : la demande d'un supérieur est à valider par un AUTRE supérieur
         // habilité ; elle n'apparaît pas dans sa propre liste « à valider ».
@@ -291,7 +293,11 @@ class DemandeController extends Controller
         );
     }
 
-    /** Premier supérieur désigné et actif de l'entité du demandeur, hors lui-même. */
+    /**
+     * Valideur supérieur attendu pour un demandeur : un titulaire de son
+     * entité autre que lui-même ; à défaut, le remplaçant temporaire en
+     * vigueur (Q3). Null si personne d'autre n'est habilité.
+     */
     private function superieurPour(?User $demandeur): ?User
     {
         $entite = $demandeur?->entiteDeValidation();
@@ -300,8 +306,22 @@ class DemandeController extends Controller
             return null;
         }
 
-        return DesignationSuperieur::titulaires($entite, $demandeur->id)->first();
+        $remplacant = GestionInterims::remplacantEnVigueur($entite);
+
+        return DesignationSuperieur::titulaires($entite, $demandeur->id)->first()
+            ?? ($remplacant && $remplacant->id !== $demandeur->id ? $remplacant : null);
     }
+
+    /** Q3 §4.3 : le demandeur est le seul validateur supérieur de son entité. */
+    private function estSeulValidateurDeSonEntite(User $demandeur): bool
+    {
+        $entite = $demandeur->entiteDeValidation();
+
+        return $entite !== null
+            && DesignationSuperieur::titulaires($entite)->pluck('id')->all() === [$demandeur->id];
+    }
+
+    public const MESSAGE_SECOND_VALIDATEUR = 'Aucun autre validateur supérieur n’est désigné pour votre entité : l’administrateur doit désigner un deuxième validateur ou un remplaçant temporaire pour que cette demande puisse être validée.';
 
     public function create()
     {
@@ -318,7 +338,12 @@ class DemandeController extends Controller
         // demandeur lui-même.
         $superieur = $this->superieurPour($user);
 
-        if (!$superieur) {
+        // Q3 §4.3 : un supérieur seul dans son entité crée sa demande
+        // normalement ; l'absence d'un autre valideur est signalée. Sans aucun
+        // supérieur dans l'entité, la règle existante est conservée.
+        $seulValidateur = ! $superieur && $this->estSeulValidateurDeSonEntite($user);
+
+        if (!$superieur && ! $seulValidateur) {
             return back()->with(
                 'error',
                 'Aucun supérieur défini'
@@ -333,7 +358,7 @@ class DemandeController extends Controller
             'objet' => $request->objet,
             'description' => $request->description,
             'user_id' => auth()->id(),
-            'superieur_id' => $superieur->id,
+            'superieur_id' => $superieur?->id,
             //'statut' => 'En attente supérieur',
             'statut' => 'En préparation',
         ]);
@@ -343,7 +368,7 @@ class DemandeController extends Controller
         // pivot article_demande à gérer après
 
         return redirect()->route('mes.demandes')
-            ->with('success', 'Demande créée');
+            ->with('success', $seulValidateur ? 'Demande créée. '.self::MESSAGE_SECOND_VALIDATEUR : 'Demande créée');
     }
 
     public function edit($id)
@@ -369,9 +394,10 @@ class DemandeController extends Controller
 
         // N03 : même règle qu'à la création, appliquée au DEMANDEUR (et non à
         // l'utilisateur qui modifie, qui peut être un SuperAdmin).
-        $superieur = $this->superieurPour(Demande::findOrFail($id)->user);
+        $demandeur = Demande::findOrFail($id)->user;
+        $superieur = $this->superieurPour($demandeur);
 
-        if (!$superieur) {
+        if (!$superieur && ! ($demandeur && $this->estSeulValidateurDeSonEntite($demandeur))) {
             return back()->with(
                 'error',
                 'Aucun supérieur défini.'
@@ -383,7 +409,7 @@ class DemandeController extends Controller
             //'date' => $request->date,
             'objet' => $request->objet,
             'description' => $request->description,
-            'superieur_id' => $superieur->id,
+            'superieur_id' => $superieur?->id,
             //'statut' => 'En attente supérieur',
         ]);
 

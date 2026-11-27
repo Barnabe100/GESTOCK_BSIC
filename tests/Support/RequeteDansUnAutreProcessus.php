@@ -24,7 +24,8 @@ echo json_encode(['debut' => microtime(true)])."\n";
 $requete = Illuminate\Http\Request::create(getenv('C_URI'), getenv('C_METHODE'), json_decode(getenv('C_DONNEES'), true), [], [], ['HTTP_REFERER' => 'http://localhost/precedente']);
 $reponse = $noyau->handle($requete);
 echo json_encode(['fin' => microtime(true), 'code' => $reponse->getStatusCode(),
-    'error' => $app['session.store']->get('error'), 'success' => $app['session.store']->get('success')], JSON_UNESCAPED_UNICODE)."\n";
+    'error' => $app['session.store']->get('error'), 'success' => $app['session.store']->get('success'),
+    'errors' => ($e = $app['session.store']->get('errors')) ? $e->getBag('default')->toArray() : []], JSON_UNESCAPED_UNICODE)."\n";
 PHP;
 
         $p = new Process([PHP_BINARY, '-r', $script], base_path(), [

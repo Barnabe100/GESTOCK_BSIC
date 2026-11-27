@@ -26,6 +26,14 @@
                         Importer
 
                     </a>
+                    <!-- Q3 : remplaçants temporaires de validation -->
+                    <a href="{{ route('interims.index') }}" class="btn btn-dark">
+
+                        <i class="fas fa-user-clock"></i>
+
+                        Intérims
+
+                    </a>
                     <!-- EXCEL -->
                     <a href="{{ route('users.export.excel') }}" class="btn btn-success btn-sm">
 
@@ -49,6 +57,17 @@
 
             <!-- BODY -->
             <div class="card-body">
+
+                {{-- Q3 : entités qui n'ont qu'un validateur supérieur --}}
+                @if (($entitesUnSeulValidateur ?? collect())->isNotEmpty())
+                    <div class="alert alert-warning">
+                        Entités avec un seul validateur supérieur (désignez un deuxième validateur ou un
+                        <a href="{{ route('interims.index') }}">remplaçant temporaire</a>) :
+                        @foreach ($entitesUnSeulValidateur as $e)
+                            <strong>{{ $e['libelle'] }}</strong>{{ $e['interim'] ? ' (intérim en vigueur)' : '' }}{{ $loop->last ? '.' : ',' }}
+                        @endforeach
+                    </div>
+                @endif
 
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped datatable">

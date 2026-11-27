@@ -57,7 +57,7 @@ class DemandePolicy
     {
         return ! $this->estProprietaire($user, $demande)
             && $demande->user
-            && $user->estSuperieurHierarchiqueDe($demande->user);
+            && $user->peutValiderCommeSuperieur($demande->user);
     }
 
     /** Quantités accordées et rejet par le gestionnaire, jamais sur sa propre demande. */

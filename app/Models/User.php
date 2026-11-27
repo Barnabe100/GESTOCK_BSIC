@@ -136,10 +136,12 @@ class User extends Authenticatable
     {
         $entite = $reference->entiteDeValidation();
 
-        if ($entite === null) {
-            return $requete->whereRaw('1 = 0');
-        }
+        return $entite === null ? $requete->whereRaw('1 = 0') : self::filtrerEntite($requete, $entite);
+    }
 
+    /** Restreint une requête sur les utilisateurs à une entité de validation donnée. */
+    public static function filtrerEntite($requete, array $entite)
+    {
         [$type, $id] = $entite;
 
         if ($type === 'departement') {
@@ -149,6 +151,28 @@ class User extends Authenticatable
 
         return $requete->where('agence_id', $id)
             ->whereHas('agence', fn ($q) => $q->where('type', Agence::TYPE_AGENCE));
+    }
+
+    /**
+     * Q3 : demandeurs dont $validateur peut traiter les demandes à l'étape
+     * « supérieur » : son entité, plus les entités dont il assure l'intérim.
+     */
+    public static function filtrerEntitesDeValidation($requete, User $validateur)
+    {
+        $entites = array_values(array_filter(array_merge(
+            [$validateur->entiteDeValidation()],
+            \App\Services\GestionInterims::entitesEnInterim($validateur)
+        )));
+
+        if ($entites === []) {
+            return $requete->whereRaw('1 = 0');
+        }
+
+        return $requete->where(function ($q) use ($entites) {
+            foreach ($entites as $entite) {
+                $q->orWhere(fn ($sous) => self::filtrerEntite($sous, $entite));
+            }
+        });
     }
 
     public function estDeLaMemeEntiteQue(User $autre): bool
@@ -212,5 +236,25 @@ class User extends Authenticatable
             && (bool) $this->superieur
             && $this->hasRole('Superieur')
             && $this->estDeLaMemeEntiteQue($demandeur);
+    }
+
+    /**
+     * Q3 : habilité à valider ou rejeter à l'étape « supérieur » : titulaire
+     * de la même entité, ou remplaçant temporaire (intérim en vigueur)
+     * désigné pour l'entité du demandeur ; jamais le demandeur lui-même.
+     */
+    public function peutValiderCommeSuperieur(User $demandeur): bool
+    {
+        if ((int) $this->id === (int) $demandeur->id) {
+            return false;
+        }
+
+        if ($this->estSuperieurHierarchiqueDe($demandeur)) {
+            return true;
+        }
+
+        $entite = $demandeur->entiteDeValidation();
+
+        return $entite !== null && in_array($entite, \App\Services\GestionInterims::entitesEnInterim($this), true);
     }
 }

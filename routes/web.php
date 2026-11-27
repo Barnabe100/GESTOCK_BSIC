@@ -253,6 +253,17 @@ Route::middleware([
         [UserController::class, 'reactiver']
     )->name('users.reactiver');
 
+    // Q3 : remplaçants temporaires de validation supérieure (autre entité)
+    Route::get('/interims-validation', [\App\Http\Controllers\InterimValidationController::class, 'index'])
+        ->name('interims.index')
+        ->middleware('can:gerer-utilisateurs');
+    Route::post('/interims-validation', [\App\Http\Controllers\InterimValidationController::class, 'store'])
+        ->name('interims.store')
+        ->middleware('can:gerer-utilisateurs');
+    Route::patch('/interims-validation/{id}/revoquer', [\App\Http\Controllers\InterimValidationController::class, 'revoquer'])
+        ->name('interims.revoquer')
+        ->middleware('can:gerer-utilisateurs');
+
     //Artcile demande
     Route::post('article-demande', [ArticleDemandeController::class, 'store'])
         ->name('article_demande.store');

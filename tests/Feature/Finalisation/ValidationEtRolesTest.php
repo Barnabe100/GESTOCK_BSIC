@@ -121,15 +121,16 @@ class ValidationEtRolesTest extends TestCase
     {
         $sup = $this->compte(['Demandeur', 'Superieur'], ['superieur' => 1]);
 
-        // Seul supérieur de l'entité : aucun autre valideur, création refusée.
+        // Seul supérieur de l'entité (décision Q3 §4.3) : création permise,
+        // sans valideur attitré, absence d'un second validateur signalée.
         $this->actingAs($sup)->from('/demandes/create')->post(route('demandes.store'), ['objet' => 'Papier'])
-            ->assertSessionHas('error', 'Aucun supérieur défini');
-        $this->assertSame(0, Demande::count());
+            ->assertSessionHas('success', 'Demande créée. '.\App\Http\Controllers\DemandeController::MESSAGE_SECOND_VALIDATEUR);
+        $this->assertNull(Demande::firstOrFail()->superieur_id);
 
-        // Un second supérieur est désigné : la demande lui est adressée.
+        // Un second supérieur est désigné : la demande suivante lui est adressée.
         $collegue = $this->compte(['Demandeur', 'Superieur'], ['superieur' => 1]);
         $this->actingAs($sup)->post(route('demandes.store'), ['objet' => 'Papier'])->assertRedirect(route('mes.demandes'));
-        $this->assertSame($collegue->id, (int) Demande::firstOrFail()->superieur_id);
+        $this->assertSame($collegue->id, (int) Demande::latest('id')->firstOrFail()->superieur_id);
     }
 
     public function test_superieur_au_siege_valide_par_departement(): void

@@ -31,6 +31,8 @@ class DiagnosticOrganisation extends Command
         $users = User::with(['agence', 'departement', 'roles'])->get();
         $entites = [];
 
+        $demandesParUtilisateur = \App\Models\Demande::selectRaw('user_id, COUNT(*) AS n')->groupBy('user_id')->pluck('n', 'user_id');
+
         foreach (Agence::withCount(['departements', 'users'])->orderBy('id')->get() as $agence) {
             $membres = $users->where('agence_id', $agence->id);
             // Règle historique 1 (DemandeController::store) : nom de l'agence.
@@ -59,6 +61,13 @@ class DiagnosticOrganisation extends Command
                 'indice_nom_siege' => $indiceNom,
                 'utilisateurs_siege_selon_regle_departement' => $membresSiegeRegle2,
                 'classement' => $classement,
+                // Éléments historiques, pour justifier la décision humaine.
+                'services' => \App\Models\Service::whereIn('departement_id', $agence->departements()->pluck('id'))->count(),
+                'departements_noms' => $agence->departements()->orderBy('nom')->pluck('nom')->all(),
+                'demandes_de_ses_utilisateurs' => (int) $membres->sum(fn (User $u) => $demandesParUtilisateur[$u->id] ?? 0),
+                'superieurs_designes' => $membres->where('superieur', true)->map(fn (User $u) => $u->id)->values()->all(),
+                'comptes_administration' => $membres->filter(fn (User $u) => $u->hasAnyRole(['SuperAdmin', 'Admin']))->pluck('id')->values()->all(),
+                'creee_le' => optional($agence->created_at)->toDateString(),
             ];
         }
 

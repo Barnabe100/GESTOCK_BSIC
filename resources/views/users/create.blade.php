@@ -42,6 +42,12 @@
                             <label>Email</label>
                             <span class="text-danger">*</span>
                             <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
+
+                            @error('email')
+                                <div class="alert alert-danger mt-2">
+                                    {{ $message }}
+                                </div>
+                            @enderror
                         </div>
                     </div>
 

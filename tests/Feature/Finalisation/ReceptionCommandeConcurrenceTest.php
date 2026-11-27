@@ -74,6 +74,7 @@ class ReceptionCommandeConcurrenceTest extends TestCase
         $this->assertSame('Cette réception a déjà été enregistrée.', $resultat['error'] ?? null, $resultat['brut']);
         $this->assertSame(3, (int) $this->ligne->fresh()->quantite_livree);
         $this->assertSame(3, (int) $this->article->fresh()->stock_disponible);
+        $this->assertSame(0, (int) $this->article->fresh()->stock_initial, 'P1-04 : stock initial inchangé');
         $this->assertSame(1, MouvementStock::where('type', 'ENTREE')->count());
     }
 
@@ -85,6 +86,7 @@ class ReceptionCommandeConcurrenceTest extends TestCase
         $this->assertSame(6, (int) $this->ligne->fresh()->quantite_livree);
         $this->assertSame(4, (int) $this->ligne->fresh()->quantite_restante);
         $this->assertSame(6, (int) $this->article->fresh()->stock_disponible);
+        $this->assertSame(0, (int) $this->article->fresh()->stock_initial, 'P1-04 : stock initial inchangé');
         $this->assertSame(1, MouvementStock::where('type', 'ENTREE')->count());
     }
 }
