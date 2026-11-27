@@ -9,6 +9,8 @@
         <!-- 🔥 STATISTIQUES -->
         <div class="row">
 
+            {{-- E10 : indicateur transmis au tableau global seulement --}}
+            @isset($totalUsers)
             <!-- USERS -->
             <div class="col-md-3 mb-3">
 
@@ -25,6 +27,7 @@
                 </div>
 
             </div>
+            @endisset
 
             <!-- DEMANDES -->
             <div class="col-md-3 mb-3">
@@ -60,6 +63,8 @@
 
             </div>
 
+            {{-- E10 : indicateur transmis au tableau global seulement --}}
+            @isset($totalMontantCommandes)
             <!-- MONTANT TOTAL COMMANDES -->
             <div class="col-md-3 mb-3">
 
@@ -76,6 +81,7 @@
                 </div>
 
             </div>
+            @endisset
 
             <!-- STOCK -->
             {{-- <div class="col-md-3 mb-3">

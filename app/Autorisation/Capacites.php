@@ -44,6 +44,8 @@ final class Capacites
         'consulter-toutes-demandes',
         'consulter-etats',
         'consulter-mouvements',
+        'voir-tableau-de-bord-global',
+        'voir-tableau-de-bord-consultation',
     ];
 
     public const DEFINITIONS = [
@@ -118,6 +120,12 @@ final class Capacites
         // (ValidateurDemande), administration (SuperAdmin). Le Supérieur n'en
         // bénéficie plus (son entité, ses demandes attribuées, ses intérims).
         'consulter-toutes-demandes' => ['permissions' => [], 'roles' => ['Gestionnaire', 'ValidateurDemande', 'SuperAdmin']],
+        // E10 : tableau de bord global (statistiques de toute l'organisation,
+        // montant des commandes, nombre d'utilisateurs) : rôles qui y avaient
+        // déjà accès, inchangés.
+        'voir-tableau-de-bord-global' => ['permissions' => [], 'roles' => ['Gestionnaire', 'SuperAdmin', 'Admin', 'ValidateurCommande', 'Superieur', 'ValidateurDemande']],
+        // E10 : tableau de bord de consultation (Consultant), limité à ses droits.
+        'voir-tableau-de-bord-consultation' => ['permissions' => ['consulter-commandes-receptionnees', 'consulter-etats', 'consulter-mouvements'], 'roles' => []],
         // Archivage d'une demande : @role('SuperAdmin')
         'archiver-demandes' => ['permissions' => [], 'roles' => ['SuperAdmin']],
     ];

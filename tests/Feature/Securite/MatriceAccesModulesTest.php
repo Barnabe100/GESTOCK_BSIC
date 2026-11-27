@@ -21,9 +21,9 @@ class MatriceAccesModulesTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const ROLES = ['Demandeur', 'Superieur', 'Gestionnaire', 'ValidateurDemande', 'ValidateurCommande', 'Admin', 'SuperAdmin'];
+    private const ROLES = ['Demandeur', 'Superieur', 'Gestionnaire', 'ValidateurDemande', 'ValidateurCommande', 'Admin', 'SuperAdmin', 'Consultant'];
 
-    /** URL (GET) => rôles autorisés */
+    /** URL (GET) => rôles autorisés (Consultant : lecture seule, décisions A1, A2, A3) */
     private const PAGES = [
         '/users' => ['Admin', 'SuperAdmin'],
         '/users/create' => ['Admin', 'SuperAdmin'],
@@ -38,15 +38,15 @@ class MatriceAccesModulesTest extends TestCase
         '/categories' => ['Gestionnaire', 'SuperAdmin'],
         '/type-articles' => ['Gestionnaire', 'SuperAdmin'],
         '/articles-export-csv' => ['Gestionnaire', 'SuperAdmin'],
-        '/mouvements-stock' => ['Gestionnaire', 'SuperAdmin'],
+        '/mouvements-stock' => ['Gestionnaire', 'SuperAdmin', 'Consultant'],
         '/fournisseurs' => ['Gestionnaire', 'SuperAdmin'],
         '/fournisseurs-export-csv' => ['Gestionnaire', 'SuperAdmin'],
-        '/commandes' => ['ValidateurCommande', 'Gestionnaire', 'SuperAdmin'],
+        '/commandes' => ['ValidateurCommande', 'Gestionnaire', 'SuperAdmin', 'Consultant'],
         '/commandes/create' => ['Gestionnaire', 'SuperAdmin'],
         '/commandes-export-csv' => ['ValidateurCommande', 'Gestionnaire', 'SuperAdmin'],
         '/articles-commandes-export-csv' => ['ValidateurCommande', 'Gestionnaire', 'SuperAdmin'],
-        '/etats' => ['Gestionnaire', 'ValidateurDemande', 'SuperAdmin'],
-        '/etats/stocks' => ['Gestionnaire', 'ValidateurDemande', 'SuperAdmin'],
+        '/etats' => ['Gestionnaire', 'ValidateurDemande', 'SuperAdmin', 'Consultant'],
+        '/etats/stocks' => ['Gestionnaire', 'ValidateurDemande', 'SuperAdmin', 'Consultant'],
         '/demandes-export-csv' => ['Gestionnaire', 'Admin', 'SuperAdmin'],
         '/articles-demandes-export-csv' => ['Gestionnaire', 'Admin', 'SuperAdmin'],
         '/demandes-a-valider' => ['Superieur'],
