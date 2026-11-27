@@ -124,8 +124,9 @@
 
 
         {{-- @can('gerer-stock') --}}
+        {{-- A2 : rôles existants, ou Consultant (consulter-etats) --}}
         @if (auth()->check() &&
-                auth()->user()->hasAnyRole(['Gestionnaire', 'ValidateurDemande']))
+                (auth()->user()->hasAnyRole(['Gestionnaire', 'ValidateurDemande']) || auth()->user()->can('consulter-etats')))
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('etats.index') }}">
 
                 États
@@ -142,13 +143,14 @@
             </a>
         @endrole
 
-        @role('Gestionnaire')
+        {{-- A3 : Gestionnaire, ou Consultant (consulter-mouvements) --}}
+        @if (auth()->check() && (auth()->user()->hasRole('Gestionnaire') || auth()->user()->can('consulter-mouvements')))
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('mouvements.index') }}">
 
                 Mouvements stock
 
             </a>
-        @endrole
+        @endif
 
     </div>
 

@@ -42,6 +42,8 @@ final class Capacites
         'voir-mouvements',
         'consulter-commandes-receptionnees',
         'consulter-toutes-demandes',
+        'consulter-etats',
+        'consulter-mouvements',
     ];
 
     public const DEFINITIONS = [
@@ -57,7 +59,11 @@ final class Capacites
         'gerer-stock' => ['permissions' => ['gerer-stock'], 'roles' => []],
 
         // Mouvements de stock : menu @role('Gestionnaire') ; module de stock (gerer-stock)
-        'voir-mouvements' => ['permissions' => ['gerer-stock'], 'roles' => ['Gestionnaire']],
+        // A3 : consultation de tous les mouvements, aussi par le Consultant
+        // (permission dédiée consulter-mouvements, distincte de gerer-stock :
+        // aucune mise au rebut ni modification du stock).
+        'voir-mouvements' => ['permissions' => ['gerer-stock', 'consulter-mouvements'], 'roles' => ['Gestionnaire']],
+        'consulter-mouvements' => ['permissions' => ['consulter-mouvements'], 'roles' => []],
 
         // Fournisseurs : menu hasAnyRole(['SuperAdmin', 'Gestionnaire'])
         'gerer-fournisseurs' => ['permissions' => [], 'roles' => ['SuperAdmin', 'Gestionnaire']],
@@ -88,7 +94,10 @@ final class Capacites
 
         // États et leurs exports : menu hasAnyRole(['Gestionnaire', 'ValidateurDemande']) ;
         // seeder : permission voir-etats (Gestionnaire, SuperAdmin). Union provisoire.
-        'voir-etats' => ['permissions' => ['voir-etats'], 'roles' => ['Gestionnaire', 'ValidateurDemande']],
+        // A2 : le Consultant consulte tous les rapports (permission dédiée
+        // consulter-etats) ; les rapports sont en lecture seule.
+        'voir-etats' => ['permissions' => ['voir-etats', 'consulter-etats'], 'roles' => ['Gestionnaire', 'ValidateurDemande']],
+        'consulter-etats' => ['permissions' => ['consulter-etats'], 'roles' => []],
 
         // Exports des demandes : hasAnyRole(['SuperAdmin', 'Admin', 'Gestionnaire'])
         'exporter-demandes' => ['permissions' => [], 'roles' => ['SuperAdmin', 'Admin', 'Gestionnaire']],
