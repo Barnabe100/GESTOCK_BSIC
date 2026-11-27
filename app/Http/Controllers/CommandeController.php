@@ -57,6 +57,16 @@ class CommandeController extends Controller
         $this->middleware('can:supprimer-commandes')->only(['destroy']);
     }
 
+    /**
+     * Accès complet au module (rôles du module) ; à défaut, consultation des
+     * seules commandes réceptionnées (livraison = 1 : toutes les quantités
+     * reçues, libellé « Receptionnée » des vues).
+     */
+    private function accesComplet(): bool
+    {
+        return \App\Autorisation\Capacites::autorise(auth()->user(), 'acceder-commandes');
+    }
+
     public function index()
     {
 
@@ -69,6 +79,9 @@ class CommandeController extends Controller
             'articles.article'
         ])
             ->where('archiver', 0)
+            // A1 : sans l'accès complet au module, seules les commandes
+            // réceptionnées (entièrement reçues) sont consultables.
+            ->when(! $this->accesComplet(), fn ($q) => $q->where('livraison', 1))
             ->latest()
             ->get();
 
@@ -114,6 +127,9 @@ class CommandeController extends Controller
             'fournisseur',
             'articles.article'
         ])->findOrFail($id);
+
+        // A1 : accès direct à une commande non réceptionnée refusé au Consultant.
+        abort_unless($this->accesComplet() || $commande->livraison, 403);
 
         //$articles = Article::where('archiver', 0)->get();
         $articles = Article::whereNotNull('prix_unitaire')

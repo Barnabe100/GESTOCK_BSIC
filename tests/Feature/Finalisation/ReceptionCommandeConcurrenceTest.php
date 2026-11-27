@@ -24,7 +24,7 @@ class ReceptionCommandeConcurrenceTest extends TestCase
     use DatabaseMigrations;
     use RequeteDansUnAutreProcessus;
 
-    private User $validateur;
+    private User $receptionnaire;
 
     private Article $article;
 
@@ -36,8 +36,9 @@ class ReceptionCommandeConcurrenceTest extends TestCase
     {
         parent::setUp();
         $this->seed(RolesAndPermissionsSeeder::class);
-        $this->validateur = User::factory()->create();
-        $this->validateur->assignRole('ValidateurCommande');
+        // A1 (décision validée) : seul le Gestionnaire réceptionne.
+        $this->receptionnaire = User::factory()->create();
+        $this->receptionnaire->assignRole('Gestionnaire');
         $this->article = Article::factory()->create(['stock_disponible' => 0, 'stock_initial' => 0]);
         $this->commande = Commande::forceCreate(['numero_bon_commande' => 'BC-C1', 'date' => '2026-11-20', 'montant' => 1000,
             'fournisseur_id' => Fournisseur::factory()->create()->id, 'statut' => 'Prête pour validation', 'validation' => 1, 'livraison' => 0, 'archiver' => 0]);
@@ -54,10 +55,10 @@ class ReceptionCommandeConcurrenceTest extends TestCase
     private function deuxReceptionsSimultanees(array $premiere, array $seconde): array
     {
         DB::beginTransaction();
-        $this->actingAs($this->validateur)->from('/commandes')->post(route('commandes.livrer', $this->commande->id), $premiere)
+        $this->actingAs($this->receptionnaire)->from('/commandes')->post(route('commandes.livrer', $this->commande->id), $premiere)
             ->assertSessionHas('success', 'Réception enregistrée');
 
-        $autre = $this->requeteDansUnAutreProcessus($this->validateur->id, 'POST', '/commandes/'.$this->commande->id.'/livrer', $seconde);
+        $autre = $this->requeteDansUnAutreProcessus($this->receptionnaire->id, 'POST', '/commandes/'.$this->commande->id.'/livrer', $seconde);
         usleep(800_000);
         $this->assertTrue($autre->isRunning(), 'La seconde réception doit attendre la première.');
 

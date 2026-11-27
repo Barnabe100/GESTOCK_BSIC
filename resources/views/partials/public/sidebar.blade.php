@@ -83,8 +83,8 @@
 
             </a>
         @endcan
-        @if (auth()->check() &&
-                auth()->user()->hasAnyRole(['ValidateurCommande', 'Gestionnaire', 'SuperAdmin']))
+        {{-- Capacité voir-commandes : rôles du module, ou Consultant --}}
+        @if (auth()->check() && auth()->user()->can('voir-commandes'))
             <a class="list-group-item list-group-item-action p-3 bg-info-subtle" href="{{ route('commandes.index') }}">
 
                 Commandes

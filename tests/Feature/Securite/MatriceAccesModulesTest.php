@@ -100,7 +100,8 @@ class MatriceAccesModulesTest extends TestCase
             // [méthode, url fabriquée, rôles autorisés]
             ['post', fn () => '/commandes/'.$nouvelleCommande()->id.'/valider', ['ValidateurCommande', 'SuperAdmin']],
             ['delete', fn () => '/commandes/'.$nouvelleCommande()->id, ['SuperAdmin']],
-            ['put', fn () => '/commandes/'.$nouvelleCommande()->id.'/livrer', ['ValidateurCommande', 'Gestionnaire', 'SuperAdmin']],
+            // A1 (décision validée) : réception par le Gestionnaire seulement.
+            ['put', fn () => '/commandes/'.$nouvelleCommande()->id.'/livrer', ['Gestionnaire']],
             ['post', fn () => '/article-commande', ['Gestionnaire', 'SuperAdmin']],
             ['put', fn () => '/articles/'.$article->id.'/rebut', ['Gestionnaire', 'SuperAdmin']],
         ];

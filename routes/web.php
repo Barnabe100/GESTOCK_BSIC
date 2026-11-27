@@ -115,8 +115,11 @@ Route::middleware([
         [UserController::class, 'import']
     )->name('users.import');
 
+    // Lecture (liste, fiche) : voir-commandes (rôles du module ou Consultant) ;
+    // création, modification et archivage restent sous les capacités
+    // d'opération du contrôleur (preparer-commandes, supprimer-commandes).
     Route::resource('commandes', CommandeController::class)
-        ->middleware('can:acceder-commandes');
+        ->middleware('can:voir-commandes');
 
     Route::put(
         '/article-commandes/{id}',

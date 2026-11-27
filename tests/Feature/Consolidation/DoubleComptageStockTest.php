@@ -33,14 +33,15 @@ class DoubleComptageStockTest extends TestCase
 {
     use RefreshDatabase;
 
-    private User $validateur;
+    private User $receptionnaire;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed(RolesAndPermissionsSeeder::class);
-        $this->validateur = User::factory()->create();
-        $this->validateur->assignRole('ValidateurCommande');
+        // A1 (décision validée) : seul le Gestionnaire réceptionne.
+        $this->receptionnaire = User::factory()->create();
+        $this->receptionnaire->assignRole('Gestionnaire');
     }
 
     private function article(int $initial = 0, int $disponible = 0): Article
@@ -68,7 +69,7 @@ class DoubleComptageStockTest extends TestCase
             $parLigne[ArticleCommande::where('commande_id', $c->id)->where('article_id', $articleId)->value('id')] = $q;
         }
 
-        return $this->actingAs($this->validateur)->from('/commandes')->put(route('commandes.livrer', $c->id),
+        return $this->actingAs($this->receptionnaire)->from('/commandes')->put(route('commandes.livrer', $c->id),
             ['date_livraison' => '2026-11-10', 'quantites' => $parLigne, 'jeton_reception' => $jeton ?? (string) Str::uuid()]);
     }
 

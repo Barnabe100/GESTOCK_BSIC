@@ -14,6 +14,7 @@
 
                 <div class="d-flex gap-2">
                     <!-- EXCEL -->
+                    @can('acceder-commandes')
                     <a href="{{ route('commandes.export.excel') }}" class="btn btn-success btn-sm">
 
                         <i class="fas fa-file-excel"></i>
@@ -26,7 +27,7 @@
                         <i class="fas fa-file-csv"></i>
                         CSV
                     </a>
-
+                    @endcan
                     @hasanyrole('Gestionnaire|SuperAdmin')
                         <a href="{{ route('commandes.create') }}" class="btn btn-light btn-sm">
                             + Ajouter
@@ -104,9 +105,8 @@
                                     </td>
 
                                     <td>
-                                        @if (
-                                            $commande->user_id == auth()->id() ||
-                                                auth()->user()->hasAnyRole(['SuperAdmin', 'Gestionnaire', 'ValidateurCommande']))
+                                        {{-- Consultation : capacité voir-commandes (y compris Consultant) --}}
+                                        @if (auth()->user()->can('voir-commandes'))
                                             <!-- VOIR -->
                                             <a href="{{ route('commandes.show', $commande->id) }}" title="Détail"
                                                 class="btn btn-info btn-sm">
@@ -159,9 +159,11 @@
                                                     </button>
                                                 </form>
                                             @endif
+                                        @endif
 
-
-                                            <!-- LIVRER -->
+                                        <!-- LIVRER -->
+                                        {{-- A1 (décision validée) : réception réservée au Gestionnaire --}}
+                                        @can('receptionner-commandes')
 
                                             {{-- @if ($commande->validation && !$commande->livraison) --}}
                                             @if ($commande->validation && $commande->articles->sum('quantite_restante') > 0)
@@ -346,7 +348,7 @@
 
                                                 </div>
                                             @endif
-                                        @endif
+                                        @endcan
                                     </td>
 
                                 </tr>

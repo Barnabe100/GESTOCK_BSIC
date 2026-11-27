@@ -150,7 +150,7 @@ class CommandesTest extends TestCase
         [$l1, $l2] = $c->articles()->orderBy('id')->get()->all();
 
         // Ligne 1 valide, ligne 2 au-delà du reste à livrer : refus global.
-        $this->receptionner($this->validateur, $c, [$l1->id => 2, $l2->id => 9])
+        $this->receptionner($this->gestionnaire, $c, [$l1->id => 2, $l2->id => 9])
             ->assertSessionHas('error', 'Quantité reçue supérieure à la quantité restante pour '.$a2->libelle);
 
         $this->assertSame(0, (int) $l1->fresh()->quantite_livree);
@@ -159,18 +159,18 @@ class CommandesTest extends TestCase
         $this->assertSame(0, ReceptionCommande::count());
 
         // Quantité négative ou date absente : refus, rien d'écrit.
-        $this->receptionner($this->validateur, $c, [$l1->id => -1])->assertSessionHasErrors('quantites.'.$l1->id);
-        $this->actingAs($this->validateur)->put(route('commandes.livrer', $c->id), ['quantites' => [$l1->id => 1], 'jeton_reception' => (string) Str::uuid()])
+        $this->receptionner($this->gestionnaire, $c, [$l1->id => -1])->assertSessionHasErrors('quantites.'.$l1->id);
+        $this->actingAs($this->gestionnaire)->put(route('commandes.livrer', $c->id), ['quantites' => [$l1->id => 1], 'jeton_reception' => (string) Str::uuid()])
             ->assertSessionHasErrors('date_livraison');
         // Aucune quantité saisie.
-        $this->receptionner($this->validateur, $c, [$l1->id => 0])->assertSessionHas('error', 'Aucune quantité reçue n’a été saisie.');
+        $this->receptionner($this->gestionnaire, $c, [$l1->id => 0])->assertSessionHas('error', 'Aucune quantité reçue n’a été saisie.');
         // Ligne d'une autre commande.
         $autre = $this->commande([[$this->article(), 1]], ['validation' => 1]);
-        $this->receptionner($this->validateur, $c, [$autre->articles()->first()->id => 1])->assertForbidden();
+        $this->receptionner($this->gestionnaire, $c, [$autre->articles()->first()->id => 1])->assertForbidden();
         $this->assertSame(0, MouvementStock::count());
 
         // Réception valide : tout est écrit.
-        $this->receptionner($this->validateur, $c, [$l1->id => 4, $l2->id => 3])->assertSessionHas('success', 'Réception enregistrée');
+        $this->receptionner($this->gestionnaire, $c, [$l1->id => 4, $l2->id => 3])->assertSessionHas('success', 'Réception enregistrée');
         $this->assertSame(9, (int) $a1->fresh()->stock_disponible);
         $this->assertSame(2, MouvementStock::where('type', 'ENTREE')->count());
         $this->assertTrue((bool) $c->fresh()->livraison);
@@ -183,15 +183,15 @@ class CommandesTest extends TestCase
         $ligne = $c->articles()->first();
         $jeton = (string) Str::uuid();
 
-        $this->receptionner($this->validateur, $c, [$ligne->id => 3], $jeton)->assertSessionHas('success', 'Réception enregistrée');
-        $this->receptionner($this->validateur, $c, [$ligne->id => 3], $jeton)->assertSessionHas('error', 'Cette réception a déjà été enregistrée.');
+        $this->receptionner($this->gestionnaire, $c, [$ligne->id => 3], $jeton)->assertSessionHas('success', 'Réception enregistrée');
+        $this->receptionner($this->gestionnaire, $c, [$ligne->id => 3], $jeton)->assertSessionHas('error', 'Cette réception a déjà été enregistrée.');
 
         $this->assertSame(3, (int) $ligne->fresh()->quantite_livree);
         $this->assertSame(1, MouvementStock::where('type', 'ENTREE')->count());
         $this->assertSame(1, ReceptionCommande::count());
 
         // Sans jeton : refus (le formulaire en fournit toujours un).
-        $this->actingAs($this->validateur)->put(route('commandes.livrer', $c->id), ['date_livraison' => '2026-11-25', 'quantites' => [$ligne->id => 1]])
+        $this->actingAs($this->gestionnaire)->put(route('commandes.livrer', $c->id), ['date_livraison' => '2026-11-25', 'quantites' => [$ligne->id => 1]])
             ->assertSessionHasErrors('jeton_reception');
         $this->assertSame(1, MouvementStock::count());
     }
@@ -202,7 +202,10 @@ class CommandesTest extends TestCase
         $ligne = $c->articles()->first();
 
         $this->receptionner($this->compte(['Demandeur']), $c, [$ligne->id => 1])->assertForbidden();
-        $this->receptionner($this->validateur, $c, [$ligne->id => 1])->assertSessionHas('error', 'Validez d’abord la commande');
+        // A1 (décision validée) : ni ValidateurCommande ni SuperAdmin ne réceptionnent.
+        $this->receptionner($this->validateur, $c, [$ligne->id => 1])->assertForbidden();
+        $this->receptionner($this->compte(['SuperAdmin']), $c, [$ligne->id => 1])->assertForbidden();
+        $this->receptionner($this->gestionnaire, $c, [$ligne->id => 1])->assertSessionHas('error', 'Validez d’abord la commande');
         $this->assertSame(0, MouvementStock::count());
     }
 }

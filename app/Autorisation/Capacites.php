@@ -62,6 +62,11 @@ final class Capacites
         // Fournisseurs : menu hasAnyRole(['SuperAdmin', 'Gestionnaire'])
         'gerer-fournisseurs' => ['permissions' => [], 'roles' => ['SuperAdmin', 'Gestionnaire']],
 
+        // Lecture du module Commandes (liste, fiche) : rôles du module, ou
+        // Consultant (permission consulter-commandes-receptionnees : commandes
+        // réceptionnées seulement, filtre appliqué par CommandeController).
+        'voir-commandes' => ['permissions' => ['consulter-commandes-receptionnees'], 'roles' => ['ValidateurCommande', 'Gestionnaire', 'SuperAdmin']],
+        'consulter-commandes-receptionnees' => ['permissions' => ['consulter-commandes-receptionnees'], 'roles' => []],
         // Commandes (module) : menu hasAnyRole(['ValidateurCommande', 'Gestionnaire', 'SuperAdmin'])
         'acceder-commandes' => ['permissions' => [], 'roles' => ['ValidateurCommande', 'Gestionnaire', 'SuperAdmin']],
         // Création, modification, lignes : @hasanyrole('Gestionnaire|SuperAdmin') (commandes/index, show)
@@ -75,9 +80,11 @@ final class Capacites
         // La règle « jamais la commande qu'on a soi-même soumise » est
         // appliquée par CommandeController::valider.
         'valider-commandes' => ['permissions' => ['valider-commande'], 'roles' => ['ValidateurCommande', 'SuperAdmin'], 'exige' => 'role_et_permission'],
-        // Réception : interface hasAnyRole(['ValidateurCommande', 'SuperAdmin']) ;
-        // seeder : permission livrer-commande (Gestionnaire). Union provisoire.
-        'receptionner-commandes' => ['permissions' => ['livrer-commande'], 'roles' => ['ValidateurCommande', 'SuperAdmin']],
+        // Réception (A1, décision validée) : Gestionnaire SEULEMENT. Ni le
+        // ValidateurCommande, ni le SuperAdmin, ni le Consultant. Aucune
+        // permission n'ouvre cette capacité (la permission livrer-commande,
+        // que le SuperAdmin détient, n'est plus prise en compte).
+        'receptionner-commandes' => ['permissions' => [], 'roles' => ['Gestionnaire']],
 
         // États et leurs exports : menu hasAnyRole(['Gestionnaire', 'ValidateurDemande']) ;
         // seeder : permission voir-etats (Gestionnaire, SuperAdmin). Union provisoire.
