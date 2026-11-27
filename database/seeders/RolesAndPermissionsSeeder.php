@@ -64,6 +64,11 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // TYPE ARTICLE
             'gerer-type-article',
+            // CONSULTATION (rôle Consultant) : noms dédiés, jamais identiques à
+            // une capacité d'opération ni à une méthode de Policy
+            'consulter-commandes-receptionnees',
+            'consulter-etats',
+            'consulter-mouvements',
         ];
 
         foreach ($permissions as $permission) {
@@ -106,6 +111,10 @@ class RolesAndPermissionsSeeder extends Seeder
         // donnait valider-commande au Superieur au lieu du ValidateurCommande).
         $superieur = Role::firstOrCreate([
             'name' => 'Superieur'
+        ]);
+        // Consultation sans opération (décision validée)
+        $consultant = Role::firstOrCreate([
+            'name' => 'Consultant'
         ]);
 
 
@@ -167,5 +176,11 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
         // Superieur : aucune permission de module (validation des demandes par
         // désignation, DesignationSuperieur).
+        // 🔥 CONSULTANT : lecture seule
+        $consultant->givePermissionTo([
+            'consulter-commandes-receptionnees',
+            'consulter-etats',
+            'consulter-mouvements',
+        ]);
     }
 }

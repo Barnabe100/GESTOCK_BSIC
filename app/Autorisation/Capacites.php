@@ -23,6 +23,26 @@ use App\Models\User;
  */
 final class Capacites
 {
+    /**
+     * Permissions de CONSULTATION (rôle Consultant). Leurs noms ne doivent
+     * jamais être ceux d'une capacité d'opération ni d'une méthode de Policy :
+     * Spatie (register_permission_check_method) accorderait sinon l'ability
+     * du même nom. Contrôlé par ConsultantSocleTest.
+     */
+    public const PERMISSIONS_CONSULTATION = [
+        'consulter-commandes-receptionnees',
+        'consulter-etats',
+        'consulter-mouvements',
+    ];
+
+    /** Capacités de simple lecture (aucune écriture possible par elles). */
+    public const CAPACITES_LECTURE = [
+        'voir-commandes',
+        'voir-etats',
+        'voir-mouvements',
+        'consulter-commandes-receptionnees',
+    ];
+
     public const DEFINITIONS = [
         // Gestion des comptes : @can('gerer-utilisateurs') (menu, Admin et SuperAdmin)
         'gerer-utilisateurs' => ['permissions' => ['gerer-utilisateurs'], 'roles' => []],

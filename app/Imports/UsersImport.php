@@ -116,7 +116,9 @@ class UsersImport implements ToCollection, WithHeadingRow
             }
 
             $roles = array_values(array_unique(array_filter(array_map('trim', explode(';', $valeur('roles'))), fn ($r) => $r !== '')));
-            $roles = $roles === [] ? ['Demandeur'] : $roles;
+            // E11 (décision validée) : tout utilisateur a le rôle Demandeur par
+            // défaut ; les rôles du fichier s'y AJOUTENT (aucun n'est retiré).
+            $roles = array_values(array_unique(array_merge(['Demandeur'], $roles)));
             // Le rôle Superieur suit l'indicateur « superieur » (désignation).
             $roles = array_values(array_diff($roles, ['Superieur']));
 

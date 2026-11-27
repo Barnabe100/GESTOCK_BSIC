@@ -43,7 +43,7 @@ class UserSeeder extends Seeder
             'departement_id' => 1,
             'service_id' => 1,
             'superieur' => 0,
-        ])->assignRole('SuperAdmin');
+        ])->assignRole(['SuperAdmin', 'Demandeur']); // E11 : Demandeur par défaut
 
         User::firstOrCreate(['email' => 'admin@test.com'], [
             'name' => 'ADMIN',
@@ -54,7 +54,7 @@ class UserSeeder extends Seeder
             'departement_id' => 1,
             'service_id' => 1,
             'superieur' => 0,
-        ])->assignRole('Admin');
+        ])->assignRole(['Admin', 'Demandeur']); // E11 : Demandeur par défaut
 
         /*User::firstOrCreate([
             'name' => 'GESTIONNAIRE',
