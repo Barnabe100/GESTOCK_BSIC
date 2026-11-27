@@ -206,9 +206,8 @@
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                             @endif
-                                            @if (
-                                                $demande->user_id == auth()->id() ||
-                                                    auth()->user()->hasAnyRole(['SuperAdmin']))
+                                            {{-- N01 : modification réservée au propriétaire (DemandePolicy::update) --}}
+                                            @if ($demande->user_id == auth()->id())
                                                 @if (!$demande->validation_superieur)
                                                     <a href="{{ route('demandes.edit', $demande->id) }}" title="Editer"
                                                         class="btn btn-warning btn-sm">

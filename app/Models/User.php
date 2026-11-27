@@ -182,19 +182,40 @@ class User extends Authenticatable
         return $entite !== null && $entite === $autre->entiteDeValidation();
     }
 
+    /**
+     * N01 (décision validée) : consultation d'une demande (fiche, accès
+     * direct par URL). Elle ne donne JAMAIS de droit de modification
+     * (DemandePolicy::update : propriétaire seul).
+     *
+     * - le propriétaire ;
+     * - tout membre de la même entité (département au siège, agence sinon),
+     *   brouillons compris ;
+     * - les circuits qui l'exigent : consultation de toutes les demandes
+     *   (Gestionnaire, ValidateurDemande, SuperAdmin) ;
+     * - le supérieur auquel la demande est attribuée, et le supérieur
+     *   habilité (titulaire ou intérim en vigueur) ;
+     * - le circuit de réception (même agence ou même département).
+     */
     public function peutVoirDemande(Demande $demande): bool
     {
-        // Les administrateurs voient tout
-        if ($this->hasAnyRole([
-            'SuperAdmin',
-            'Gestionnaire',
-            'Superieur',
-            'ValidateurDemande'
-        ])) {
+        if ((int) $demande->user_id === (int) $this->id) {
             return true;
         }
 
-        return $demande->user !== null && $this->estDeLaMemeEntiteQue($demande->user);
+        if (\App\Autorisation\Capacites::autorise($this, 'consulter-toutes-demandes')) {
+            return true;
+        }
+
+        $demandeur = $demande->user;
+
+        if (! $demandeur) {
+            return false;
+        }
+
+        return $this->estDeLaMemeEntiteQue($demandeur)
+            || ($demande->superieur_id !== null && (int) $demande->superieur_id === (int) $this->id)
+            || $this->peutValiderCommeSuperieur($demandeur)
+            || $this->peutConfirmerReception($demande);
     }
 
     /**

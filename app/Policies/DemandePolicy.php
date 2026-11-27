@@ -36,7 +36,9 @@ class DemandePolicy
      */
     public function update(User $user, Demande $demande): bool
     {
-        return ($this->estProprietaire($user, $demande) || $user->hasRole('SuperAdmin'))
+        // N01 (décision validée) : seul le propriétaire modifie sa demande,
+        // dans les limites du circuit ; aucune exception, SuperAdmin compris.
+        return $this->estProprietaire($user, $demande)
             && ! $demande->validation_superieur;
     }
 

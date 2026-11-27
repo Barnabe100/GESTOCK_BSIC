@@ -41,6 +41,7 @@ final class Capacites
         'voir-etats',
         'voir-mouvements',
         'consulter-commandes-receptionnees',
+        'consulter-toutes-demandes',
     ];
 
     public const DEFINITIONS = [
@@ -96,6 +97,11 @@ final class Capacites
         'traiter-demandes' => ['permissions' => [], 'roles' => ['Gestionnaire', 'SuperAdmin']],
         // Validation finale : menu @role('ValidateurDemande') ; permission valider-demande
         'valider-finale-demandes' => ['permissions' => ['valider-demande'], 'roles' => ['ValidateurDemande']],
+        // N01 : consultation de TOUTES les demandes, réservée aux circuits qui
+        // l'exigent : traitement et livraison (Gestionnaire), validation finale
+        // (ValidateurDemande), administration (SuperAdmin). Le Supérieur n'en
+        // bénéficie plus (son entité, ses demandes attribuées, ses intérims).
+        'consulter-toutes-demandes' => ['permissions' => [], 'roles' => ['Gestionnaire', 'ValidateurDemande', 'SuperAdmin']],
         // Archivage d'une demande : @role('SuperAdmin')
         'archiver-demandes' => ['permissions' => [], 'roles' => ['SuperAdmin']],
     ];

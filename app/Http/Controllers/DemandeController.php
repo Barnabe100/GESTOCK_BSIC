@@ -86,10 +86,8 @@ class DemandeController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->hasRole('Demandeur')) {
-            abort(403);
-        }
-
+        // N01 (décision validée) : tout membre d'une entité consulte les
+        // demandes de son entité, quel que soit son rôle, brouillons compris.
         $demandes = Demande::with([
             'user',
             'user.agence',
@@ -97,7 +95,6 @@ class DemandeController extends Controller
             'articles.article'
         ])
             ->where('archiver', 0)
-            ->where('statut', '!=', 'En préparation')
             // N03 : même entité de validation (type explicite de l'entité).
             ->whereHas('user', fn ($q) => User::filtrerMemeEntite($q, $user))
             ->latest()
