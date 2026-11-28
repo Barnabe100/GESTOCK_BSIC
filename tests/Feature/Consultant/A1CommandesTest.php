@@ -133,16 +133,15 @@ class A1CommandesTest extends TestCase
         $this->actingAs($consultant)->post(route('commandes.valider', $aValider->id))->assertForbidden();
         $this->receptionner($consultant, $receptionnee)->assertForbidden();
         $this->actingAs($consultant)->post(route('article_commande.store'), ['commande_id' => $enPreparation->id])->assertForbidden();
-        $this->actingAs($consultant)->get(route('commandes.export.csv'))->assertForbidden();
+        // Arbitrage A : l'export est permis, filtré côté serveur (ExportCommandesConsultantTest).
 
         $this->assertSame('En préparation', $enPreparation->fresh()->statut);
         $this->assertFalse((bool) $aValider->fresh()->validation);
 
-        // L'interface ne propose aucune action ni export au Consultant.
+        // L'interface ne propose aucune action au Consultant.
         $this->actingAs($consultant)->get(route('commandes.index'))->assertOk()
             ->assertSee(route('commandes.show', $receptionnee->id), false)
             ->assertDontSee(route('commandes.create'), false)
-            ->assertDontSee(route('commandes.export.csv'), false)
             ->assertDontSee(route('commandes.edit', $receptionnee->id), false);
     }
 

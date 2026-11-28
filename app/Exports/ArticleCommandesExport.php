@@ -10,12 +10,21 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ArticleCommandesExport implements FromCollection, WithHeadings, WithStyles
 {
+    /**
+     * @param  bool  $receptionneesSeulement  Arbitrage A (Consultant) : seules les
+     *         lignes des commandes entièrement réceptionnées (livraison = 1).
+     */
+    public function __construct(private bool $receptionneesSeulement = false)
+    {
+    }
+
     public function collection()
     {
         return ArticleCommande::with([
                 'article',
                 'commande.fournisseur'
             ])
+            ->when($this->receptionneesSeulement, fn ($q) => $q->whereHas('commande', fn ($c) => $c->where('livraison', 1)))
             ->get()
             ->map(function ($ligne) {
 

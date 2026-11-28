@@ -227,8 +227,10 @@ class ArticleCommandeController extends Controller
     //Export Excel
     public function exportExcel()
     {
+        // Arbitrage A : sans l'accès complet au module, export limité aux
+        // commandes entièrement réceptionnées (filtre côté serveur).
         return Excel::download(
-            new ArticleCommandesExport,
+            new ArticleCommandesExport(! \App\Autorisation\Capacites::autorise(auth()->user(), 'acceder-commandes')),
             'articles-commandes.xlsx'
         );
     }
@@ -236,8 +238,10 @@ class ArticleCommandeController extends Controller
     //Export CSV
     public function exportCsv()
     {
+        // Arbitrage A : sans l'accès complet au module, export limité aux
+        // commandes entièrement réceptionnées (filtre côté serveur).
         return Excel::download(
-            new ArticleCommandesExport,
+            new ArticleCommandesExport(! \App\Autorisation\Capacites::autorise(auth()->user(), 'acceder-commandes')),
             'articles-commandes.csv'
         );
     }

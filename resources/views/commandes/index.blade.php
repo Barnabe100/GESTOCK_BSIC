@@ -14,7 +14,8 @@
 
                 <div class="d-flex gap-2">
                     <!-- EXCEL -->
-                    @can('acceder-commandes')
+                    {{-- Arbitrage A : le Consultant exporte les commandes réceptionnées (filtre serveur) --}}
+                    @can('voir-commandes')
                     <a href="{{ route('commandes.export.excel') }}" class="btn btn-success btn-sm">
 
                         <i class="fas fa-file-excel"></i>

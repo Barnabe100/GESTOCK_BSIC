@@ -43,8 +43,8 @@ class MatriceAccesModulesTest extends TestCase
         '/fournisseurs-export-csv' => ['Gestionnaire', 'SuperAdmin'],
         '/commandes' => ['ValidateurCommande', 'Gestionnaire', 'SuperAdmin', 'Consultant'],
         '/commandes/create' => ['Gestionnaire', 'SuperAdmin'],
-        '/commandes-export-csv' => ['ValidateurCommande', 'Gestionnaire', 'SuperAdmin'],
-        '/articles-commandes-export-csv' => ['ValidateurCommande', 'Gestionnaire', 'SuperAdmin'],
+        '/commandes-export-csv' => ['ValidateurCommande', 'Gestionnaire', 'SuperAdmin', 'Consultant'], // arbitrage A : réceptionnées seulement
+        '/articles-commandes-export-csv' => ['ValidateurCommande', 'Gestionnaire', 'SuperAdmin', 'Consultant'], // arbitrage A : réceptionnées seulement
         '/etats' => ['Gestionnaire', 'ValidateurDemande', 'SuperAdmin', 'Consultant'],
         '/etats/stocks' => ['Gestionnaire', 'ValidateurDemande', 'SuperAdmin', 'Consultant'],
         '/demandes-export-csv' => ['Gestionnaire', 'Admin', 'SuperAdmin'],

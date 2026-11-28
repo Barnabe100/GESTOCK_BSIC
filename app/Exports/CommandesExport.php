@@ -10,10 +10,19 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class CommandesExport implements FromCollection, WithHeadings, WithStyles
 {
+    /**
+     * @param  bool  $receptionneesSeulement  Arbitrage A (Consultant) : seules les
+     *         commandes entièrement réceptionnées (livraison = 1) sont exportées.
+     */
+    public function __construct(private bool $receptionneesSeulement = false)
+    {
+    }
+
     public function collection()
     {
         return Commande::with('fournisseur')
             ->where('archiver', 0)
+            ->when($this->receptionneesSeulement, fn ($q) => $q->where('livraison', 1))
             ->get()
             ->map(function ($commande) {
 

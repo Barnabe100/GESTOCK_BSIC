@@ -328,10 +328,10 @@ Route::middleware([
     //Export commandes
     Route::get('commandes-export-excel', [CommandeController::class, 'exportExcel'])
         ->name('commandes.export.excel')
-        ->middleware('can:acceder-commandes');
+        ->middleware('can:voir-commandes'); // arbitrage A : Consultant, réceptionnées seulement
     Route::get('commandes-export-csv', [CommandeController::class, 'exportCsv'])
         ->name('commandes.export.csv')
-        ->middleware('can:acceder-commandes');
+        ->middleware('can:voir-commandes'); // arbitrage A : Consultant, réceptionnées seulement
 
     // Décision 3.6 : soumission réservée au Gestionnaire.
     Route::put('/commandes/{id}/soumettre', [CommandeController::class, 'soumettre'])
@@ -375,10 +375,10 @@ Route::middleware([
     //Export Articles Commandes
     Route::get('articles-commandes-export-excel', [ArticleCommandeController::class, 'exportExcel'])
         ->name('articles-commandes.export.excel')
-        ->middleware('can:acceder-commandes');
+        ->middleware('can:voir-commandes'); // arbitrage A : Consultant, réceptionnées seulement
     Route::get('articles-commandes-export-csv', [ArticleCommandeController::class, 'exportCsv'])
         ->name('articles-commandes.export.csv')
-        ->middleware('can:acceder-commandes');
+        ->middleware('can:voir-commandes'); // arbitrage A : Consultant, réceptionnées seulement
 
     Route::get(
         '/dashboard',
