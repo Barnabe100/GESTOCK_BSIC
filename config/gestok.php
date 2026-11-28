@@ -25,4 +25,12 @@ return [
     */
     'seed_mot_de_passe' => env('GESTOK_SEED_MOT_DE_PASSE'),
 
+    /*
+    | Comptes techniques ou particuliers DÉCLARÉS (adresses e-mail ou
+    | identifiants, séparés par des virgules) : exclus de toute attribution
+    | automatique de rôle (régularisation E11). Décision humaine, jamais
+    | déduite.
+    */
+    'comptes_techniques' => array_values(array_filter(array_map('trim', explode(',', (string) env('GESTOK_COMPTES_TECHNIQUES', ''))))),
+
 ];
